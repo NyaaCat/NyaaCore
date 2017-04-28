@@ -1,23 +1,29 @@
-## nyaautils
+## NyaaCore
+Common library used for all NyaaCat plugin.  
+Provides infrastructures to simplify plugin development.
 
-Gaming utilities/helpers for NyaaCat Minecraft Server
+Current version: Minecraft 1.11.2
 
-Detailed function manual please refer to [Wiki](https://github.com/NyaaCat/nyaautils/wiki).
+## Component List
 
-[![Build Status](https://travis-ci.org/NyaaCat/nyaautils.svg?branch=master)](https://travis-ci.org/NyaaCat/nyaautils)
+- Annotation based command dispatcher
+- Annotation based configuration serializer
+- Annotation based database serializer
+- JSON message builder
+- Server side I18n support
 
 ## Use as dependency in Gradle
 
 ```
 repositories {
     maven {
-        name 'nyaa'
-        url 'https://raw.githubusercontent.com/NyaaCat/nyaautils/maven-repo'
+        name 'NyaaCore'
+        url 'https://raw.githubusercontent.com/NyaaCat/NyaaCore/maven-repo'
     }
 }
 
 dependencies {
-    compile('cat.nyaa:nyaautils:2.0-SNAPSHOT') {
+    compile('cat.nyaa:nyaacore:2.0-SNAPSHOT') {
         transitive = false
     }
 }
