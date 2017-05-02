@@ -73,7 +73,7 @@ public abstract class CommandReceiver<T extends JavaPlugin> implements CommandEx
     }
 
     // Language class is passed in for message support
-    private final Internationalization i18n;
+    private final LanguageRepository i18n;
     // Subcommands exists in this class
     private final Map<String, Method> subCommands = new HashMap<>();
     // Commands to be passed to other classes
@@ -100,7 +100,7 @@ public abstract class CommandReceiver<T extends JavaPlugin> implements CommandEx
     }
 
     // Scan recursively into parent class to find annotated methods when constructing
-    public CommandReceiver(T plugin, Internationalization i18n) {
+    public CommandReceiver(T plugin, LanguageRepository i18n) {
         //this.plugin = plugin;
         this.i18n = i18n;
 
@@ -127,7 +127,7 @@ public abstract class CommandReceiver<T extends JavaPlugin> implements CommandEx
                 CommandReceiver<T> obj = null;
                 try {
                     Class<? extends CommandReceiver<T>> cls = (Class<? extends CommandReceiver<T>>) f.getType();
-                    Constructor<? extends CommandReceiver<T>> con = cls.getDeclaredConstructor(Object.class, Internationalization.class);
+                    Constructor<? extends CommandReceiver<T>> con = cls.getDeclaredConstructor(Object.class, LanguageRepository.class);
                     obj = con.newInstance(plugin, i18n);
                     if (obj != null) {
                         subCommandClasses.put(anno.value().toLowerCase(), obj);

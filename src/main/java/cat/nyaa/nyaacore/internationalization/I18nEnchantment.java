@@ -1,4 +1,4 @@
-package cat.nyaa.nyaacore.internationalizer;
+package cat.nyaa.nyaacore.internationalization;
 
 /*
  * Copyright (c) 2015 Hexosse
@@ -31,7 +31,7 @@ import java.util.Map;
  * @author <b>hexosse</b> (<a href="https://github.com/hexosse">hexosse on GitHub</a>).
  */
 @SuppressWarnings("unused")
-public enum I16rEnchantment {
+public enum I18nEnchantment {
 
     PROTECTION_ENVIRONMENTAL(Enchantment.PROTECTION_ENVIRONMENTAL, "enchantment.protect.all"),
     PROTECTION_FIRE(Enchantment.PROTECTION_FIRE, "enchantment.protect.fire"),
@@ -64,10 +64,10 @@ public enum I16rEnchantment {
     MENDING(Enchantment.MENDING, "enchantment.mending"),
     VANISHING_CURSE(Enchantment.VANISHING_CURSE, "enchantment.vanishing_curse");
 
-    private static final Map<Enchantment, I16rEnchantment> lookup = new HashMap<>();
+    private static final Map<Enchantment, I18nEnchantment> lookup = new HashMap<>();
 
     static {
-        for (I16rEnchantment enchantment : EnumSet.allOf(I16rEnchantment.class))
+        for (I18nEnchantment enchantment : EnumSet.allOf(I18nEnchantment.class))
             lookup.put(enchantment.enchantment, enchantment);
     }
 
@@ -77,7 +77,7 @@ public enum I16rEnchantment {
     /**
      * Create an index of enchantments.
      */
-    I16rEnchantment(Enchantment enchantment, String unlocalizedName) {
+    I18nEnchantment(Enchantment enchantment, String unlocalizedName) {
         this.enchantment = enchantment;
         this.unlocalizedName = unlocalizedName;
     }
@@ -97,12 +97,12 @@ public enum I16rEnchantment {
     }
 
     /**
-     * Get the index of an enchantment based on {@link I16rEnchantment}.
+     * Get the index of an enchantment based on {@link I18nEnchantment}.
      *
      * @param ench The enchantment.
      * @return The index of the item.
      */
-    public static I16rEnchantment fromEnchantment(Enchantment ench) {
+    public static I18nEnchantment fromEnchantment(Enchantment ench) {
         return lookup.getOrDefault(ench, null);
     }
 

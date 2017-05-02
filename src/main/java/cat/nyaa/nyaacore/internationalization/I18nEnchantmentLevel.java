@@ -8,7 +8,7 @@
  * this project.   If not, see <http://opensource.org/licenses/MIT>.
  */
 
-package cat.nyaa.nyaacore.internationalizer;
+package cat.nyaa.nyaacore.internationalization;
 
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -21,7 +21,7 @@ import java.util.Map;
  *
  * @author <b>hexosse</b> (<a href="https://github.com/hexosse">hexosse on GitHub</a>).
  */
-public enum I16rEnchantmentLevel {
+public enum I18nEnchantmentLevel {
 
     LEVEL1(1, "enchantment.level.1"),
     LEVEL2(2, "enchantment.level.2"),
@@ -34,10 +34,10 @@ public enum I16rEnchantmentLevel {
     LEVEL9(9, "enchantment.level.9"),
     LEVEL10(10, "enchantment.level.10"),;
 
-    private static final Map<Integer, I16rEnchantmentLevel> lookup = new HashMap<Integer, I16rEnchantmentLevel>();
+    private static final Map<Integer, I18nEnchantmentLevel> lookup = new HashMap<Integer, I18nEnchantmentLevel>();
 
     static {
-        for (I16rEnchantmentLevel level : EnumSet.allOf(I16rEnchantmentLevel.class))
+        for (I18nEnchantmentLevel level : EnumSet.allOf(I18nEnchantmentLevel.class))
             lookup.put(level.getLevel(), level);
     }
 
@@ -47,7 +47,7 @@ public enum I16rEnchantmentLevel {
     /**
      * Create an index of enchantments.
      */
-    I16rEnchantmentLevel(int level, String unlocalizedName) {
+    I18nEnchantmentLevel(int level, String unlocalizedName) {
         this.level = level;
         this.unlocalizedName = unlocalizedName;
     }
@@ -56,7 +56,7 @@ public enum I16rEnchantmentLevel {
      * @param level Enchantment level.
      * @return The index of a level.
      */
-    public static I16rEnchantmentLevel get(Integer level) {
+    public static I18nEnchantmentLevel get(Integer level) {
         return lookup.get(level);
     }
 

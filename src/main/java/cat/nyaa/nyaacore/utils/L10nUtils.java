@@ -8,7 +8,7 @@
  * this project.   If not, see <http://opensource.org/licenses/MIT>.
  */
 
-package cat.nyaa.nyaacore.internationalizer;
+package cat.nyaa.nyaacore.utils;
 
 import cat.nyaa.nyaacore.NyaaCoreLoader;
 
@@ -27,55 +27,51 @@ import java.util.Map;
  *
  * @author Meow J
  */
-public enum I16rLang {
+public final class L10nUtils {
+    public enum AvailableLanguages {
+        ENGLISH("en_US"),
+        CHINESE_SIMPLIFIED("zh_CN");
+        public final String codeName;
+        public final Map<String, String> map;
+        AvailableLanguages(String codeName) {
+            this.codeName = codeName;
+            this.map = new HashMap<>();
+        }
+    };
 
-    EN_US("en_us", new HashMap<>()),
-    ZH_CN("zh_cn", new HashMap<>());
 
-
-    private static final Map<String, I16rLang> lookup = new HashMap<>();
+    private static final Map<String, AvailableLanguages> lookup = new HashMap<>();
 
     static {
-        for (I16rLang lang : EnumSet.allOf(I16rLang.class))
-            lookup.put(lang.getLocale(), lang);
-    }
-
-    private final String locale;
-    private final Map<String, String> map;
-
-    /**
-     * Create an index of lang file.
-     */
-    I16rLang(String locale, Map<String, String> map) {
-        this.locale = locale;
-        this.map = map;
+        for (AvailableLanguages lang : EnumSet.allOf(AvailableLanguages.class))
+            lookup.put(lang.codeName, lang);
     }
 
     /**
      * @param locale The locale of the language
      * @return The index of a lang file based on locale.
      */
-    public static I16rLang get(String locale) {
-        I16rLang result = lookup.get(locale);
-        return result == null ? EN_US : result;
+    public static AvailableLanguages get(String locale) {
+        AvailableLanguages result = lookup.get(locale);
+        return result == null ? AvailableLanguages.ENGLISH : result;
     }
 
     /**
      * Initialize this class, load all the languages to the corresponding HashMap.
      */
     public static void init(NyaaCoreLoader plugin) {
-        for (I16rLang i16rLang : I16rLang.values()) {
+        for (AvailableLanguages i16rLang : AvailableLanguages.values()) {
             try {
-                readFile(i16rLang, new BufferedReader(new InputStreamReader(plugin.getResource("i16r/" + i16rLang.locale + ".lang"), Charset.forName("UTF-8"))));
-                plugin.getLogger().info(i16rLang.getLocale() + " has been loaded.");
+                readFile(i16rLang, new BufferedReader(new InputStreamReader(plugin.getResource("l10n/" + i16rLang.codeName + ".lang"), Charset.forName("UTF-8"))));
+                plugin.getLogger().info(i16rLang.codeName + " has been loaded.");
             } catch (Exception e) {
-                plugin.getLogger().warning("Failed to load language file " + i16rLang.locale);
+                plugin.getLogger().warning("Failed to load language file " + i16rLang.codeName);
                 e.printStackTrace();
             }
         }
     }
 
-    public static void readFile(I16rLang i16rLang, BufferedReader reader) throws IOException {
+    public static void readFile(AvailableLanguages i16rLang, BufferedReader reader) throws IOException {
         String temp;
         String[] tempStringArr;
         try {
@@ -91,19 +87,5 @@ public enum I16rLang {
         } finally {
             reader.close();
         }
-    }
-
-    /**
-     * @return The locale of the language
-     */
-    public String getLocale() {
-        return locale;
-    }
-
-    /**
-     * @return The HashMap of the language.
-     */
-    public Map<String, String> getMap() {
-        return map;
     }
 }

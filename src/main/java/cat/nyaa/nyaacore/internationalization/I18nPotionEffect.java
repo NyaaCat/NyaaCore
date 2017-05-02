@@ -8,8 +8,9 @@
  * this project.   If not, see <http://opensource.org/licenses/MIT>.
  */
 
-package cat.nyaa.nyaacore.internationalizer;
+package cat.nyaa.nyaacore.internationalization;
 
+import cat.nyaa.nyaacore.utils.I18nUtils;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.PotionMeta;
@@ -26,7 +27,7 @@ import java.util.Map;
  *
  * @author Meow J
  */
-public enum I16rPotionEffect {
+public enum I18nPotionEffect {
 
     UNCRAFTABLE(PotionType.UNCRAFTABLE, "potion.effect.empty", "splash_potion.effect.empty", "lingering_potion.effect.empty", "tipped_arrow.effect.empty"),
     WATER(PotionType.WATER, "potion.effect.water", "splash_potion.effect.water", "lingering_potion.effect.water", "tipped_arrow.effect.water"),
@@ -48,10 +49,10 @@ public enum I16rPotionEffect {
     WEAKNESS(PotionType.WEAKNESS, "potion.effect.weakness", "splash_potion.effect.weakness", "lingering_potion.effect.weakness", "tipped_arrow.effect.weakness"),
     LUCK(PotionType.LUCK, "potion.effect.luck", "splash_potion.effect.luck", "lingering_potion.effect.luck", "tipped_arrow.effect.luck");
 
-    private static final Map<PotionType, I16rPotionEffect> lookup = new HashMap<PotionType, I16rPotionEffect>();
+    private static final Map<PotionType, I18nPotionEffect> lookup = new HashMap<PotionType, I18nPotionEffect>();
 
     static {
-        for (I16rPotionEffect effect : EnumSet.allOf(I16rPotionEffect.class))
+        for (I18nPotionEffect effect : EnumSet.allOf(I18nPotionEffect.class))
             lookup.put(effect.getPotionType(), effect);
     }
 
@@ -64,7 +65,7 @@ public enum I16rPotionEffect {
     /**
      * Create an index of potion effects.
      */
-    I16rPotionEffect(PotionType potionType, String unlocalizedName, String unlocalizedSplashName, String unlocalizedLingeringName, String unlocalizedArrowName) {
+    I18nPotionEffect(PotionType potionType, String unlocalizedName, String unlocalizedSplashName, String unlocalizedLingeringName, String unlocalizedArrowName) {
         this.potionType = potionType;
         this.unlocalizedName = unlocalizedName;
         this.unlocalizedSplashName = unlocalizedSplashName;
@@ -76,7 +77,7 @@ public enum I16rPotionEffect {
      * @param effectType The effect type.
      * @return The index of a potion based on effect.
      */
-    public static I16rPotionEffect get(PotionType effectType) {
+    public static I18nPotionEffect get(PotionType effectType) {
         return lookup.get(effectType);
     }
 
@@ -87,7 +88,7 @@ public enum I16rPotionEffect {
     public static String getUnlocalizedName(ItemStack potion) {
         PotionMeta meta = (PotionMeta) potion.getItemMeta();
         PotionType type = meta.getBasePotionData().getType();
-        I16rPotionEffect effect = get(type);
+        I18nPotionEffect effect = get(type);
         return effect != null ? effect.unlocalizedName : type.name();
     }
 
@@ -98,7 +99,7 @@ public enum I16rPotionEffect {
     public static String getUnlocalizedSplashName(ItemStack potion) {
         PotionMeta meta = (PotionMeta) potion.getItemMeta();
         PotionType type = meta.getBasePotionData().getType();
-        I16rPotionEffect effect = get(type);
+        I18nPotionEffect effect = get(type);
         return effect != null ? effect.unlocalizedSplashName : "SPLASH_" + type.name();
     }
 
@@ -109,7 +110,7 @@ public enum I16rPotionEffect {
     public static String getUnlocalizedLingeringName(ItemStack potion) {
         PotionMeta meta = (PotionMeta) potion.getItemMeta();
         PotionType type = meta.getBasePotionData().getType();
-        I16rPotionEffect effect = get(type);
+        I18nPotionEffect effect = get(type);
         return effect != null ? effect.unlocalizedLingeringName : "LINGERING_" + type.name();
     }
 
@@ -120,7 +121,7 @@ public enum I16rPotionEffect {
     public static String getUnlocalizedArrowName(ItemStack arrow) {
         PotionMeta meta = (PotionMeta) arrow.getItemMeta();
         PotionType type = meta.getBasePotionData().getType();
-        I16rPotionEffect effect = get(type);
+        I18nPotionEffect effect = get(type);
         return effect != null ? effect.unlocalizedArrowName : "TIPPED_ARROW_" + type.name();
     }
 
@@ -131,13 +132,13 @@ public enum I16rPotionEffect {
      */
     public static String getLocalizedName(ItemStack itemStack, String locale) {
         if (itemStack.getType() == Material.SPLASH_POTION)
-            return LanguageHelper.translateToLocal(getUnlocalizedSplashName(itemStack), locale);
+            return I18nUtils.translateToLocal(getUnlocalizedSplashName(itemStack), locale);
         else if (itemStack.getType() == Material.LINGERING_POTION)
-            return LanguageHelper.translateToLocal(getUnlocalizedLingeringName(itemStack), locale);
+            return I18nUtils.translateToLocal(getUnlocalizedLingeringName(itemStack), locale);
         else if (itemStack.getType() == Material.TIPPED_ARROW)
-            return LanguageHelper.translateToLocal(getUnlocalizedArrowName(itemStack), locale);
+            return I18nUtils.translateToLocal(getUnlocalizedArrowName(itemStack), locale);
         else
-            return LanguageHelper.translateToLocal(getUnlocalizedName(itemStack), locale);
+            return I18nUtils.translateToLocal(getUnlocalizedName(itemStack), locale);
     }
 
     /**

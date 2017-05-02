@@ -1,4 +1,4 @@
-package cat.nyaa.nyaacore.internationalizer;
+package cat.nyaa.nyaacore.internationalization;
 
 /*
  * Copyright (c) 2015 Jerrell Fang
@@ -10,6 +10,7 @@ package cat.nyaa.nyaacore.internationalizer;
  * this project.   If not, see <http://opensource.org/licenses/MIT>.
  */
 
+import cat.nyaa.nyaacore.utils.I18nUtils;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.chat.TranslatableComponent;
@@ -35,7 +36,7 @@ import java.util.Map;
  */
 
 @SuppressWarnings("unused")
-public enum I16rItemName {
+public enum I18nItemName {
 
     AIR(Material.AIR, "Air"),
     BARRIER(Material.BARRIER, "tile.barrier.name"),
@@ -667,10 +668,10 @@ public enum I16rItemName {
     SHULKER_SHELL(Material.SHULKER_SHELL, "item.shulkerShell.name"),
     IRON_NUGGET(Material.IRON_NUGGET, "item.ironNugget.name");
 
-    private static final Map<String, I16rItemName> lookup = new HashMap<>();
+    private static final Map<String, I18nItemName> lookup = new HashMap<>();
 
     static {
-        for (I16rItemName item : EnumSet.allOf(I16rItemName.class))
+        for (I18nItemName item : EnumSet.allOf(I18nItemName.class))
             lookup.put(item.material.name() + ":" + Integer.toString(item.metadata), item);
     }
 
@@ -681,13 +682,13 @@ public enum I16rItemName {
     /**
      * Create an index of an item
      */
-    I16rItemName(Material material, int metadata, String unlocalizedName) {
+    I18nItemName(Material material, int metadata, String unlocalizedName) {
         this.material = material;
         this.metadata = metadata;
         this.unlocalizedName = unlocalizedName;
     }
 
-    I16rItemName(Material material, String unlocalizedName) {
+    I18nItemName(Material material, String unlocalizedName) {
         this(material, 0, unlocalizedName);
     }
 
@@ -713,7 +714,7 @@ public enum I16rItemName {
     }
 
     public static BaseComponent getUnlocalizedName(ItemStack item) {
-        I16rItemName e = lookup.get(item.getType().name() + ":" + Short.toString(item.getDurability()));
+        I18nItemName e = lookup.get(item.getType().name() + ":" + Short.toString(item.getDurability()));
         if (e == null) e = lookup.get(item.getType().name() + ":0");
         if (e == null) return new TextComponent(item.getType().name() + ":" + Short.toString(item.getDurability()));
         if (e == PLAYER_HEAD) {
@@ -731,9 +732,9 @@ public enum I16rItemName {
     public static String getPlayerSkullName(ItemStack skull, String locale) {
         SkullMeta meta = (SkullMeta) skull.getItemMeta();
         if (meta.hasOwner()) {
-            return String.format(LanguageHelper.translateToLocal("item.skull.player.name", locale),
+            return String.format(I18nUtils.translateToLocal("item.skull.player.name", locale),
                     meta.getOwner());
-        } else return LanguageHelper.translateToLocal("item.skull.char.name", locale);
+        } else return I18nUtils.translateToLocal("item.skull.char.name", locale);
     }
 
     /**
@@ -742,8 +743,8 @@ public enum I16rItemName {
      * @param item The item for search.
      * @return The index of the item.
      */
-    public static I16rItemName get(ItemStack item) {
-        I16rItemName result = lookup.get(item.getType().name() + ":" + Integer.toString(item.getDurability()));
+    public static I18nItemName get(ItemStack item) {
+        I18nItemName result = lookup.get(item.getType().name() + ":" + Integer.toString(item.getDurability()));
         if (result == null)
             result = lookup.get(item.getType().name());
         return result;

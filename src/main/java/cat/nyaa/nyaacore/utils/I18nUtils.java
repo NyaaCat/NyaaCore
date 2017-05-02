@@ -8,9 +8,10 @@
  * this project.   If not, see <http://opensource.org/licenses/MIT>.
  */
 
-package cat.nyaa.nyaacore.internationalizer;
+package cat.nyaa.nyaacore.utils;
 
 
+import cat.nyaa.nyaacore.internationalization.*;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
@@ -26,7 +27,7 @@ import java.util.Map;
  *
  * @author Meow J
  */
-public class LanguageHelper {
+public class I18nUtils {
 
     /**
      * Return the display name of the item.
@@ -52,11 +53,11 @@ public class LanguageHelper {
     public static String getItemName(ItemStack item, String locale) {
         // Potion & SpawnEgg & Player Skull
         if (item.getType() == Material.POTION || item.getType() == Material.SPLASH_POTION || item.getType() == Material.LINGERING_POTION || item.getType() == Material.TIPPED_ARROW)
-            return I16rPotionEffect.getLocalizedName(item, locale);
+            return I18nPotionEffect.getLocalizedName(item, locale);
         else if (item.getType() == Material.MONSTER_EGG)
-            return I16rEntity.getSpawnEggName(item, locale);
+            return I18nEntity.getSpawnEggName(item, locale);
         else if (item.getType() == Material.SKULL_ITEM && item.getDurability() == 3) // is player's skull
-            return I16rItemName.getPlayerSkullName(item, locale);
+            return I18nItemName.getPlayerSkullName(item, locale);
 
         return translateToLocal(getItemUnlocalizedName(item), locale);
     }
@@ -68,7 +69,7 @@ public class LanguageHelper {
      * @return The unlocalized name. If the item doesn't have a unlocalized name, this method will return the Material of it.
      */
     public static String getItemUnlocalizedName(ItemStack item) {
-        I16rItemName enumItem = I16rItemName.get(item);
+        I18nItemName enumItem = I18nItemName.get(item);
         return enumItem != null ? enumItem.getUnlocalizedName() : item.getType().toString();
     }
 
@@ -79,7 +80,7 @@ public class LanguageHelper {
      * @return The unlocalized name. If the entity doesn't have a unlocalized name, this method will return the EntityType of it.
      */
     public static String getEntityUnlocalizedName(Entity entity) {
-        I16rEntity i16rEntity = I16rEntity.get(entity.getType());
+        I18nEntity i16rEntity = I18nEntity.get(entity.getType());
         return i16rEntity != null ? i16rEntity.getUnlocalizedName() : entity.getType().toString();
     }
 
@@ -90,7 +91,7 @@ public class LanguageHelper {
      * @return The unlocalized name. If the entity doesn't have a unlocalized name, this method will return the name of the EntityType.
      */
     public static String getEntityUnlocalizedName(EntityType entityType) {
-        I16rEntity i16rEntity = I16rEntity.get(entityType);
+        I18nEntity i16rEntity = I18nEntity.get(entityType);
         return i16rEntity != null ? i16rEntity.getUnlocalizedName() : entityType.toString();
     }
 
@@ -135,7 +136,7 @@ public class LanguageHelper {
      * @return The unlocalized name.(if level is greater than 10, it will only return the number of the level)
      */
     public static String getEnchantmentLevelUnlocalizedName(int level) {
-        I16rEnchantmentLevel enumEnchLevel = I16rEnchantmentLevel.get(level);
+        I18nEnchantmentLevel enumEnchLevel = I18nEnchantmentLevel.get(level);
         return enumEnchLevel != null ? enumEnchLevel.getUnlocalizedName() : Integer.toString(level);
     }
 
@@ -157,7 +158,7 @@ public class LanguageHelper {
      * @return The unlocalized name.
      */
     public static String getEnchantmentUnlocalizedName(Enchantment enchantment) {
-        I16rEnchantment enumEnch = I16rEnchantment.fromEnchantment(enchantment);
+        I18nEnchantment enumEnch = I18nEnchantment.fromEnchantment(enchantment);
         return (enumEnch != null ? enumEnch.getUnlocalizedNameString() : enchantment.getName());
     }
 
@@ -205,11 +206,11 @@ public class LanguageHelper {
      * @return The localized entry. If the localized entry doesn't exist, it will first look up the fallback language map. If the entry still doesn't exist, then return the unlocalized name.
      */
     public static String translateToLocal(String unlocalizedName, String locale) {
-        String result = I16rLang.get(locale.toLowerCase()).getMap().get(unlocalizedName);
+        String result = L10nUtils.get(locale.toLowerCase()).map.get(unlocalizedName);
         if (result != null)
             return result;
         else {
-            result = I16rLang.EN_US.getMap().get(unlocalizedName);
+            result = L10nUtils.AvailableLanguages.ENGLISH.map.get(unlocalizedName);
         }
         return result == null ? unlocalizedName : result;
     }

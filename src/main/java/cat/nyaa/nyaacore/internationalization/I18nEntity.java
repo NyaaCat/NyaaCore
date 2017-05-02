@@ -8,8 +8,9 @@
  * this project.   If not, see <http://opensource.org/licenses/MIT>.
  */
 
-package cat.nyaa.nyaacore.internationalizer;
+package cat.nyaa.nyaacore.internationalization;
 
+import cat.nyaa.nyaacore.utils.I18nUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
@@ -26,7 +27,7 @@ import java.util.Map;
  *
  * @author Meow J
  */
-public enum I16rEntity {
+public enum I18nEntity {
 
     ITEM(EntityType.DROPPED_ITEM, "entity.Item.name"),
     EXPERIENCE_ORB(EntityType.EXPERIENCE_ORB, "entity.XPOrb.name"),
@@ -93,17 +94,17 @@ public enum I16rEntity {
     MULE(EntityType.MULE, "entity.Mule.name");
     // Some entity subtypes are not included
 
-    private static final Map<EntityType, I16rEntity> lookup = new HashMap<EntityType, I16rEntity>();
+    private static final Map<EntityType, I18nEntity> lookup = new HashMap<EntityType, I18nEntity>();
 
     static {
-        for (I16rEntity entity : EnumSet.allOf(I16rEntity.class))
+        for (I18nEntity entity : EnumSet.allOf(I18nEntity.class))
             lookup.put(entity.getType(), entity);
     }
 
     private EntityType type;
     private String unlocalizedName;
 
-    I16rEntity(EntityType type, String unlocalizedName) {
+    I18nEntity(EntityType type, String unlocalizedName) {
         this.type = type;
         this.unlocalizedName = unlocalizedName;
     }
@@ -112,7 +113,7 @@ public enum I16rEntity {
      * @param entityType The Entity type.
      * @return The index of an entity based on entity type
      */
-    public static I16rEntity get(EntityType entityType) {
+    public static I18nEntity get(EntityType entityType) {
         return lookup.get(entityType);
     }
 
@@ -130,11 +131,11 @@ public enum I16rEntity {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        I16rEntity entity = get(type);
+        I18nEntity entity = get(type);
         return entity != null ?
-                LanguageHelper.translateToLocal("item.monsterPlacer.name", locale) + " "
-                        + LanguageHelper.translateToLocal(entity.getUnlocalizedName(), locale)
-                : LanguageHelper.translateToLocal("item.monsterPlacer.name", locale);
+                I18nUtils.translateToLocal("item.monsterPlacer.name", locale) + " "
+                        + I18nUtils.translateToLocal(entity.getUnlocalizedName(), locale)
+                : I18nUtils.translateToLocal("item.monsterPlacer.name", locale);
     }
 
     /**

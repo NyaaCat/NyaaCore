@@ -5,7 +5,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class NyaaCoreLoader extends JavaPlugin {
     @Override
     public void onLoad() {
-        Internationalization.loadInternalMap(this);
+        LanguageRepository.initInternalMap(this);
     }
 
     @Override
