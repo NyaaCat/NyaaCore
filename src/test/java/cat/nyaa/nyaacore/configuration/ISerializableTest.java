@@ -4,8 +4,11 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.junit.Test;
 
 import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class ISerializableTest {
     @Test
@@ -24,6 +27,36 @@ public class ISerializableTest {
         for (int i=0;i<=9;i++) {
             for (int j=0;j<=9;j++)
                 assertEquals((long)(i*10+j), (long)obj2.nestedList.get(Integer.toString(i,2)).get(j));
+        }
+    }
+
+    static class Test2Class implements ISerializable {
+        @Serializable
+        List<Object> objs = new ArrayList<>();
+
+        Test2Class() {
+            objs.add(new DataObject());
+            objs.add(new DataObject());
+            objs.add(new DataObject.NestedObject());
+        }
+    }
+
+    @Test
+    public void test2() throws Exception {
+        YamlConfiguration cfg = new YamlConfiguration();
+        Test2Class cls = new Test2Class();
+        ((DataObject) cls.objs.get(1)).fillNestedList();
+        cls.serialize(cfg);
+        //System.out.println(cfg.saveToString());
+        cls.objs = null;
+        cls.deserialize(YamlConfiguration.loadConfiguration(new StringReader(cfg.saveToString())));
+        assertTrue(List.class.isAssignableFrom(cls.objs.getClass()));
+        assertEquals(DataObject.class, cls.objs.get(0).getClass());
+        assertEquals(DataObject.class, cls.objs.get(1).getClass());
+        assertEquals(DataObject.NestedObject.class, cls.objs.get(2).getClass());
+        for (int i = 0; i <= 9; i++) {
+            for (int j = 0; j <= 9; j++)
+                assertEquals((long) (i * 10 + j), (long) ((DataObject) cls.objs.get(1)).nestedList.get(Integer.toString(i, 2)).get(j));
         }
     }
 }

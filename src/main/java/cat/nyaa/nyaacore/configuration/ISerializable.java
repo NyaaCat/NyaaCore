@@ -2,12 +2,14 @@ package cat.nyaa.nyaacore.configuration;
 
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -86,6 +88,32 @@ public interface ISerializable {
 
     String TYPE_KEY = "__class__";
 
+    // returns a list can be directly set() into configsection
+    // All nested complex objects are converted to primitive configsection
+    static List<Object> asPrimitiveList(List<?> list) {
+        if (list == null) throw new IllegalArgumentException();
+        List<Object> primitiveList = new ArrayList<>();
+        for (Object o : list) {
+            if (o == null) continue;
+            if (o instanceof ISerializable) {
+                YamlConfiguration tmp = new YamlConfiguration();
+                pushSerializable(tmp, (ISerializable) o);
+                primitiveList.add(tmp);
+            } else if (o instanceof Map) {
+                YamlConfiguration tmp = new YamlConfiguration();
+                pushMap(tmp, (Map) o);
+                primitiveList.add(tmp);
+            } else if (o instanceof List) {
+                primitiveList.add(asPrimitiveList((List) o));
+            } else if (o instanceof Enum) {
+                throw new IllegalArgumentException("Enum type not allowed in nested list");
+            } else {
+                primitiveList.add(o);
+            }
+        }
+        return primitiveList;
+    }
+
     // push primitive objects then dispatch complex objects into corresponding methods
     static void pushMap(ConfigurationSection config, Map<?, ?> map) {
         for (Map.Entry<?, ?> e : map.entrySet()) {
@@ -100,7 +128,7 @@ public interface ISerializable {
             } else if (obj instanceof Map) {
                 pushMap(config.createSection(key), (Map<?, ?>) obj);
             } else if (obj instanceof List) {
-                config.set(key, obj);
+                config.set(key, asPrimitiveList((List) obj));
                 //throw new IllegalArgumentException("List serialization not implemented");
             } else if (obj instanceof Enum) {
                 config.set(key, ((Enum) obj).name());
@@ -161,6 +189,7 @@ public interface ISerializable {
 
     // dump all items in the config section into the map, recursively
     // all returned objects are primitive
+    // NOTE: also contains primitive lists
     static Map<String, ?> popPrimitiveMap(ConfigurationSection config) {
         Map<String, Object> map = new HashMap<>();
         for (String key : config.getKeys(false)) {
@@ -233,6 +262,11 @@ public interface ISerializable {
                     if (!(newPrimitiveValue instanceof Map))
                         throw new IllegalArgumentException("Config field require a map object: " + f.toString());
                     newValue = constructNonPrimitiveMap((Map) newPrimitiveValue);
+                }
+                if (List.class.isAssignableFrom(f.getType())) {
+                    if (!(newPrimitiveValue instanceof List))
+                        throw new IllegalArgumentException("Config field require a list object: " + f.toString());
+                    newValue = constructNonPrimitiveList((List) newPrimitiveValue);
                 } else if (ISerializable.class.isAssignableFrom(f.getType())) {
                     if (!(newPrimitiveValue instanceof Map))
                         throw new IllegalArgumentException("Config field require a map object: " + f.toString());
@@ -282,7 +316,7 @@ public interface ISerializable {
         for (Object key : primitiveMap.keySet()) {
             Object obj = primitiveMap.get(key);
             if (obj instanceof List) {
-                nonPrimitiveMap.put(key, obj);
+                nonPrimitiveMap.put(key, constructNonPrimitiveList((List) obj));
                 //throw new IllegalArgumentException("List deserialization not supported");
             } else if (obj instanceof Map) {
                 nonPrimitiveMap.put(key, constructNonPrimitiveMap((Map) obj));
@@ -291,5 +325,19 @@ public interface ISerializable {
             }
         }
         return nonPrimitiveMap;
+    }
+
+    static Object constructNonPrimitiveList(List primitiveList) {
+        List<Object> nonPrimitiveList = new ArrayList<>();
+        for (Object primitive : primitiveList) {
+            if (primitive instanceof List) {
+                nonPrimitiveList.add(constructNonPrimitiveList((List) primitive));
+            } else if (primitive instanceof Map) {
+                nonPrimitiveList.add(constructNonPrimitiveMap((Map) primitive));
+            } else {
+                nonPrimitiveList.add(primitive);
+            }
+        }
+        return nonPrimitiveList;
     }
 }
