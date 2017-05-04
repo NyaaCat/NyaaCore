@@ -8,6 +8,7 @@ import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.block.BlockState;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.InventoryHolder;
@@ -15,6 +16,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.permissions.Permission;
 import org.librazy.nyaautils_lang_checker.LangKey;
 
 import java.lang.reflect.Constructor;
@@ -23,6 +25,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Predicate;
 
 public class Message {
     public final BaseComponent inner;
@@ -131,12 +134,36 @@ public class Message {
         return this;
     }
 
-    public Message broadcast(String permission) {
+    public Message broadcast(Permission permission) {
         for (Player player : Bukkit.getOnlinePlayers()) {
             if (player.hasPermission(permission)) {
                 this.send(player);
             }
         }
+        Bukkit.getConsoleSender().sendMessage(inner.toLegacyText());
+        Bukkit.getConsoleSender().sendMessage("broadcast to players with permission:" + permission);
+        return this;
+    }
+
+    public Message broadcast(World world) {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            if (player.getLocation().getWorld().equals(world)) {
+                this.send(player);
+            }
+        }
+        Bukkit.getConsoleSender().sendMessage(inner.toLegacyText());
+        Bukkit.getConsoleSender().sendMessage("broadcast to world:" + world.getName());
+        return this;
+    }
+
+    public Message broadcast(Predicate<Player> playerFilter) {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            if (playerFilter.test(player)) {
+                this.send(player);
+            }
+        }
+        Bukkit.getConsoleSender().sendMessage(inner.toLegacyText());
+        Bukkit.getConsoleSender().sendMessage("broadcast with filter:" + playerFilter.toString());
         return this;
     }
 
