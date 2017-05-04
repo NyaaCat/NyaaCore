@@ -156,10 +156,10 @@ public class Message {
         return this;
     }
 
-    public Message broadcast(Predicate<Player> playerFilter) {
+    public Message broadcast(MessageType type, Predicate<Player> playerFilter) {
         for (Player player : Bukkit.getOnlinePlayers()) {
             if (playerFilter.test(player)) {
-                this.send(player);
+                this.send(player, type);
             }
         }
         Bukkit.getConsoleSender().sendMessage(inner.toLegacyText());
