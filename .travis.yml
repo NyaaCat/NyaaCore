@@ -33,5 +33,5 @@ deploy:
   api_key: $GITHUB_OAUTH_TOKEN
   file: ./NyaaCore-$PLUGIN_VERSION.$TRAVIS_BUILD_NUMBER-mc$MC_VERSION.jar
   on:
-    tags: true
+    tags: false
     all_branches: true
