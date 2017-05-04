@@ -50,3 +50,19 @@ dependencies {
 compileJava {
     options.compilerArgs += ["-Xplugin:NyaaUtilsLangAnnotationProcessor"]
 }
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            groupId "cat.nyaa"
+            artifactId "nyaacore"
+            version '2.0-SNAPSHOT'
+            from components.java
+        }
+    }
+    repositories {
+        maven {
+            url "$buildDir/repo"
+        }
+    }
+}
