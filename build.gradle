@@ -6,7 +6,6 @@ plugins {
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
-archivesBaseName = 'NyaaCore-mc1.11.2'
 
 repositories {
     jcenter()
