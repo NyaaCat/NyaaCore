@@ -205,6 +205,31 @@ public interface ISerializable {
         return map;
     }
 
+    /**
+     * Similar to {@link Map#get(Object)}
+     * But the key is dot-separated and the map may be nested.
+     * @return null if not found
+     */
+    static Object searchMap(Map map, String key) {
+        if (map == null || key == null || "".equals(key)) return null;
+        if (!key.contains(".")) return map.get(key);
+        if (key.charAt(0) == '.' || key.charAt(key.length()-1) == '.') throw new IllegalArgumentException();
+        String prefix = "";
+        String[] seg = key.split("\\.");
+        for (int i=0;i<seg.length-1;i++) {
+            prefix += seg[i];
+            if (map.containsKey(prefix)) {
+                Object obj = map.get(prefix);
+                if (obj instanceof Map) {
+                    return searchMap((Map)obj, key.substring(prefix.length()+1));
+                } else {
+                    return null;
+                }
+            }
+            prefix += ".";
+        }
+        return map.get(key);
+    }
     // deserialize ISerializable from primitive map
     // Also deals with StandaloneConfig
     static void popSerializable(Map<String, ?> primitiveMap, ISerializable serializable) {
@@ -233,29 +258,18 @@ public interface ISerializable {
             Serializable anno = f.getAnnotation(Serializable.class);
             if (anno == null || anno.manualSerialization()) continue;
             f.setAccessible(true);
-            String cfgName = anno.name().equals("") ? f.getName() : anno.name();
+            //String cfgName = anno.name().equals("") ? f.getName() : anno.name();
             try {
-                Object origValue = f.get(serializable);
+                //Object origValue = f.get(serializable);
                 Object newPrimitiveValue = null;
-                boolean hasValue = false;
                 for (String key : anno.alias()) {
-                    if (primitiveMap.containsKey(key)) {
-                        newPrimitiveValue = primitiveMap.get(key);
-                        hasValue = true;
-                        break;
-                    }
+                    newPrimitiveValue = searchMap(primitiveMap, key);
+                    if (newPrimitiveValue != null) break;
                 }
-                if (!hasValue && primitiveMap.containsKey(f.getName())) {
-                    newPrimitiveValue = primitiveMap.get(f.getName());
-                    hasValue = true;
-                }
-                if (!hasValue && anno.name().length() > 0 && primitiveMap.containsKey(anno.name())) {
-                    newPrimitiveValue = primitiveMap.get(anno.name());
-                    hasValue = true;
-                }
-                if (!hasValue) {
-                    continue;
-                }
+                if (newPrimitiveValue == null) newPrimitiveValue = searchMap(primitiveMap, f.getName());
+                if (newPrimitiveValue == null && anno.name().length() > 0)
+                    newPrimitiveValue = searchMap(primitiveMap, anno.name());
+                if (newPrimitiveValue == null) continue;
 
                 Object newValue = null;
                 if (Map.class.isAssignableFrom(f.getType())) {

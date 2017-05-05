@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 public class ISerializableTest {
@@ -58,5 +59,20 @@ public class ISerializableTest {
             for (int j = 0; j <= 9; j++)
                 assertEquals((long) (i * 10 + j), (long) ((DataObject) cls.objs.get(1)).nestedList.get(Integer.toString(i, 2)).get(j));
         }
+    }
+
+    static class Test3Class implements ISerializable {
+        @Serializable(name = "object.nested.double")
+        DataObject.NestedObject obj = new DataObject.NestedObject();
+    }
+
+    @Test
+    public void test3() throws Exception {
+        YamlConfiguration cfg = new YamlConfiguration();
+        Test3Class cls = new Test3Class();
+        cls.serialize(cfg);
+        cls.obj = null;
+        cls.deserialize(cfg);
+        assertNotNull(cls.obj);
     }
 }
