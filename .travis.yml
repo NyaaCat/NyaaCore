@@ -26,8 +26,8 @@ cache:
     - $HOME/.gradle/caches/
     - $HOME/.gradle/wrapper/
 before_deploy:
-- cp build/libs/NyaaCore.jar ./NyaaCore-$PLUGIN_VERSION.$TRAVIS_BUILD_NUMBER-mc$MC_VERSION.jar
-- export GIT_TAG=$PLUGIN_VERSION.$TRAVIS_BUILD_NUMBER-mc$MC_VERSION
+- cp build/libs/NyaaCore.jar ./NyaaCore-v$PLUGIN_VERSION.$TRAVIS_BUILD_NUMBER-mc$MC_VERSION.jar
+- export GIT_TAG=v$PLUGIN_VERSION.$TRAVIS_BUILD_NUMBER-mc$MC_VERSION
 - export GIT_ORIGIN_URL=`git config --get remote.origin.url`
 - git tag $GIT_TAG -a -m "Generated tag from TravisCI for build $TRAVIS_BUILD_NUMBER"
 - git config credential.helper "store --file=.git/credentials"
@@ -50,7 +50,7 @@ deploy:
   provider: releases
   prerelease: true
   api_key: $GITHUB_OAUTH_TOKEN
-  file: ./NyaaCore-$PLUGIN_VERSION.$TRAVIS_BUILD_NUMBER-mc$MC_VERSION.jar
+  file: ./NyaaCore-v$PLUGIN_VERSION.$TRAVIS_BUILD_NUMBER-mc$MC_VERSION.jar
   on:
     tags: false
     all_branches: true
