@@ -2,8 +2,7 @@
 Common library used for all NyaaCat plugin.  
 Provides infrastructures to simplify plugin development.
 
-Current version: Minecraft 1.11.2
-
+[![Build Status](https://travis-ci.org/NyaaCat/NyaaCore.svg?branch=master)](https://travis-ci.org/NyaaCat/NyaaCore)
 ## Component List
 
 - Annotation based command dispatcher
