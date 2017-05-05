@@ -6,6 +6,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.librazy.nyaautils_lang_checker.LangKey;
+import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
 import java.io.IOException;
@@ -69,13 +70,37 @@ public abstract class LanguageRepository {
      */
     protected abstract String getLanguage();
 
+    private static NyaaCoreLoader corePlugin = null;
+
+    // helper function to load language map
+    private static void loadResourceMap(JavaPlugin plugin, String codeName,
+                                        Map<String, String> targetMap, boolean ignoreInternal, boolean ignoreNormal) {
+        if (plugin == null || codeName == null || targetMap == null) throw new IllegalArgumentException();
+        InputStream stream = plugin.getResource("lang/" + codeName + ".yml");
+        if (stream != null) {
+            YamlConfiguration section = YamlConfiguration.loadConfiguration(new InputStreamReader(stream));
+            loadLanguageSection(targetMap, section, "", ignoreInternal, ignoreNormal);
+        }
+    }
+
+    // helper function to load language map
+    private static void loadLocalMap(JavaPlugin plugin, String codeName,
+                                        Map<String, String> targetMap, boolean ignoreInternal, boolean ignoreNormal) {
+        if (plugin == null || codeName == null || targetMap == null) throw new IllegalArgumentException();
+        if (Boolean.parseBoolean(System.getProperty("nyaautils.i18n.refreshLangFiles", "false"))) return;
+        File langFile = new File(plugin.getDataFolder(), codeName + ".yml");
+        if (langFile.exists() && langFile.isFile()) {
+            YamlConfiguration section = YamlConfiguration.loadConfiguration(langFile);
+            loadLanguageSection(targetMap, section, "", ignoreInternal, ignoreNormal);
+        }
+    }
+
     /**
      * Load the internal map
      * should only be called once from {@link NyaaCoreLoader#onLoad()}
      *
      * @param plugin the NyaaCore plugin
      */
-    private static NyaaCoreLoader corePlugin = null;
     public static void initInternalMap(NyaaCoreLoader plugin) {
         if (internalMap.size() != 0 || corePlugin != null) {
             plugin.getLogger().warning("Multiple internalMap initiation");
@@ -86,18 +111,10 @@ public abstract class LanguageRepository {
             String codeName = lang.codeName;
             Map<String, String> map = new HashMap<>();
             internalMap.put(codeName, map);
-            InputStream stream;
-            YamlConfiguration section;
-            stream = plugin.getResource("lang/" + DEFAULT_LANGUAGE + ".yml");
-            if (stream != null) {
-                section = YamlConfiguration.loadConfiguration(new InputStreamReader(stream));
-                loadLanguageSection(map, section, "", false, true);
-            }
-            stream = plugin.getResource("lang/" + codeName + ".yml");
-            if (stream != null) {
-                section = YamlConfiguration.loadConfiguration(new InputStreamReader(stream));
-                loadLanguageSection(map, section, "", false, true);
-            }
+            loadResourceMap(plugin, DEFAULT_LANGUAGE, map, false, true);
+            loadLocalMap(plugin, DEFAULT_LANGUAGE, map, false, true);
+            loadResourceMap(plugin, codeName, map, false, true);
+            loadLocalMap(plugin, codeName, map, false, true);
             plugin.getLogger().info(String.format("NyaaCore internalMap loaded: %s", codeName));
         }
     }
@@ -112,36 +129,15 @@ public abstract class LanguageRepository {
         if (codeName == null) codeName = DEFAULT_LANGUAGE;
         map.clear();
         // load languages
-        InputStream stream;
-        YamlConfiguration section;
-        stream = corePlugin.getResource("lang/" + DEFAULT_LANGUAGE + ".yml");
-        if (stream != null) {
-            section = YamlConfiguration.loadConfiguration(new InputStreamReader(stream));
-            loadLanguageSection(map, section, "", true, false);
-        }
-        stream = corePlugin.getResource("lang/" + codeName + ".yml");
-        if (stream != null) {
-            section = YamlConfiguration.loadConfiguration(new InputStreamReader(stream));
-            loadLanguageSection(map, section, "", true, false);
-        }
+        loadResourceMap(corePlugin, DEFAULT_LANGUAGE, map, true, false);
+        loadLocalMap(corePlugin, DEFAULT_LANGUAGE, map, true, false);
+        loadResourceMap(corePlugin, codeName, map, true, false);
+        loadLocalMap(corePlugin, codeName, map, true, false);
 
-        stream = plugin.getResource("lang/" + DEFAULT_LANGUAGE + ".yml");
-        if (stream != null) {
-            section = YamlConfiguration.loadConfiguration(new InputStreamReader(stream));
-            loadLanguageSection(map, section, "", false, false);
-        }
-        stream = plugin.getResource("lang/" + codeName + ".yml");
-        if (stream != null) {
-            section = YamlConfiguration.loadConfiguration(new InputStreamReader(stream));
-            loadLanguageSection(map, section, "", false, false);
-        }
-
-        if ("false".equals(System.getProperty("nyaautils.i18n.refreshLangFiles", "false"))) { // Do not refresh, so still loading from dataFolder
-            File localLangFile = new File(plugin.getDataFolder(), codeName + ".yml");
-            if (localLangFile.exists() && localLangFile.isFile()) {
-                loadLanguageSection(map, YamlConfiguration.loadConfiguration(localLangFile), "", false, false);
-            }
-        }
+        loadResourceMap(getPlugin(), DEFAULT_LANGUAGE, map, false, false);
+        loadLocalMap(getPlugin(), DEFAULT_LANGUAGE, map, false, false);
+        loadResourceMap(getPlugin(), codeName, map, false, false);
+        loadLocalMap(getPlugin(), codeName, map, false, false);
 
         // save (probably) modified language file back to disk
         File localLangFile = new File(plugin.getDataFolder(), codeName + ".yml");
