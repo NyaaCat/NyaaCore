@@ -2,7 +2,6 @@ name: NyaaCore
 main: cat.nyaa.nyaacore.NyaaCoreLoader
 description: "Code infrastructure for all NyaaCat plugins."
 version: 2.0
-depend: [Vault,WorldEdit,Essentials]
-softdepend: [LockettePro]
+depend: [Vault]
 authors: [RecursiveG,Librazy]
 website: "https://github.com/NyaaCat/NyaaCore"

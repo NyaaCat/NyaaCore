@@ -25,11 +25,6 @@ repositories {
     }
 
     maven {
-        name 'sk89q'
-        url 'http://maven.sk89q.com/artifactory/repo/'
-    }
-
-    maven {
         name 'vault-repo'
         url 'http://nexus.hc.to/content/repositories/pub_releases'
     }
@@ -43,9 +38,6 @@ repositories {
 dependencies {
     compile 'org.spigotmc:spigot-api:1.11.2-R0.1-SNAPSHOT'
     compile 'net.milkbowl.vault:VaultAPI:1.6'
-    compile files('lib/LocketteProAPI.jar')
-    compile files('lib/EssentialsX-2.0.1-468.jar')
-    compile 'com.sk89q.worldedit:worldedit-bukkit:6.1.5'
     compile 'org.librazy:NyaaUtilsLangChecker:1.0-SNAPSHOT'
     processor 'org.librazy:NyaaUtilsLangChecker:1.0-SNAPSHOT'
 }
