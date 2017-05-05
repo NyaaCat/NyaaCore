@@ -181,10 +181,10 @@ public abstract class LanguageRepository {
     public String get(@LangKey String key, Object... para) {
         String val = map.get(key);
         if (val == null && key.startsWith("internal.") && internalMap.containsKey(getLanguage())) {
-            internalMap.get(getLanguage()).get(key);
+            val = internalMap.get(getLanguage()).get(key);
         }
         if (val == null && key.startsWith("internal.")) {
-            internalMap.get(DEFAULT_LANGUAGE).get(key);
+            val = internalMap.get(DEFAULT_LANGUAGE).get(key);
         }
         if (val == null) {
             getPlugin().getLogger().warning("Missing language key: " + key);
