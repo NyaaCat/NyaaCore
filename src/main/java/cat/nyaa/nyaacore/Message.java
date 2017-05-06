@@ -10,6 +10,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.BlockState;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
@@ -105,8 +106,13 @@ public class Message {
         return this;
     }
 
-    public Message send(Player p) {
-        return send(p, MessageType.CHAT);
+    public Message send(CommandSender p) {
+        if(p instanceof Player){
+            return send((Player) p, MessageType.CHAT);
+        } else {
+            p.sendMessage(this.inner.toLegacyText());
+            return this;
+        }
     }
 
     public Message send(Player p, MessageType type) {
