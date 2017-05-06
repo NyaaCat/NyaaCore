@@ -61,12 +61,12 @@ public abstract class CommandReceiver<T extends JavaPlugin> implements CommandEx
          * @param msg_internal msg template key. e.g. `internal.warn.***'
          * @param args         arguments
          */
-        public BadCommandException(String msg_internal, Object... args) {
+        public BadCommandException(@LangKey String msg_internal, Object... args) {
             super(msg_internal);
             objs = args;
         }
 
-        public BadCommandException(String msg_internal, Throwable cause, Object... args) {
+        public BadCommandException(@LangKey(varArgsPosition = 1) String msg_internal, Throwable cause, Object... args) {
             super(msg_internal, cause);
             objs = args;
         }
@@ -200,7 +200,7 @@ public abstract class CommandReceiver<T extends JavaPlugin> implements CommandEx
         } catch (NoItemInHandException ex) {
             msg(sender, ex.isOffHand ? "internal.error.no_item_offhand" : "internal.error.no_item_hand");
         } catch (BadCommandException ex) {
-            @LangKey String msg = ex.getMessage();
+            @LangKey(skipCheck = true) String msg = ex.getMessage();
             if (msg != null && !msg.equals("")) {
                 if (ex.objs == null) {
                     msg(sender, msg);
@@ -254,7 +254,7 @@ public abstract class CommandReceiver<T extends JavaPlugin> implements CommandEx
     public abstract String getHelpPrefix();
 
     private String getHelpContent(@LangKey(type = LangKeyType.SUFFIX, skipCheck = true) String type, String... subkeys) {
-        @LangKey String key = "manual";
+        @LangKey(type = LangKeyType.PREFIX, skipCheck = true) String key = "manual";
         for (String s : subkeys) {
             if (s.length() > 0)
                 key += "." + s;

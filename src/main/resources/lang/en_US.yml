@@ -12,10 +12,10 @@ internal:
     no_required_permission: "You do not have the required permission: %s"
     invalid_command_arg: "Invalid command line arguments."
 
-    bad_int: "Not a valid integer"
-    bad_double: "Not a valid number"
+    bad_int: "Not a valid integer: %s"
+    bad_double: "Not a valid number: %s"
     bad_enum: "Not valid for enum type: %s. Values: %s"
-    bad_decimal_pattern: "Not a valid pattern"
+    bad_decimal_pattern: "Not a valid pattern: %s"
 
     no_more_int: "No more integers in argument"
     no_more_double: "No more numbers in argument"
