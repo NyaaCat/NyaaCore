@@ -15,6 +15,7 @@ import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.IllegalFormatConversionException;
 import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * To be extended by each plugin
@@ -178,7 +179,17 @@ public abstract class LanguageRepository {
         }
     }
 
+    /**
+     * @deprecated rename to getFormatted
+     */
     public String get(@LangKey String key, Object... para) {
+        return getFormatted(key, para);
+    }
+
+    /**
+     * Get the language item then format with `para` by {@link String#format(String, Object...)}
+     */
+    public String getFormatted(@LangKey String key, Object... para) {
         String val = map.get(key);
         if (val == null && key.startsWith("internal.") && internalMap.containsKey(getLanguage())) {
             val = internalMap.get(getLanguage()).get(key);
@@ -208,6 +219,53 @@ public abstract class LanguageRepository {
                 getPlugin().getLogger().warning("params: " + params);
                 return "CORRUPTED_LANG<" + key + ">" + params;
             }
+        }
+    }
+
+    /**
+     * Called this way: `getSubstituted(languageKey, "key1", value1, "key2", value2, ...)`
+     * {@link Object#toString()} will be called on non-string objects
+     * `null` key-value pair will be ignored
+     */
+    public String getSubstituted(@LangKey String key, Object... param) {
+        if (key == null || param == null || (param.length%2) != 0) throw new IllegalArgumentException();
+        Map<Object, Object> map = new HashMap<>();
+        for (int i = 0;i<param.length/2;i++) {
+            if (param[i*2] != null && param[i*2+1]!=null) {
+                map.put(param[i*2], param[i*2+1]);
+            }
+        }
+        return getSubstituted(key, map);
+    }
+
+    /**
+     * Get the language item specified by `key`
+     * Then substitute all `{{paraName}}` with `paraValue`
+     * CAVEAT: Replacement occur in arbitrary order.
+     * @param key language item key
+     * @param paraMap parameters map, no null key/value allowed
+     * @return substituted language item
+     */
+    public String getSubstituted(@LangKey String key, Map<?,?> paraMap) {
+        String val = map.get(key);
+        if (val == null && key.startsWith("internal.") && internalMap.containsKey(getLanguage())) {
+            val = internalMap.get(getLanguage()).get(key);
+        }
+        if (val == null && key.startsWith("internal.")) {
+            val = internalMap.get(DEFAULT_LANGUAGE).get(key);
+        }
+        if (val == null) {
+            getPlugin().getLogger().warning("Missing language key: " + key);
+            StringBuilder keyBuilder = new StringBuilder("MISSING_LANG<" + key + ">");
+            for (Map.Entry<?,?> e : paraMap.entrySet()) {
+                keyBuilder.append("#<").append(e.getKey().toString()).append(":").append(e.getValue().toString()).append(">");
+            }
+            return keyBuilder.toString();
+        } else {
+            for (Map.Entry<?,?> e : paraMap.entrySet()) {
+                val = val.replace("{{" + e.getKey().toString() + "}}", e.getValue().toString());
+            }
+            return val;
         }
     }
 
