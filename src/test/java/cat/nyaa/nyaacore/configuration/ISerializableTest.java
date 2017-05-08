@@ -4,75 +4,156 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.junit.Test;
 
 import java.io.StringReader;
-import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 public class ISerializableTest {
-    @Test
-    public void test1() throws Exception {
-        YamlConfiguration cfg = new YamlConfiguration();
-        DataObject obj1 = new DataObject();
-        DataObject obj2 = new DataObject();
-        obj1.fillNestedList();
-        obj1.serialize(cfg);
-        String yml = cfg.saveToString();
-        final String ans = "str: The quick brown fox jumps over the lazy dog\n__class__: cat.nyaa.nyaacore.configuration.DataObject\nnumber_int: 42\nnumber_long: 42\nenum_1: VALUE_A\nenum_2: LEAVES\nmap:\n  key1: value1\n  key2: value2\n  key3: value3\n  key4: value4\nanotherDataObject:\n  x: 42\n  __class__: cat.nyaa.nyaacore.configuration.DataObject$NestedObject\n  d: 42.42\nmapOfDataObject:\n  obj2:\n    x: 42\n    __class__: cat.nyaa.nyaacore.configuration.DataObject$NestedObject\n    d: 42.42\n  obj1:\n    x: 42\n    __class__: cat.nyaa.nyaacore.configuration.DataObject$NestedObject\n    d: 42.42\nnestedList:\n  '0':\n  - 0\n  - 1\n  - 2\n  - 3\n  - 4\n  - 5\n  - 6\n  - 7\n  - 8\n  - 9\n  '11':\n  - 30\n  - 31\n  - 32\n  - 33\n  - 34\n  - 35\n  - 36\n  - 37\n  - 38\n  - 39\n  '110':\n  - 60\n  - 61\n  - 62\n  - 63\n  - 64\n  - 65\n  - 66\n  - 67\n  - 68\n  - 69\n  '1':\n  - 10\n  - 11\n  - 12\n  - 13\n  - 14\n  - 15\n  - 16\n  - 17\n  - 18\n  - 19\n  '100':\n  - 40\n  - 41\n  - 42\n  - 43\n  - 44\n  - 45\n  - 46\n  - 47\n  - 48\n  - 49\n  '111':\n  - 70\n  - 71\n  - 72\n  - 73\n  - 74\n  - 75\n  - 76\n  - 77\n  - 78\n  - 79\n  '101':\n  - 50\n  - 51\n  - 52\n  - 53\n  - 54\n  - 55\n  - 56\n  - 57\n  - 58\n  - 59\n  '1001':\n  - 90\n  - 91\n  - 92\n  - 93\n  - 94\n  - 95\n  - 96\n  - 97\n  - 98\n  - 99\n  '1000':\n  - 80\n  - 81\n  - 82\n  - 83\n  - 84\n  - 85\n  - 86\n  - 87\n  - 88\n  - 89\n  '10':\n  - 20\n  - 21\n  - 22\n  - 23\n  - 24\n  - 25\n  - 26\n  - 27\n  - 28\n  - 29\n";
-        assertEquals(ans, yml);
+    private static final boolean enable_print = false;
+    //private static final boolean enable_print = true;
 
-        YamlConfiguration parse = YamlConfiguration.loadConfiguration(new StringReader(yml));
-        obj2.deserialize(parse);
-        for (int i=0;i<=9;i++) {
-            for (int j=0;j<=9;j++)
-                assertEquals((long)(i*10+j), (long)obj2.nestedList.get(Integer.toString(i,2)).get(j));
+    private <T extends ISerializable> T process(T obj) throws ReflectiveOperationException{
+        YamlConfiguration cfg = new YamlConfiguration();
+        obj.serialize(cfg);
+        T newObj = (T)obj.getClass().newInstance();
+        if (enable_print) System.out.println(cfg.saveToString());
+        newObj.deserialize(YamlConfiguration.loadConfiguration(new StringReader(cfg.saveToString())));
+        return newObj;
+    }
+
+    private void print(ISerializable obj) {
+        if (!enable_print) return;
+        YamlConfiguration cfg = new YamlConfiguration();
+        obj.serialize(cfg);
+        System.out.println(cfg.saveToString());
+    }
+
+    public static enum TestEnum {
+        VALUE_A,
+        VALUE_B,
+        VALUE_C,
+        VALUE_D,
+        VALUE_E;
+    }
+
+    public static class Test1Class implements ISerializable {
+        @Serializable
+        public Integer i;
+        @Serializable
+        public Double d;
+        @Serializable
+        public String s;
+        @Serializable
+        public TestEnum e;
+
+        public Test1Class fill() {
+            i = 42;
+            d = 42.42;
+            s = "42";
+            e = TestEnum.VALUE_D;
+            return this;
+        }
+
+        public void assertEq() {
+            assertEquals((Integer)42, i);
+            assertEquals((Double)42.42, d);
+            assertEquals("42", s);
+            assertEquals(TestEnum.VALUE_D, e);
         }
     }
 
-    static class Test2Class implements ISerializable {
-        @Serializable
-        List<Object> objs = new ArrayList<>();
+    @Test
+    public void test1() throws Exception {
+        process(new Test1Class().fill()).assertEq();
+    }
 
-        Test2Class() {
-            objs.add(new DataObject());
-            objs.add(new DataObject());
-            objs.add(new DataObject.NestedObject());
-        }
+    static class Test2Class implements ISerializable {
+        @Serializable(name = "object.nested.double")
+        Test1Class obj;
     }
 
     @Test
     public void test2() throws Exception {
-        YamlConfiguration cfg = new YamlConfiguration();
-        Test2Class cls = new Test2Class();
-        ((DataObject) cls.objs.get(1)).fillNestedList();
-        cls.serialize(cfg);
-        //System.out.println(cfg.saveToString());
-        cls.objs = null;
-        cls.deserialize(YamlConfiguration.loadConfiguration(new StringReader(cfg.saveToString())));
-        assertTrue(List.class.isAssignableFrom(cls.objs.getClass()));
-        assertEquals(DataObject.class, cls.objs.get(0).getClass());
-        assertEquals(DataObject.class, cls.objs.get(1).getClass());
-        assertEquals(DataObject.NestedObject.class, cls.objs.get(2).getClass());
-        for (int i = 0; i <= 9; i++) {
-            for (int j = 0; j <= 9; j++)
-                assertEquals((long) (i * 10 + j), (long) ((DataObject) cls.objs.get(1)).nestedList.get(Integer.toString(i, 2)).get(j));
-        }
+        Test2Class obj = new Test2Class();
+        obj.obj = new Test1Class().fill();
+        Test2Class n = process(obj);
+        assertNotNull(n);
+        assertNotNull(n.obj);
+        assertEquals(Test2Class.class, n.getClass());
+        n.obj.assertEq();
     }
 
     static class Test3Class implements ISerializable {
-        @Serializable(name = "object.nested.double")
-        DataObject.NestedObject obj = new DataObject.NestedObject();
+        @Serializable
+        List<Test1Class> list;
     }
 
     @Test
     public void test3() throws Exception {
-        YamlConfiguration cfg = new YamlConfiguration();
-        Test3Class cls = new Test3Class();
-        cls.serialize(cfg);
-        cls.obj = null;
-        cls.deserialize(cfg);
-        assertNotNull(cls.obj);
+        Test3Class o = new Test3Class();
+        o.list = new LinkedList<>();
+        for (int i = 0;i<5;i++) o.list.add(new Test1Class().fill());
+        Test3Class n = process(o);
+        assertEquals(5, o.list.size());
+        for (int i = 0;i<5;i++) n.list.get(i).assertEq();
+    }
+
+    static class Test4Class implements ISerializable {
+        @Serializable
+        int depth;
+        @Serializable
+        Test4Class nested;
+        public Test4Class() {}
+        public Test4Class(int depth) {
+            this.depth = depth;
+            if (depth > 0) {
+                nested = new Test4Class(depth - 1);
+            }
+        }
+
+        public void check(int depth) {
+            assertEquals(depth, this.depth);
+            if (depth > 0) {
+                assertNotNull(nested);
+                nested.check(depth - 1);
+            }
+        }
+    }
+
+    @Test
+    public void test4() throws Exception {
+        process(new Test4Class(10)).check(10);
+    }
+
+    static class Test5Class implements ISerializable {
+        @Serializable
+        int depth;
+        @Serializable
+        List<Test5Class> nested;
+        public Test5Class() {}
+        public Test5Class(int depth) {
+            this.depth = depth;
+            if (depth > 0) {
+                nested = Collections.singletonList(new Test5Class(depth - 1));
+            }
+        }
+
+        public void check(int depth) {
+            assertEquals(depth, this.depth);
+            if (depth > 0) {
+                assertNotNull(nested);
+                assertEquals(1, nested.size());
+                nested.get(0).check(depth - 1);
+            }
+        }
+    }
+
+    @Test
+    public void test5() throws Exception {
+        process(new Test5Class(10)).check(10);
     }
 }
+

@@ -97,11 +97,12 @@ public interface ISerializable {
             if (o == null) continue;
             if (o instanceof ISerializable) {
                 YamlConfiguration tmp = new YamlConfiguration();
+                tmp.set(TYPE_KEY, o.getClass().getName());
                 pushSerializable(tmp, (ISerializable) o);
                 primitiveList.add(tmp);
             } else if (o instanceof Map) {
                 YamlConfiguration tmp = new YamlConfiguration();
-                pushMap(tmp, (Map) o);
+                pushMap(tmp, (Map) o, false);
                 primitiveList.add(tmp);
             } else if (o instanceof List) {
                 primitiveList.add(asPrimitiveList((List) o));
@@ -114,8 +115,15 @@ public interface ISerializable {
         return primitiveList;
     }
 
-    // push primitive objects then dispatch complex objects into corresponding methods
-    static void pushMap(ConfigurationSection config, Map<?, ?> map) {
+    /**
+     * push primitive objects then dispatch complex objects into corresponding methods
+     * @param config the ConfigurationSection to be pushed into.
+     * @param map the String-Object map
+     * @param belongsToISerializable If the map is the shadowMap of some ISerializable.
+     *                               If it is, nested ISerializable objects do not needs type hint
+     *                               as class field indicates the correct type.
+     */
+    static void pushMap(ConfigurationSection config, Map<?, ?> map, boolean belongsToISerializable) {
         for (Map.Entry<?, ?> e : map.entrySet()) {
             if (!(e.getKey() instanceof String)) {
                 throw new IllegalArgumentException("Map key is not string: " + e.getKey().toString());
@@ -124,9 +132,11 @@ public interface ISerializable {
             Object obj = e.getValue();
             if (obj == null) continue;
             if (obj instanceof ISerializable) {
-                ((ISerializable) obj).serialize(config.createSection(key));
+                ConfigurationSection section = config.createSection(key);
+                if (!belongsToISerializable) section.set(TYPE_KEY, obj.getClass().getName());
+                ((ISerializable) obj).serialize(section);
             } else if (obj instanceof Map) {
-                pushMap(config.createSection(key), (Map<?, ?>) obj);
+                pushMap(config.createSection(key), (Map<?, ?>) obj, false);
             } else if (obj instanceof List) {
                 config.set(key, asPrimitiveList((List) obj));
                 //throw new IllegalArgumentException("List serialization not implemented");
@@ -143,7 +153,6 @@ public interface ISerializable {
     static void pushSerializable(ConfigurationSection config, ISerializable serializable) {
         Class<?> clz = serializable.getClass();
         Map<String, Object> shallowMap = new HashMap<>();
-        shallowMap.put(TYPE_KEY, clz.getName());
         for (Field f : clz.getDeclaredFields()) {
             // standalone config
             StandaloneConfig standaloneAnno = f.getAnnotation(StandaloneConfig.class);
@@ -183,7 +192,7 @@ public interface ISerializable {
             } catch (ReflectiveOperationException ex) {
                 Bukkit.getLogger().log(Level.SEVERE, "Failed to serialize object", ex);
             }
-            pushMap(config, shallowMap);
+            pushMap(config, shallowMap, true);
         }
     }
 
