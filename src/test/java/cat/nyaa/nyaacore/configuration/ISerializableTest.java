@@ -4,9 +4,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.junit.Test;
 
 import java.io.StringReader;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -154,6 +152,47 @@ public class ISerializableTest {
     @Test
     public void test5() throws Exception {
         process(new Test5Class(10)).check(10);
+    }
+
+    static class Test6Class implements ISerializable {
+        @Serializable
+        Map<String, Test1Class> map;
+    }
+
+    @Test
+    public void test6() throws Exception {
+        Test6Class c = new Test6Class();
+        c.map = new HashMap<>();
+        c.map.put("abc", new Test1Class().fill());
+        process(c).map.get("abc").assertEq();
+    }
+
+    static class Test7Class implements ISerializable {
+        @Serializable
+        List<Map<String, Test1Class>> obj;
+    }
+
+    @Test
+    public void test7() throws Exception {
+        Test7Class c = new Test7Class();
+        c.obj = new ArrayList<>();
+        c.obj.add(new HashMap<>());
+        c.obj.get(0).put("abc", new Test1Class().fill());
+        process(c).obj.get(0).get("abc").assertEq();
+    }
+
+    static class Test8Class implements ISerializable {
+        @Serializable
+        Map<String, List<Test1Class>> obj;
+    }
+
+    @Test
+    public void test8() throws Exception {
+        Test8Class c = new Test8Class();
+        c.obj = new HashMap<>();
+        c.obj.put("abc", new ArrayList<>());
+        c.obj.get("abc").add(new Test1Class().fill());
+        process(c).obj.get("abc").get(0).assertEq();
     }
 }
 

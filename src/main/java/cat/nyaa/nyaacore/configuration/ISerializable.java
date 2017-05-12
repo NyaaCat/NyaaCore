@@ -285,8 +285,7 @@ public interface ISerializable {
                     if (!(newPrimitiveValue instanceof Map))
                         throw new IllegalArgumentException("Config field require a map object: " + f.toString());
                     newValue = constructNonPrimitiveMap((Map) newPrimitiveValue);
-                }
-                if (List.class.isAssignableFrom(f.getType())) {
+                } else if (List.class.isAssignableFrom(f.getType())) {
                     if (!(newPrimitiveValue instanceof List))
                         throw new IllegalArgumentException("Config field require a list object: " + f.toString());
                     newValue = constructNonPrimitiveList((List) newPrimitiveValue);
