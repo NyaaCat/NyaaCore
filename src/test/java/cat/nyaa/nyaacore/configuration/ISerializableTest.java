@@ -1,5 +1,6 @@
 package cat.nyaa.nyaacore.configuration;
 
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.junit.Test;
 
@@ -8,6 +9,7 @@ import java.util.*;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 public class ISerializableTest {
     private static final boolean enable_print = false;
@@ -86,17 +88,16 @@ public class ISerializableTest {
 
     static class Test3Class implements ISerializable {
         @Serializable
-        List<Test1Class> list;
+        Map<String, Integer> map;
     }
 
     @Test
     public void test3() throws Exception {
         Test3Class o = new Test3Class();
-        o.list = new LinkedList<>();
-        for (int i = 0;i<5;i++) o.list.add(new Test1Class().fill());
-        Test3Class n = process(o);
-        assertEquals(5, o.list.size());
-        for (int i = 0;i<5;i++) n.list.get(i).assertEq();
+        o.map = new HashMap<>();
+        for (int i = 0;i<=10;i++) o.map.put(Integer.toString(i), i);
+        Test3Class p = process(o);
+        for (int i = 0;i<=10;i++) assertEquals((Integer)i, p.map.get(Integer.toString(i)));
     }
 
     static class Test4Class implements ISerializable {
@@ -128,71 +129,64 @@ public class ISerializableTest {
 
     static class Test5Class implements ISerializable {
         @Serializable
-        int depth;
-        @Serializable
-        List<Test5Class> nested;
-        public Test5Class() {}
-        public Test5Class(int depth) {
-            this.depth = depth;
-            if (depth > 0) {
-                nested = Collections.singletonList(new Test5Class(depth - 1));
-            }
-        }
-
-        public void check(int depth) {
-            assertEquals(depth, this.depth);
-            if (depth > 0) {
-                assertNotNull(nested);
-                assertEquals(1, nested.size());
-                nested.get(0).check(depth - 1);
-            }
-        }
-    }
-
-    @Test
-    public void test5() throws Exception {
-        process(new Test5Class(10)).check(10);
-    }
-
-    static class Test6Class implements ISerializable {
-        @Serializable
         Map<String, Test1Class> map;
     }
 
     @Test
-    public void test6() throws Exception {
-        Test6Class c = new Test6Class();
+    public void test5() throws Exception {
+        Test5Class c = new Test5Class();
         c.map = new HashMap<>();
         c.map.put("abc", new Test1Class().fill());
         process(c).map.get("abc").assertEq();
     }
 
-    static class Test7Class implements ISerializable {
-        @Serializable
-        List<Map<String, Test1Class>> obj;
+    static class Test6Class implements ISerializable {
+        List<Test6Class> list = null;
+        public Test6Class(){}
+        public Test6Class(int depth) {
+            if (depth == 0) return;
+            list = new ArrayList<>();
+            for (int i=0;i<depth;i++) {
+                list.add(new Test6Class(depth-1));
+            }
+        }
+
+        public void verify(int depth) {
+            if (depth == 0) assertNull(list);
+            else {
+                assertNotNull(list);
+                assertEquals(depth, list.size());
+                for (int i=0;i<depth;i++) list.get(i).verify(depth-1);
+            }
+        }
+
+        @Override
+        public void deserialize(ConfigurationSection config) {
+            if (config.getKeys(false).size() == 0) return;
+            list = new ArrayList<>();
+            List<String> keyList = new ArrayList<>(config.getKeys(false));
+            keyList.sort(Comparator.naturalOrder());
+            for (String key : keyList) {
+                ConfigurationSection sec = config.getConfigurationSection(key);
+                Test6Class n = new Test6Class();
+                n.deserialize(sec);
+                list.add(n);
+            }
+        }
+
+        @Override
+        public void serialize(ConfigurationSection config) {
+            if (list == null) return;
+            for (int i=0;i<list.size();i++) {
+                ConfigurationSection sec = config.createSection(Integer.toString(i));
+                list.get(i).serialize(sec);
+            }
+        }
     }
 
     @Test
-    public void test7() throws Exception {
-        Test7Class c = new Test7Class();
-        c.obj = new ArrayList<>();
-        c.obj.add(new HashMap<>());
-        c.obj.get(0).put("abc", new Test1Class().fill());
-        process(c).obj.get(0).get("abc").assertEq();
-    }
-
-    static class Test8Class implements ISerializable {
-        @Serializable
-        Map<String, List<Test1Class>> obj;
-    }
-
-    @Test
-    public void test8() throws Exception {
-        Test8Class c = new Test8Class();
-        c.obj = new HashMap<>();
-        c.obj.put("abc", new ArrayList<>());
-        c.obj.get("abc").add(new Test1Class().fill());
-        process(c).obj.get("abc").get(0).assertEq();
+    public void test6() throws Exception {
+        process(new Test6Class(6)).verify(6);
     }
 }
 
