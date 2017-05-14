@@ -141,6 +141,7 @@ public class ISerializableTest {
     }
 
     static class Test6Class implements ISerializable {
+        @Serializable(manualSerialization = true)
         List<Test6Class> list = null;
         public Test6Class(){}
         public Test6Class(int depth) {
@@ -187,6 +188,35 @@ public class ISerializableTest {
     @Test
     public void test6() throws Exception {
         process(new Test6Class(6)).verify(6);
+    }
+
+    static class Test7Class implements ISerializable {
+        @Serializable(name = "list.strings")
+        List<String> s;
+        @Serializable(name = "list.numbers")
+        List<Integer> i;
+
+        public Test7Class fill() {
+            this.s = new ArrayList<>();
+            this.i = new ArrayList<>();
+            for (int x = 0;x<100;x++) {
+                i.add(x);
+                s.add(Integer.toString(x));
+            }
+            return this;
+        }
+
+        public void verify() {
+            for (Integer x = 0;x<100;x++) {
+                assertEquals(x, this.i.get(x));
+                assertEquals(x.toString(), this.s.get(x));
+            }
+        }
+    }
+
+    @Test
+    public void test7() throws Exception {
+        process(new Test7Class().fill()).verify();
     }
 }
 

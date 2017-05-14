@@ -144,8 +144,8 @@ public interface ISerializable {
                     ISerializable o = (ISerializable) cls.newInstance();
                     o.deserialize(sec);
                     newValue = o;
-                } else if (List.class.isAssignableFrom(f.getType())) {
-                    throw new RuntimeException("List serialization is not supported: " + f.toString());
+                //} else if (List.class.isAssignableFrom(f.getType())) {
+                //    throw new RuntimeException("List serialization is not supported: " + f.toString());
                 } else if (Map.class.isAssignableFrom(f.getType())) {
                     if (!(newValue instanceof ConfigurationSection)) throw new RuntimeException("Map object require ConfigSection: " + f.toString());
                     ConfigurationSection sec = (ConfigurationSection) newValue;
@@ -239,8 +239,8 @@ public interface ISerializable {
                             section.set(k, o);
                         }
                     }
-                } else if (List.class.isAssignableFrom(f.getType())) {
-                    throw new RuntimeException("List serialization is not supported: " + f.toString());
+                //} else if (List.class.isAssignableFrom(f.getType())) {
+                //    throw new RuntimeException("List serialization is not supported: " + f.toString());
                 } else {
                     Object origValue = f.get(obj);
                     if (origValue == null) continue;
