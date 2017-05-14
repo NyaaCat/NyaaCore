@@ -44,7 +44,7 @@ public final class L10nUtils {
 
     static {
         for (AvailableLanguages lang : EnumSet.allOf(AvailableLanguages.class))
-            lookup.put(lang.codeName, lang);
+            lookup.put(lang.codeName.toLowerCase(), lang);
     }
 
     /**
