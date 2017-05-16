@@ -360,8 +360,11 @@ public abstract class CommandReceiver<T extends JavaPlugin> implements CommandEx
                             return null; //bad quote end
                         }
                     } else {
-                        if (tmp.length() > 0)
-                            return null; // bad quote start
+                        if (tmp.length() > 0) {
+                            if (!tmp.matches("[a-zA-Z_]+[0-9a-zA-Z_]*:")) {//as a key:`value` pair
+                                return null; // bad quote start
+                            }
+                        }
                         quote = true;
                     }
                 } else if (chr == ' ') {

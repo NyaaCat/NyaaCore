@@ -30,4 +30,39 @@ public class ArgumentsTest {
         assertEquals("key:13", arg.nextString());
         assertNull(arg.next());
     }
+
+    @Test
+    public void test3() throws Exception {
+        String cmd = "t w key:`3` key2:`/co l u:miu_bug` ke3y:`12`";
+        CommandReceiver.Arguments arg = CommandReceiver.Arguments.parse(cmd.split(" "));
+        assertNotNull(arg);
+        assertEquals(3, arg.argInt("key"));
+        assertEquals("/co l u:miu_bug", arg.argString("key2"));
+        assertEquals("t", arg.next());
+        assertEquals("12", arg.argString("ke3y"));
+        assertEquals("w", arg.nextString());
+        try {
+            arg.nextString();
+        } catch (CommandReceiver.BadCommandException e) {//seems that no expectThrows available here
+            assertEquals("internal.error.no_more_string", e.getMessage());//magic string, but no impact...
+        }
+    }
+
+    @Test
+    public void test4() throws Exception {
+        String cmd = "key :`3`";
+        CommandReceiver.Arguments arg = CommandReceiver.Arguments.parse(cmd.split(" "));
+        assertNull(arg);
+    }
+
+    @Test
+    public void test5() throws Exception {
+        String cmd = "key: `3`";
+        CommandReceiver.Arguments arg = CommandReceiver.Arguments.parse(cmd.split(" "));
+        assertNotNull(arg);
+        assertEquals("key:", arg.top());
+        assertEquals("", arg.argString("key"));
+        assertEquals("3", arg.nextString());
+        assertNull(arg.next());
+    }
 }
