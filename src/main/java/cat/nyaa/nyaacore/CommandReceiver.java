@@ -22,6 +22,7 @@ import java.lang.reflect.Method;
 import java.text.DecimalFormat;
 import java.util.*;
 
+@SuppressWarnings("unused")
 public abstract class CommandReceiver<T extends JavaPlugin> implements CommandExecutor, TabCompleter {
     //==== Error Definitions ====//
     private static class NotPlayerException extends RuntimeException {
@@ -111,7 +112,7 @@ public abstract class CommandReceiver<T extends JavaPlugin> implements CommandEx
             if (!(params.length == 2 &&
                     params[0] == CommandSender.class &&
                     params[1] == Arguments.class)) {
-                plugin.getLogger().warning(i18n.get("internal.error.bad_subcommand", m.toString()));
+                plugin.getLogger().warning(i18n.getFormatted("internal.error.bad_subcommand", m.toString()));
             } else {
                 m.setAccessible(true);
                 subCommands.put(anno.value().toLowerCase(), m);
@@ -135,12 +136,12 @@ public abstract class CommandReceiver<T extends JavaPlugin> implements CommandEx
                         f.set(this, obj);
                     }
                 } catch (ReflectiveOperationException ex) {
-                    plugin.getLogger().warning(i18n.get("internal.error.bad_subcommand", f.toString()));
+                    plugin.getLogger().warning(i18n.getFormatted("internal.error.bad_subcommand", f.toString()));
                     obj = null;
                     ex.printStackTrace();
                 }
             } else {
-                plugin.getLogger().warning(i18n.get("internal.error.bad_subcommand", f.toString()));
+                plugin.getLogger().warning(i18n.getFormatted("internal.error.bad_subcommand", f.toString()));
             }
         }
     }
@@ -261,9 +262,9 @@ public abstract class CommandReceiver<T extends JavaPlugin> implements CommandEx
         }
         key += "." + type;
         if (i18n.hasKey(key)) {
-            return i18n.get(key);
+            return i18n.getFormatted(key);
         } else {
-            return i18n.get("manual.no_" + type);
+            return i18n.getFormatted("manual.no_" + type);
         }
     }
 
@@ -289,7 +290,7 @@ public abstract class CommandReceiver<T extends JavaPlugin> implements CommandEx
     }
 
     public void msg(CommandSender target, @LangKey String template, Object... args) {
-        target.sendMessage(i18n.get(template, args));
+        target.sendMessage(i18n.getFormatted(template, args));
     }
 
     public static ItemStack getItemInHand(CommandSender se) {
@@ -322,6 +323,7 @@ public abstract class CommandReceiver<T extends JavaPlugin> implements CommandEx
         }
     }
 
+    @SuppressWarnings("unused")
     public static class Arguments {
 
         private List<String> parsedArguments = new ArrayList<>();

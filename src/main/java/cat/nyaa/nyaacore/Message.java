@@ -41,7 +41,7 @@ public class Message {
     }
 
     public Message appendFormat(LanguageRepository i18n, @LangKey String template, Object... obj) {
-        return append(i18n.get(template, obj));
+        return append(i18n.getFormatted(template, obj));
     }
 
     public Message append(ItemStack item) {

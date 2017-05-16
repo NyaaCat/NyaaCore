@@ -148,6 +148,7 @@ public enum I18nEntity {
      * @throws InvocationTargetException when either method throws an exception.
      * @throws IllegalAccessException    when does not have access to these methods.
      */
+    @SuppressWarnings("deprecation")
     public static EntityType getEntityType(ItemStack egg) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         Object nmsStack = Class.forName("org.bukkit.craftbukkit." + Bukkit.getServer().getClass().getPackage().getName().replace(".", ",").split(",")[3] + "." + "inventory.CraftItemStack").getMethod("asNMSCopy", ItemStack.class).invoke(null, egg);
         Object tag = nmsStack.getClass().getMethod("getTag").invoke(nmsStack);

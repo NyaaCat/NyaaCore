@@ -152,7 +152,7 @@ public abstract class LanguageRepository {
             plugin.getLogger().warning("Cannot save language file: " + codeName + ".yml");
         }
 
-        plugin.getLogger().info(get("internal.info.using_language", codeName));
+        plugin.getLogger().info(getFormatted("internal.info.using_language", codeName));
     }
 
     /**
