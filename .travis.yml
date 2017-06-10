@@ -7,7 +7,7 @@ branches:
   - "maven-repo"
 env:
   global:
-    - MC_VERSION=1.11.2
+    - MC_VERSION=1.12
     - PLUGIN_VERSION=2.0
 install: true
 before_script:
