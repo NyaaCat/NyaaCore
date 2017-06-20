@@ -8,7 +8,7 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
-public class VaultUtils {
+public final class VaultUtils {
     public static Economy getVaultEconomy() {
         if(eco == null){
             RegisteredServiceProvider<Economy> provider = Bukkit.getServer().getServicesManager().getRegistration(Economy.class);

@@ -1,6 +1,7 @@
 package cat.nyaa.nyaacore;
 
 import cat.nyaa.nyaacore.utils.L10nUtils;
+import cat.nyaa.nyaacore.utils.VersionUtils;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class NyaaCoreLoader extends JavaPlugin {
@@ -22,6 +23,6 @@ public class NyaaCoreLoader extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        super.onEnable();
+        VersionUtils.checkVersion(VersionUtils.API_MAJOR_VERSION, VersionUtils.API_MAJOR_VERSION);
     }
 }
