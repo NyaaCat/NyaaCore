@@ -10,7 +10,7 @@ import java.util.List;
 
 public class TeleportUtils {
 
-    public void Teleport(Player player, Location loc) {
+    public static void Teleport(Player player, Location loc) {
         if (!player.isOnline()) {
             return;
         }
@@ -30,7 +30,7 @@ public class TeleportUtils {
         }
     }
 
-    public void Teleport(List<Player> players, Location loc) {
+    public static void Teleport(List<Player> players, Location loc) {
         for (Player p : players) {
             Teleport(p, loc);
         }
