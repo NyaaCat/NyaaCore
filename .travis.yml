@@ -5,6 +5,7 @@ branches:
   - "/^*-v[0-9]/"
   - "/^*-mc/"
   - "maven-repo"
+  - "api-break"
 env:
   global:
     - MC_VERSION=1.12
