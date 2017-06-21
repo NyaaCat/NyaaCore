@@ -40,7 +40,7 @@ import java.util.TreeMap;
  *
  * Use -Dnyaautils.i18n.refreshLangFiles=true to force loading languages from jar.
  */
-public abstract class LanguageRepository {
+public abstract class LanguageRepository implements ILocalizer {
     /**
      * Use English as default & fallback language
      */
@@ -189,6 +189,7 @@ public abstract class LanguageRepository {
     /**
      * Get the language item then format with `para` by {@link String#format(String, Object...)}
      */
+    @Override
     public String getFormatted(@LangKey String key, Object... para) {
         String val = map.get(key);
         if (val == null && key.startsWith("internal.") && internalMap.containsKey(getLanguage())) {
@@ -269,9 +270,48 @@ public abstract class LanguageRepository {
         }
     }
 
+    @Override
     public boolean hasKey(String key) {
         if (map.containsKey(key) || internalMap.get(DEFAULT_LANGUAGE).containsKey(key)) return true;
         if (internalMap.containsKey(getLanguage()) && internalMap.get(getLanguage()).containsKey(key)) return true;
         return false;
+    }
+
+    public static class InternalOnlyRepository extends LanguageRepository{
+
+        private final JavaPlugin plugin;
+        private final String lang;
+
+        public InternalOnlyRepository(JavaPlugin plugin, String lang) {
+            this.plugin = plugin;
+            this.lang = lang;
+        }
+
+        public InternalOnlyRepository(JavaPlugin plugin) {
+            this.plugin = plugin;
+            this.lang = DEFAULT_LANGUAGE;
+        }
+
+        @Override
+        protected JavaPlugin getPlugin() {
+            return plugin;
+        }
+
+        @Override
+        protected String getLanguage() {
+            return lang;
+        }
+
+        @Override
+        public String getFormatted(@LangKey String key, Object... para) {
+            if (!key.startsWith("internal.")) throw new IllegalArgumentException("Not an internal language key");
+            return super.getFormatted(key, para);
+        }
+
+        @Override
+        public boolean hasKey(String key) {
+            if (!key.startsWith("internal.")) return false;
+            return super.hasKey(key);
+        }
     }
 }
