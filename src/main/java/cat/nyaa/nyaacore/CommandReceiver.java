@@ -23,7 +23,7 @@ import java.text.DecimalFormat;
 import java.util.*;
 
 @SuppressWarnings("unused")
-public abstract class CommandReceiver<T extends JavaPlugin> implements CommandExecutor, TabCompleter {
+public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
     //==== Error Definitions ====//
     private static class NotPlayerException extends RuntimeException {
     }
@@ -101,7 +101,7 @@ public abstract class CommandReceiver<T extends JavaPlugin> implements CommandEx
     }
 
     // Scan recursively into parent class to find annotated methods when constructing
-    public CommandReceiver(T plugin, LanguageRepository i18n) {
+    public CommandReceiver(JavaPlugin plugin, LanguageRepository i18n) {
         //this.plugin = plugin;
         this.i18n = i18n;
 
@@ -125,10 +125,10 @@ public abstract class CommandReceiver<T extends JavaPlugin> implements CommandEx
             SubCommand anno = f.getAnnotation(SubCommand.class);
             if (anno == null) continue;
             if (CommandReceiver.class.isAssignableFrom(f.getType())) {
-                CommandReceiver<T> obj = null;
+                CommandReceiver obj = null;
                 try {
-                    Class<? extends CommandReceiver<T>> cls = (Class<? extends CommandReceiver<T>>) f.getType();
-                    Constructor<? extends CommandReceiver<T>> con = cls.getDeclaredConstructor(Object.class, LanguageRepository.class);
+                    Class<? extends CommandReceiver> cls = (Class<? extends CommandReceiver>) f.getType();
+                    Constructor<? extends CommandReceiver> con = cls.getDeclaredConstructor(Object.class, LanguageRepository.class);
                     obj = con.newInstance(plugin, i18n);
                     if (obj != null) {
                         subCommandClasses.put(anno.value().toLowerCase(), obj);
