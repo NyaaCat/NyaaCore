@@ -1,6 +1,5 @@
 package cat.nyaa.nyaacore;
 
-import com.sun.istack.internal.Nullable;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
@@ -102,7 +101,7 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
     }
 
     // Scan recursively into parent class to find annotated methods when constructing
-    public CommandReceiver(JavaPlugin plugin, @Nullable ILocalizer _i18n) {
+    public CommandReceiver(JavaPlugin plugin, ILocalizer _i18n) {
         if (plugin == null) throw new IllegalArgumentException();
         if (_i18n == null) _i18n = new LanguageRepository.InternalOnlyRepository(plugin);
 
