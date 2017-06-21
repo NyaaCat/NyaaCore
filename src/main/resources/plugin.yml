@@ -3,5 +3,6 @@ main: cat.nyaa.nyaacore.NyaaCoreLoader
 description: "Code infrastructure for all NyaaCat plugins."
 version: 3.0
 depend: [Vault]
+softdepend: [Essentials]
 authors: [RecursiveG,Librazy]
 website: "https://github.com/NyaaCat/NyaaCore"

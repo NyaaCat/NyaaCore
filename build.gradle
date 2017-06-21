@@ -32,12 +32,20 @@ repositories {
         name 'nu-langchecker'
         url 'https://raw.githubusercontent.com/Librazy/NyaaUtilsLangChecker/maven-repo'
     }
+
+    maven {
+        name 'ess-repo'
+        url 'http://repo.ess3.net/content/groups/essentials'
+    }
 }
 
 dependencies {
     compile 'org.spigotmc:spigot-api:1.12-R0.1-SNAPSHOT'
     compile 'net.milkbowl.vault:VaultAPI:1.6'
     compile 'org.librazy:NyaaUtilsLangChecker:1.0-SNAPSHOT'
+    compile('net.ess3:Essentials:2.13-SNAPSHOT') {
+        transitive = false
+    }
 }
 
 compileJava {
