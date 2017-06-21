@@ -1,5 +1,6 @@
 package cat.nyaa.nyaacore;
 
+import com.sun.istack.internal.Nullable;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
@@ -74,7 +75,7 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
     }
 
     // Language class is passed in for message support
-    private final LanguageRepository i18n;
+    private final ILocalizer i18n;
     // Subcommands exists in this class
     private final Map<String, Method> subCommands = new HashMap<>();
     // Commands to be passed to other classes
@@ -101,9 +102,11 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
     }
 
     // Scan recursively into parent class to find annotated methods when constructing
-    public CommandReceiver(JavaPlugin plugin, LanguageRepository i18n) {
-        //this.plugin = plugin;
-        this.i18n = i18n;
+    public CommandReceiver(JavaPlugin plugin, @Nullable ILocalizer _i18n) {
+        if (plugin == null) throw new IllegalArgumentException();
+        if (_i18n == null) _i18n = new LanguageRepository.InternalOnlyRepository(plugin);
+
+        this.i18n = _i18n;
 
         for (Method m : getAllMethods(getClass())) {
             SubCommand anno = m.getAnnotation(SubCommand.class);
