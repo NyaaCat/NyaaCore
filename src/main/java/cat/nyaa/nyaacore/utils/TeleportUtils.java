@@ -10,9 +10,9 @@ import java.util.List;
 
 public class TeleportUtils {
 
-    public static void Teleport(Player player, Location loc) {
-        if (!player.isOnline()) {
-            return;
+    public static boolean Teleport(Player player, Location loc) {
+        if (!player.isOnline() || loc == null || loc.getWorld() == null) {
+            return false;
         }
         Essentials ess = null;
         if (Bukkit.getServer().getPluginManager().getPlugin("Essentials") != null) {
@@ -21,12 +21,14 @@ public class TeleportUtils {
         if (ess != null) {
             try {
                 ess.getUser(player).getTeleport().now(loc, false, PlayerTeleportEvent.TeleportCause.PLUGIN);
-                return;
+                return true;
             } catch (Exception e) {
-                e.printStackTrace();
+                return false;
             }
+        } else {
             player.setFallDistance(0);
             player.teleport(loc, PlayerTeleportEvent.TeleportCause.PLUGIN);
+            return true;
         }
     }
 
