@@ -8,7 +8,7 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 
 import java.util.List;
 
-public class TeleportUtils {
+public final class TeleportUtils {
 
     public static boolean Teleport(Player player, Location loc) {
         if (!player.isOnline() || loc == null || loc.getWorld() == null) {

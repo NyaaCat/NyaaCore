@@ -1,12 +1,10 @@
 package cat.nyaa.nyaacore;
 
-import cat.nyaa.nyaacore.utils.L10nUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.librazy.nyaautils_lang_checker.LangKey;
-import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,14 +13,13 @@ import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.IllegalFormatConversionException;
 import java.util.Map;
-import java.util.TreeMap;
 
 /**
  * To be extended by each plugin
  * So plugins share the internal language section while maintaining their own sections
  *
  * When NyaaCore loading:
- *   Every language available in {@link cat.nyaa.nyaacore.utils.L10nUtils.AvailableLanguages} is loaded into internalMap
+ *   Every language available in {@link LanguageRepository#AVAILABLE_INTERNAL_LANGUAGES} is loaded into internalMap
  *   And only the internal section is loaded. Then the internalMap remains unchanged unless restart server.
  * When plugin loading:
  *   0. Clear map. So that loading is also reloading
@@ -44,7 +41,8 @@ public abstract class LanguageRepository implements ILocalizer {
     /**
      * Use English as default & fallback language
      */
-    private static final String DEFAULT_LANGUAGE = L10nUtils.AvailableLanguages.ENGLISH.codeName;
+    public static final String DEFAULT_LANGUAGE = "en_US";
+    public static final String[] AVAILABLE_INTERNAL_LANGUAGES = {"en_US", "zh_CN"};
     /**
      * Internal language map is loaded and should only be loaded by {@link NyaaCoreLoader#onLoad()}
      * Once it's loaded, it cannot be reloaded or modified.
@@ -108,8 +106,7 @@ public abstract class LanguageRepository implements ILocalizer {
             return;
         }
         corePlugin = plugin;
-        for (L10nUtils.AvailableLanguages lang : L10nUtils.AvailableLanguages.values()) {
-            String codeName = lang.codeName;
+        for (String codeName : AVAILABLE_INTERNAL_LANGUAGES) {
             Map<String, String> map = new HashMap<>();
             internalMap.put(codeName, map);
             loadResourceMap(plugin, DEFAULT_LANGUAGE, map, false, true);

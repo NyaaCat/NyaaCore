@@ -1,6 +1,6 @@
 package cat.nyaa.nyaacore;
 
-import cat.nyaa.nyaacore.internationalization.I18nItemName;
+import cat.nyaa.nyaacore.utils.LocaleUtils;
 import cat.nyaa.nyaacore.utils.ReflectionUtils;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.BaseComponent;
@@ -65,7 +65,7 @@ public class Message {
         for (int i = 0; i < items.length; i++) {
             ItemStack clone = items[i].clone();
             boolean hasCustomName = clone.hasItemMeta() && clone.getItemMeta().hasDisplayName();
-            BaseComponent cmp = hasCustomName ? new TextComponent(clone.getItemMeta().getDisplayName()) : I18nItemName.getUnlocalizedName(clone);
+            BaseComponent cmp = hasCustomName ? new TextComponent(clone.getItemMeta().getDisplayName()) : LocaleUtils.getNameComponent(clone);
             cmp.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_ITEM, new BaseComponent[]{new TextComponent(getItemJsonStripped(clone))}));
             varMap.put(String.format("{amount:%d}", i), new TextComponent(Integer.toString(clone.getAmount())));
             varMap.put(String.format("{itemName:%d}", i), cmp);

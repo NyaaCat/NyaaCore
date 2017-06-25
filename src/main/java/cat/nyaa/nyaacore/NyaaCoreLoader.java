@@ -1,6 +1,5 @@
 package cat.nyaa.nyaacore;
 
-import cat.nyaa.nyaacore.utils.L10nUtils;
 import cat.nyaa.nyaacore.utils.VersionUtils;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -13,7 +12,6 @@ public class NyaaCoreLoader extends JavaPlugin {
     public void onLoad() {
         instance = this;
         LanguageRepository.initInternalMap(this);
-        L10nUtils.init(this);
     }
 
     @Override

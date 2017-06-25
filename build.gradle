@@ -37,6 +37,11 @@ repositories {
         name 'ess-repo'
         url 'http://repo.ess3.net/content/groups/essentials'
     }
+
+    maven {
+        name 'langutils-repo'
+        url 'https://raw.github.com/MascusJeoraly/LanguageUtils/mvn-repo/'
+    }
 }
 
 dependencies {
@@ -44,6 +49,9 @@ dependencies {
     compile 'net.milkbowl.vault:VaultAPI:1.6'
     compile 'org.librazy:NyaaUtilsLangChecker:1.0-SNAPSHOT'
     compile('net.ess3:Essentials:2.13-SNAPSHOT') {
+        transitive = false
+    }
+    compile('com.meowj:LangUtils:1.9') {
         transitive = false
     }
 }
