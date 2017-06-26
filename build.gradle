@@ -7,6 +7,12 @@ configurations.all {
     resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
 }
 
+// Version strings used for CI
+// Note the spaces before and after the equals sign
+ext.majorVersion = 4
+ext.minorVersion = 0
+ext.minecraftVersion = 1.12
+
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
@@ -65,7 +71,7 @@ publishing {
         mavenJava(MavenPublication) {
             groupId "cat.nyaa"
             artifactId "nyaacore"
-            version '3.0-SNAPSHOT'
+            version "$majorVersion.$minorVersion-SNAPSHOT"
             from components.java
         }
     }

@@ -1,8 +1,8 @@
 name: NyaaCore
 main: cat.nyaa.nyaacore.NyaaCoreLoader
 description: "Code infrastructure for all NyaaCat plugins."
-version: 3.0
+version: 4.0-dev
 depend: [Vault, LangUtils]
 softdepend: [Essentials]
-authors: [RecursiveG,Librazy]
+authors: [RecursiveG,Librazy,cyilin]
 website: "https://github.com/NyaaCat/NyaaCore"
