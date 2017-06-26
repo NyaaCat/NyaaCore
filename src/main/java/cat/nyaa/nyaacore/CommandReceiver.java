@@ -129,9 +129,7 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
             if (CommandReceiver.class.isAssignableFrom(f.getType())) {
                 CommandReceiver obj = null;
                 try {
-                    Class<? extends CommandReceiver> cls = (Class<? extends CommandReceiver>) f.getType();
-                    Constructor<? extends CommandReceiver> con = cls.getDeclaredConstructor(Object.class, LanguageRepository.class);
-                    obj = con.newInstance(plugin, i18n);
+                    obj = newInstance(f.getType(),plugin, i18n);
                     if (obj != null) {
                         subCommandClasses.put(anno.value().toLowerCase(), obj);
                         f.setAccessible(true);
@@ -146,6 +144,17 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
                 plugin.getLogger().warning(i18n.getFormatted("internal.error.bad_subcommand", f.toString()));
             }
         }
+    }
+
+    private CommandReceiver newInstance(Class cls, Object arg1, Object arg2) throws ReflectiveOperationException {
+        for (Constructor c : cls.getConstructors()) {
+            if (c.getParameterCount() == 2 &&
+                    c.getParameterTypes()[0].isAssignableFrom(arg1.getClass()) &&
+                    c.getParameterTypes()[1].isAssignableFrom(arg2.getClass())) {
+                return (CommandReceiver) c.newInstance(arg1, arg2);
+            }
+        }
+        throw new NoSuchMethodException("no matching constructor found");
     }
 
     public List<String> getSubcommands() {
