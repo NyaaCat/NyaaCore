@@ -6,15 +6,15 @@ branches:
   - "/^*-mc/"
   - "maven-repo"
   - "api-break"
-env:
-  global:
-    - MC_VERSION=1.12
-    - PLUGIN_VERSION=3.0
 install: true
 before_script:
+- export MAJOR_VERSION=`sed -n 's/^ext\.majorVersion = \(.*\)$/\1/p' build.gradle`
+- export MINOR_VERSION=`sed -n 's/^ext\.minorVersion = \(.*\)$/\1/p' build.gradle`
+- export MC_VERSION=`sed -n 's/^ext\.minecraftVersion = \(.*\)$/\1/p' build.gradle`
+- export VERSION_STRING=$MAJOR_VERSION.$MINOR_VERSION.$TRAVIS_BUILD_NUMBER-mc$MC_VERSION
 - git config --global user.email "builds@travis-ci.com"
 - git config --global user.name "Travis CI"
-- 'sed -i "s/^\(version: \).*\$/\1$PLUGIN_VERSION.$TRAVIS_BUILD_NUMBER-mc$MC_VERSION/g" src/main/resources/plugin.yml'
+- 'sed -i "s/^\(version: \).*\$/\$VERSION_STRING/g" src/main/resources/plugin.yml'
 script: gradle build
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
@@ -27,8 +27,8 @@ cache:
     - $HOME/.gradle/caches/
     - $HOME/.gradle/wrapper/
 before_deploy:
-- cp build/libs/NyaaCore.jar ./NyaaCore-v$PLUGIN_VERSION.$TRAVIS_BUILD_NUMBER-mc$MC_VERSION.jar
-- export GIT_TAG=v$PLUGIN_VERSION.$TRAVIS_BUILD_NUMBER-mc$MC_VERSION
+- cp build/libs/NyaaCore.jar ./NyaaCore-$VERSION_STRING.jar
+- export GIT_TAG=v$VERSION_STRING
 - export GIT_ORIGIN_URL=`git config --get remote.origin.url`
 - git tag $GIT_TAG -a -m "Generated tag from TravisCI for build $TRAVIS_BUILD_NUMBER"
 - git config credential.helper "store --file=.git/credentials"
@@ -51,7 +51,7 @@ deploy:
   provider: releases
   prerelease: true
   api_key: $GITHUB_OAUTH_TOKEN
-  file: ./NyaaCore-v$PLUGIN_VERSION.$TRAVIS_BUILD_NUMBER-mc$MC_VERSION.jar
+  file: ./NyaaCore-$VERSION_STRING.jar
   on:
     tags: false
     all_branches: true

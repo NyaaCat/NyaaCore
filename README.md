@@ -9,7 +9,6 @@ Provides infrastructures to simplify plugin development.
 - Annotation based configuration serializer
 - Annotation based database serializer
 - JSON message builder
-- Server side I18n support
 
 ## Use as dependency in Gradle
 
@@ -22,7 +21,23 @@ repositories {
 }
 
 dependencies {
-    compile('cat.nyaa:nyaacore:2.0-SNAPSHOT') {
+    compile('cat.nyaa:nyaacore:4.0-SNAPSHOT') {
+        transitive = false
+    }
+}
+```
+
+If you need extra server side I18n/L10n stuff, consider using [LangUtils](https://github.com/MascusJeoraly/LanguageUtils):
+
+```
+repositories {
+    maven {
+        url 'https://raw.github.com/MascusJeoraly/LanguageUtils/mvn-repo/'
+    }
+}
+
+dependencies {
+    compile('com.meowj:LangUtils:1.9') {
         transitive = false
     }
 }
