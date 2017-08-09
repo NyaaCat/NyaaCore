@@ -38,5 +38,4 @@ after_success:
 - git add .
 - git commit -m "auto generated maven repo"
 - git push --follow-tags
-- cd ../NyaaCore
 deploy: false
