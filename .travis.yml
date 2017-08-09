@@ -5,7 +5,7 @@ branches:
   - "/^*-v[0-9]/"
   - "/^*-mc/"
   - "maven-repo"
-  - "api-break"
+  - "maven-repo-dev"
 install: true
 before_script:
 - export MAJOR_VERSION=`sed -n 's/^ext\.majorVersion = \(.*\)$/\1/p' build.gradle`
@@ -37,7 +37,7 @@ before_deploy:
 - gem install octokit -v 4.3.0
 - gradle publish
 - cd ..
-- git clone -b maven-repo $GIT_ORIGIN_URL nyaacore-mvn
+- git clone -b maven-repo-dev $GIT_ORIGIN_URL nyaacore-mvn
 - cp -r NyaaCore/build/repo/cat nyaacore-mvn/
 - cd nyaacore-mvn
 - git config credential.helper "store --file=.git/credentials"
