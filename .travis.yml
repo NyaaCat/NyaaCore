@@ -26,12 +26,8 @@ cache:
   directories:
     - $HOME/.gradle/caches/
     - $HOME/.gradle/wrapper/
-before_deploy:
-- cp build/libs/NyaaCore.jar ./NyaaCore-$VERSION_STRING.jar
-- export GIT_TAG=v$VERSION_STRING
+after_success:
 - export GIT_ORIGIN_URL=`git config --get remote.origin.url`
-- git tag $GIT_TAG -a -m "Generated tag from TravisCI for build $TRAVIS_BUILD_NUMBER"
-- gem install octokit -v 4.3.0
 - gradle publish
 - cd ..
 - git clone -b maven-repo-dev $GIT_ORIGIN_URL nyaacore-mvn
@@ -43,12 +39,4 @@ before_deploy:
 - git commit -m "auto generated maven repo"
 - git push --follow-tags
 - cd ../NyaaCore
-deploy:
-  skip_cleanup: true
-  provider: releases
-  prerelease: true
-  api_key: $GITHUB_OAUTH_TOKEN
-  file: ./NyaaCore-$VERSION_STRING.jar
-  on:
-    tags: false
-    all_branches: true
+deploy: false
