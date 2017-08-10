@@ -76,11 +76,13 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
     // Language class is passed in for message support
     private final ILocalizer i18n;
     // Subcommands exists in this class
-    private final Map<String, Method> subCommands = new HashMap<>();
+    protected final Map<String, Method> subCommands = new HashMap<>();
     // Commands to be passed to other classes
-    private final Map<String, CommandReceiver> subCommandClasses = new HashMap<>();
+    protected final Map<String, CommandReceiver> subCommandClasses = new HashMap<>();
     // Permissions required for each subclass. Bypass check if no permission specified
-    private final Map<String, String> subCommandPermission = new HashMap<>();
+    protected final Map<String, String> subCommandPermission = new HashMap<>();
+    // Custom attributes
+    protected final Map<String, String> subCommandAttribute = new HashMap<>();
 
     private Set<Method> getAllMethods(Class cls) {
         Set<Method> ret = new HashSet<>();
@@ -119,7 +121,9 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
                 m.setAccessible(true);
                 subCommands.put(anno.value().toLowerCase(), m);
                 if (!anno.permission().equals(""))
-                    subCommandPermission.put(anno.value().toLowerCase(), anno.permission());
+                    subCommandPermission.put(anno.value(), anno.permission());
+                if (!anno.attribute().equals(""))
+                    subCommandAttribute.put(anno.value(), anno.attribute());
             }
         }
 
@@ -589,6 +593,8 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
         String value();
 
         String permission() default "";
+
+        String attribute() default "";
     }
 
     // TODO: automatic call default subcommand when no match found
