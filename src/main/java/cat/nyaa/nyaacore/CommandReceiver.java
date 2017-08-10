@@ -121,9 +121,9 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
                 m.setAccessible(true);
                 subCommands.put(anno.value().toLowerCase(), m);
                 if (!anno.permission().isEmpty())
-                    subCommandPermission.put(anno.value(), anno.permission());
+                    subCommandPermission.put(anno.value().toLowerCase(), anno.permission());
                 if (!anno.data().isEmpty())
-                    subCommandData.put(anno.value(), anno.data());
+                    subCommandData.put(anno.value().toLowerCase(), anno.data());
             }
         }
 
