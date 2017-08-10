@@ -14,7 +14,7 @@ before_script:
 - export VERSION_STRING=$MAJOR_VERSION.$MINOR_VERSION.$TRAVIS_BUILD_NUMBER-mc$MC_VERSION
 - git config --global user.email "builds@travis-ci.com"
 - git config --global user.name "Travis CI"
-- 'sed -i "s/^\(version: \).*\$/\$VERSION_STRING/g" src/main/resources/plugin.yml'
+- 'sed -i "s/^\(version: \).*\$/\1$VERSION_STRING/g" src/main/resources/plugin.yml'
 script: gradle build
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
