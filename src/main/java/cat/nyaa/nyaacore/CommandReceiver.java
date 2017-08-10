@@ -81,8 +81,8 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
     protected final Map<String, CommandReceiver> subCommandClasses = new HashMap<>();
     // Permissions required for each subclass. Bypass check if no permission specified
     protected final Map<String, String> subCommandPermission = new HashMap<>();
-    // Custom attributes
-    protected final Map<String, String> subCommandAttribute = new HashMap<>();
+    // Custom data for plugin-specific usage
+    protected final Map<String, String> subCommandData = new HashMap<>();
 
     private Set<Method> getAllMethods(Class cls) {
         Set<Method> ret = new HashSet<>();
@@ -120,10 +120,10 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
             } else {
                 m.setAccessible(true);
                 subCommands.put(anno.value().toLowerCase(), m);
-                if (!anno.permission().equals(""))
+                if (!anno.permission().isEmpty())
                     subCommandPermission.put(anno.value(), anno.permission());
-                if (!anno.attribute().equals(""))
-                    subCommandAttribute.put(anno.value(), anno.attribute());
+                if (!anno.data().isEmpty())
+                    subCommandData.put(anno.value(), anno.data());
             }
         }
 
@@ -594,7 +594,7 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
 
         String permission() default "";
 
-        String attribute() default "";
+        String data() default "";
     }
 
     // TODO: automatic call default subcommand when no match found
