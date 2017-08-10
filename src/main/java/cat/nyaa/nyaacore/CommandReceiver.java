@@ -117,7 +117,7 @@ public abstract class CommandReceiver<T extends JavaPlugin> implements CommandEx
                 m.setAccessible(true);
                 subCommands.put(anno.value().toLowerCase(), m);
                 if (!anno.permission().equals(""))
-                    subCommandPermission.put(anno.value(), anno.permission());
+                    subCommandPermission.put(anno.value().toLowerCase(), anno.permission());
             }
         }
 
@@ -176,9 +176,9 @@ public abstract class CommandReceiver<T extends JavaPlugin> implements CommandEx
                 subCommand = "help";
             }
 
-            if (subCommandPermission.containsKey(subCommand)) {
-                if (!sender.hasPermission(subCommandPermission.get(subCommand))) {
-                    throw new NoPermissionException(subCommandPermission.get(subCommand));
+            if (subCommandPermission.containsKey(subCommand.toLowerCase())) {
+                if (!sender.hasPermission(subCommandPermission.get(subCommand.toLowerCase()))) {
+                    throw new NoPermissionException(subCommandPermission.get(subCommand.toLowerCase()));
                 }
             }
 
@@ -240,8 +240,8 @@ public abstract class CommandReceiver<T extends JavaPlugin> implements CommandEx
             return subCommandClasses.get(cmd.toLowerCase()).acceptTabComplete(sender, args);
         List<String> arr = new ArrayList<>();
         for (String s : getSubcommands()) {
-            if (subCommandPermission.containsKey(s)) {
-                if (!sender.hasPermission(subCommandPermission.get(s))) {
+            if (subCommandPermission.containsKey(s.toLowerCase())) {
+                if (!sender.hasPermission(subCommandPermission.get(s.toLowerCase()))) {
                     continue;
                 }
             }
