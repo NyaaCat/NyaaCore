@@ -10,7 +10,7 @@ install: true
 before_script:
 - export MAJOR_VERSION=`sed -n 's/^ext\.majorVersion = \(.*\)$/\1/p' build.gradle`
 - export MINOR_VERSION=`sed -n 's/^ext\.minorVersion = \(.*\)$/\1/p' build.gradle`
-- export MC_VERSION=`sed -n 's/^ext\.minecraftVersion = \(.*\)$/\1/p' build.gradle`
+- export MC_VERSION=`sed -n 's/^ext\.minecraftVersion = "\(.*\)"$/\1/p' build.gradle`
 - export VERSION_STRING=$MAJOR_VERSION.$MINOR_VERSION.$TRAVIS_BUILD_NUMBER-mc$MC_VERSION
 - git config --global user.email "builds@travis-ci.com"
 - git config --global user.name "Travis CI"
@@ -27,10 +27,13 @@ cache:
     - $HOME/.gradle/caches/
     - $HOME/.gradle/wrapper/
 after_success:
+- cp build/libs/NyaaCore.jar ./NyaaCore-v$VERSION_STRING.jar
+- export GIT_TAG=v$VERSION_STRING
+- git tag $GIT_TAG -a -m "Generated tag from TravisCI for build $TRAVIS_BUILD_NUMBER"
 - export GIT_ORIGIN_URL=`git config --get remote.origin.url`
 - gradle publish
 - cd ..
-- git clone -b maven-repo-dev $GIT_ORIGIN_URL nyaacore-mvn
+- git clone -b maven-repo $GIT_ORIGIN_URL nyaacore-mvn
 - cp -r NyaaCore/build/repo/cat nyaacore-mvn/
 - cd nyaacore-mvn
 - git config credential.helper "store --file=.git/credentials"
@@ -38,4 +41,13 @@ after_success:
 - git add .
 - git commit -m "auto generated maven repo"
 - git push --follow-tags
-deploy: false
+- cd ../NyaaCore
+deploy:
+  skip_cleanup: true
+  provider: releases
+  prerelease: true
+  api_key: $GITHUB_OAUTH_TOKEN
+  file: ./NyaaCore-v$VERSION_STRING.jar
+  on:
+    tags: false
+    all_branches: true

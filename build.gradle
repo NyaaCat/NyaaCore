@@ -11,7 +11,7 @@ configurations.all {
 // Note the spaces before and after the equals sign
 ext.majorVersion = 4
 ext.minorVersion = 0
-ext.minecraftVersion = 1.12
+ext.minecraftVersion = "1.12.1"
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
