@@ -119,11 +119,12 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
                 plugin.getLogger().warning(i18n.getFormatted("internal.error.bad_subcommand", m.toString()));
             } else {
                 m.setAccessible(true);
-                subCommands.put(anno.value().toLowerCase(), m);
+                String subCommandName = anno.value();
+                subCommands.put(subCommandName, m);
                 if (!anno.permission().isEmpty())
-                    subCommandPermission.put(anno.value().toLowerCase(), anno.permission());
+                    subCommandPermission.put(subCommandName, anno.permission());
                 if (!anno.data().isEmpty())
-                    subCommandData.put(anno.value().toLowerCase(), anno.data());
+                    subCommandData.put(subCommandName, anno.data());
             }
         }
 
@@ -133,15 +134,16 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
             if (CommandReceiver.class.isAssignableFrom(f.getType())) {
                 CommandReceiver obj = null;
                 try {
+                    String subCommandName = anno.value();
                     obj = newInstance(f.getType(),plugin, i18n);
-                    if (obj != null) {
-                        subCommandClasses.put(anno.value().toLowerCase(), obj);
-                        f.setAccessible(true);
-                        f.set(this, obj);
-                    }
+                    f.setAccessible(true);
+                    f.set(this, obj);
+
+                    subCommandClasses.put(subCommandName, obj);
+                    if (!anno.permission().isEmpty()) subCommandPermission.put(subCommandName, anno.permission());
+                    if (!anno.data().isEmpty()) subCommandData.put(subCommandName, anno.data());
                 } catch (ReflectiveOperationException ex) {
                     plugin.getLogger().warning(i18n.getFormatted("internal.error.bad_subcommand", f.toString()));
-                    obj = null;
                     ex.printStackTrace();
                 }
             } else {
@@ -184,24 +186,25 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
     public void acceptCommand(CommandSender sender, Arguments cmd) {
         String subCommand = cmd.next();
         try {
-            if (subCommand == null) subCommand = "help";
-            boolean hasCommand = subCommands.containsKey(subCommand.toLowerCase()) || subCommandClasses.containsKey(subCommand.toLowerCase());
-            boolean subClassCommand = subCommandClasses.containsKey(subCommand.toLowerCase());
-            if (cmd.length() == 0 || !hasCommand) {
+            if (cmd.length() == 0 || subCommand == null) subCommand = "help";
+            boolean hasCommand = subCommands.containsKey(subCommand) || subCommandClasses.containsKey(subCommand);
+            boolean subClassCommand = subCommandClasses.containsKey(subCommand);
+            if (!hasCommand) {
                 subCommand = "help";
             }
 
-            if (subCommandPermission.containsKey(subCommand.toLowerCase())) {
-                if (!sender.hasPermission(subCommandPermission.get(subCommand.toLowerCase()))) {
-                    throw new NoPermissionException(subCommandPermission.get(subCommand.toLowerCase()));
+            if (subCommandPermission.containsKey(subCommand)) {
+                String permission = subCommandPermission.get(subCommand);
+                if (!sender.hasPermission(permission)) {
+                    throw new NoPermissionException(permission);
                 }
             }
 
             try {
                 if (subClassCommand) {
-                    subCommandClasses.get(subCommand.toLowerCase()).acceptCommand(sender, cmd);
+                    subCommandClasses.get(subCommand).acceptCommand(sender, cmd);
                 } else {
-                    subCommands.get(subCommand.toLowerCase()).invoke(this, sender, cmd);
+                    subCommands.get(subCommand).invoke(this, sender, cmd);
                 }
             } catch (ReflectiveOperationException ex) {
                 Throwable cause = ex.getCause();
@@ -250,23 +253,30 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
     public List<String> acceptTabComplete(CommandSender sender, Arguments args) throws Exception {
         String cmd = args.next();
         if (cmd == null) cmd = "";
-        if (subCommands.containsKey(cmd.toLowerCase())) return null;
-        if (subCommandClasses.containsKey(cmd.toLowerCase()))
-            return subCommandClasses.get(cmd.toLowerCase()).acceptTabComplete(sender, args);
+        if (subCommands.containsKey(cmd)) return null; //TODO dispatch to corresponding handler method
+        if (subCommandClasses.containsKey(cmd))
+            return subCommandClasses.get(cmd).acceptTabComplete(sender, args);
         List<String> arr = new ArrayList<>();
         for (String s : getSubcommands()) {
-            if (subCommandPermission.containsKey(s.toLowerCase())) {
-                if (!sender.hasPermission(subCommandPermission.get(s.toLowerCase()))) {
+            if (subCommandPermission.containsKey(s)) {
+                if (!sender.hasPermission(subCommandPermission.get(s))) {
                     continue;
                 }
             }
-            if (s.toLowerCase().startsWith(cmd.toLowerCase())) {
+            if (s.startsWith(cmd)) {
                 arr.add(s);
             }
         }
         return arr;
     }
 
+    /**
+     * This prefix will be used to locate the correct manual item.
+     * If the class is registered to bukkit directly, you should return a empty string.
+     * If the class is registered through @SubCommand annotation, you should return the subcommand name.
+     * If it's a nested subcommand, separate the prefixes using dot.
+     * @return the prefix
+     */
     public abstract String getHelpPrefix();
 
     private String getHelpContent(@LangKey(type = LangKeyType.SUFFIX, skipCheck = true) String type, String... subkeys) {
@@ -587,6 +597,7 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
         }
     }
 
+    /** SubCommands ARE CASE-SENSITIVE */
     @Target({ElementType.METHOD, ElementType.FIELD})
     @Retention(RetentionPolicy.RUNTIME)
     public @interface SubCommand {
