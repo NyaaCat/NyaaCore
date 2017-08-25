@@ -81,7 +81,10 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
     protected final Map<String, CommandReceiver> subCommandClasses = new HashMap<>();
     // Permissions required for each subclass. Bypass check if no permission specified
     protected final Map<String, String> subCommandPermission = new HashMap<>();
-    // Custom data for plugin-specific usage
+    /**
+     * Custom data for plugin-specific usage
+     * @deprecated if a plugin want some extra information about a method, it should come with it's own annotation.
+     */
     protected final Map<String, String> subCommandData = new HashMap<>();
 
     private Set<Method> getAllMethods(Class cls) {
@@ -605,6 +608,9 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
 
         String permission() default "";
 
+        /**
+         * @deprecated if a plugin want some extra information about a method, it should come with it's own annotation.
+         */
         String data() default "";
     }
 
