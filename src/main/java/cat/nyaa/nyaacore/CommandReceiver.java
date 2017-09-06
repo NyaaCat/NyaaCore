@@ -81,11 +81,6 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
     protected final Map<String, CommandReceiver> subCommandClasses = new HashMap<>();
     // Permissions required for each subclass. Bypass check if no permission specified
     protected final Map<String, String> subCommandPermission = new HashMap<>();
-    /**
-     * Custom data for plugin-specific usage
-     * @deprecated if a plugin want some extra information about a method, it should come with it's own annotation.
-     */
-    protected final Map<String, String> subCommandData = new HashMap<>();
 
     private Set<Method> getAllMethods(Class cls) {
         Set<Method> ret = new HashSet<>();
@@ -126,8 +121,6 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
                 subCommands.put(subCommandName, m);
                 if (!anno.permission().isEmpty())
                     subCommandPermission.put(subCommandName, anno.permission());
-                if (!anno.data().isEmpty())
-                    subCommandData.put(subCommandName, anno.data());
             }
         }
 
@@ -144,7 +137,6 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
 
                     subCommandClasses.put(subCommandName, obj);
                     if (!anno.permission().isEmpty()) subCommandPermission.put(subCommandName, anno.permission());
-                    if (!anno.data().isEmpty()) subCommandData.put(subCommandName, anno.data());
                 } catch (ReflectiveOperationException ex) {
                     plugin.getLogger().warning(i18n.getFormatted("internal.error.bad_subcommand", f.toString()));
                     ex.printStackTrace();
@@ -607,11 +599,6 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
         String value();
 
         String permission() default "";
-
-        /**
-         * @deprecated if a plugin want some extra information about a method, it should come with it's own annotation.
-         */
-        String data() default "";
     }
 
     // TODO: automatic call default subcommand when no match found
