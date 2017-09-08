@@ -63,7 +63,7 @@ dependencies {
 }
 
 compileJava {
-    options.compilerArgs += ["-Xlint:deprecation"]
+    options.compilerArgs += ["-Xplugin:NyaaUtilsLangAnnotationProcessor", "-Xlint:deprecation"]
 }
 
 publishing {
