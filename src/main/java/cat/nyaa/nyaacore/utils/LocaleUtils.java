@@ -34,7 +34,7 @@ public final class LocaleUtils {
         if (type == Material.SKULL_ITEM && item.getDurability() == 3) {
             SkullMeta meta = (SkullMeta) item.getItemMeta();
             if (meta.hasOwner()) {
-                return new TranslatableComponent("item.skull.player.name", meta.getOwningPlayer().getName());
+                return new TranslatableComponent("item.skull.player.name", meta.getOwner());
             } else {
                 return new TranslatableComponent("item.skull.char.name");
             }
