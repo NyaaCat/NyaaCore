@@ -22,9 +22,6 @@ package cat.nyaa.nyaacore.utils;
 import org.bukkit.Bukkit;
 import org.bukkit.inventory.ItemStack;
 
-import java.io.*;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -150,96 +147,6 @@ public final class ReflectionUtils {
         }
     }
 
-    public static byte[] dumpRawNbt(ItemStack itemStack) {
-        try {
-            Class<?> classCraftItemStack = ReflectionUtils.getOBCClass("inventory.CraftItemStack");
-            Class<?> classNativeItemStack = ReflectionUtils.getNMSClass("ItemStack");
-            Class<?> classNBTTagCompound = ReflectionUtils.getNMSClass("NBTTagCompound");
-
-            Method asNMSCopy_craftItemStack = ReflectionUtils.getMethod(classCraftItemStack, "asNMSCopy", ItemStack.class);
-            Method save_nativeItemStack = ReflectionUtils.getMethod(classNativeItemStack, "save", classNBTTagCompound);
-            Method write_nbtTagCompound = ReflectionUtils.getMethod(classNBTTagCompound, "write", DataOutput.class);
-
-            Object nativeItemStack = asNMSCopy_craftItemStack.invoke(null, itemStack);
-            Object nbtTagCompound = classNBTTagCompound.newInstance();
-            save_nativeItemStack.invoke(nativeItemStack, nbtTagCompound);
-
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            DataOutputStream dos = new DataOutputStream(baos);
-            write_nbtTagCompound.invoke(nbtTagCompound, dos);
-            byte[] outputByteArray = baos.toByteArray();
-            dos.close();
-            baos.close();
-            return outputByteArray;
-
-        } catch (ReflectiveOperationException | IOException ex) {
-            throw new RuntimeException(ex);
-        }
-    }
-
-    private static Object unlimitedNBTReadLimiter = null;
-    public static ItemStack loadItemStackFromNbt(byte[] nbt) {
-        try {
-            Class<?> classNBTReadLimiter = ReflectionUtils.getNMSClass("NBTReadLimiter");
-            if (unlimitedNBTReadLimiter == null) {
-                for (Field f :classNBTReadLimiter.getDeclaredFields()) {
-                    if (f.getType().equals(classNBTReadLimiter)) {
-                        unlimitedNBTReadLimiter = f.get(null);
-                        break;
-                    }
-                }
-            }
-
-            Class<?> classCraftItemStack = ReflectionUtils.getOBCClass("inventory.CraftItemStack");
-            Class<?> classNativeItemStack = ReflectionUtils.getNMSClass("ItemStack");
-            Class<?> classNBTTagCompound = ReflectionUtils.getNMSClass("NBTTagCompound");
-
-            Method load_nbtTagCompound = ReflectionUtils.getMethod(classNBTTagCompound, "load", DataInput.class, int.class, classNBTReadLimiter);
-            Constructor constructNativeItemStackFromNBTTagCompound = classNativeItemStack.getConstructor(classNBTTagCompound);
-            Method asBukkitCopy_CraftItemStack = ReflectionUtils.getMethod(classCraftItemStack, "asBukkitCopy", classNativeItemStack);
-
-            ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(nbt);
-            DataInputStream dataInputStream = new DataInputStream(byteArrayInputStream);
-            Object reconstructedNBTTagCompound = classNBTTagCompound.newInstance();
-            load_nbtTagCompound.invoke(reconstructedNBTTagCompound, dataInputStream, 0, unlimitedNBTReadLimiter);
-            dataInputStream.close();
-            byteArrayInputStream.close();
-            Object reconstructedNativeItemStack = constructNativeItemStackFromNBTTagCompound.newInstance(reconstructedNBTTagCompound);
-            return (ItemStack) asBukkitCopy_CraftItemStack.invoke(null, reconstructedNativeItemStack);
-        } catch (ReflectiveOperationException | IOException ex) {
-            throw new RuntimeException(ex);
-        }
-
-    }
-
-    // https://github.com/sainttx/Auctions/blob/12533c9af0b1dba700473bf728895abb9ff5b33b/Auctions/src/main/java/com/sainttx/auctions/SimpleMessageFactory.java#L197
-    // Converts an ItemStack to a JSON representation of itself
-    public static String convertItemStackToJson(ItemStack itemStack) throws RuntimeException {
-        // ItemStack methods to get a net.minecraft.server.ItemStack object for serialization
-        Class<?> craftItemStackClazz = ReflectionUtils.getOBCClass("inventory.CraftItemStack");
-        Method asNMSCopyMethod = ReflectionUtils.getMethod(craftItemStackClazz, "asNMSCopy", ItemStack.class);
-
-        // NMS Method to serialize a net.minecraft.server.ItemStack to a valid Json string
-        Class<?> nmsItemStackClazz = ReflectionUtils.getNMSClass("ItemStack");
-        Class<?> nbtTagCompoundClazz = ReflectionUtils.getNMSClass("NBTTagCompound");
-        Method saveNmsItemStackMethod = ReflectionUtils.getMethod(nmsItemStackClazz, "save", nbtTagCompoundClazz);
-
-        Object nmsNbtTagCompoundObj; // This will just be an empty NBTTagCompound instance to invoke the saveNms method
-        Object nmsItemStackObj; // This is the net.minecraft.server.ItemStack object received from the asNMSCopy method
-        Object itemAsJsonObject; // This is the net.minecraft.server.ItemStack after being put through saveNmsItem method
-
-        try {
-            nmsNbtTagCompoundObj = nbtTagCompoundClazz.newInstance();
-            nmsItemStackObj = asNMSCopyMethod.invoke(null, itemStack);
-            itemAsJsonObject = saveNmsItemStackMethod.invoke(nmsItemStackObj, nmsNbtTagCompoundObj);
-        } catch (Throwable t) {
-            throw new RuntimeException("failed to serialize itemstack to nms item", t);
-        }
-
-        // Return a string representation of the serialized object
-        return itemAsJsonObject.toString();
-    }
-
     public static boolean isValidItem(ItemStack item) {
         Class<?> craftItemStackClazz = ReflectionUtils.getOBCClass("inventory.CraftItemStack");
         Method asNMSCopyMethod = ReflectionUtils.getMethod(craftItemStackClazz, "asNMSCopy", ItemStack.class);
@@ -258,5 +165,12 @@ public final class ReflectionUtils {
             e.printStackTrace();
         }
         return false;
+    }
+
+    /**
+     * @deprecated
+     */
+    public static String convertItemStackToJson(ItemStack itemStack) throws RuntimeException {
+        return ItemStackUtils.itemToJson(itemStack);
     }
 }

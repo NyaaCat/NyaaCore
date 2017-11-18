@@ -1,5 +1,6 @@
 package cat.nyaa.nyaacore;
 
+import cat.nyaa.nyaacore.utils.ItemStackUtils;
 import cat.nyaa.nyaacore.utils.LocaleUtils;
 import cat.nyaa.nyaacore.utils.ReflectionUtils;
 import net.md_5.bungee.api.ChatMessageType;
@@ -176,7 +177,7 @@ public class Message {
     private String getItemJsonStripped(ItemStack item) {
         ItemStack cloned = item.clone();
         if (cloned.hasItemMeta() && cloned.getItemMeta() instanceof BookMeta) {
-            return ReflectionUtils.convertItemStackToJson(removeBookContent(cloned));
+            return ItemStackUtils.itemToJson(removeBookContent(cloned));
         }
         if (cloned.hasItemMeta() && cloned.getItemMeta() instanceof BlockStateMeta) {
             BlockStateMeta blockStateMeta = (BlockStateMeta) cloned.getItemMeta();
@@ -209,10 +210,10 @@ public class Message {
                 }
                 blockStateMeta.setBlockState((BlockState) inventoryHolder);
                 cloned.setItemMeta(blockStateMeta);
-                return ReflectionUtils.convertItemStackToJson(cloned);
+                return ItemStackUtils.itemToJson(cloned);
             }
         }
-        return ReflectionUtils.convertItemStackToJson(cloned);
+        return ItemStackUtils.itemToJson(cloned);
     }
 
     /**

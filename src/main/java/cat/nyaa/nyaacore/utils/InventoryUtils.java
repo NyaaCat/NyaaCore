@@ -7,6 +7,9 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public final class InventoryUtils {
 
     public static boolean hasItem(Player player, ItemStack item, int amount) {
@@ -165,5 +168,56 @@ public final class InventoryUtils {
             }
         }
         return false;
+    }
+
+    /**
+     * Remove items from inventory.
+     * Either all removed or none removed.
+     *
+     * @param inv           the inventory
+     * @param itemToBeTaken items to be removed
+     * @return If null, then all designated items are removed. If not null, it contains the items missing
+     */
+    public static List<ItemStack> withdrawInventoryAtomic(Inventory inv, List<ItemStack> itemToBeTaken) {
+        ItemStack[] itemStacks = inv.getContents();
+        ItemStack[] cloneStacks = new ItemStack[itemStacks.length];
+        for (int i = 0; i < itemStacks.length; i++) {
+            cloneStacks[i] = itemStacks[i] == null ? null : itemStacks[i].clone();
+        }
+
+        List<ItemStack> ret = new ArrayList<>();
+
+        for (ItemStack item : itemToBeTaken) {
+            int sizeReq = item.getAmount();
+
+            for (int i = 0; i < cloneStacks.length; i++) {
+                if (cloneStacks[i] == null) continue;
+                if (cloneStacks[i].isSimilar(item)) {
+                    int sizeSupp = cloneStacks[i].getAmount();
+                    if (sizeSupp > sizeReq) {
+                        cloneStacks[i].setAmount(sizeSupp - sizeReq);
+                        sizeReq = 0;
+                        break;
+                    } else {
+                        cloneStacks[i] = null;
+                        sizeReq -= sizeSupp;
+                        if (sizeReq == 0) break;
+                    }
+                }
+            }
+
+            if (sizeReq > 0) {
+                ItemStack n = item.clone();
+                item.setAmount(sizeReq);
+                ret.add(n);
+            }
+        }
+
+        if (ret.size() == 0) {
+            inv.setContents(cloneStacks);
+            return null;
+        } else {
+            return ret;
+        }
     }
 }
