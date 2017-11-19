@@ -94,12 +94,12 @@ public class ColumnStructure {
 
         Method getter, setter;
         try {
-            getter = dataMethod.getClass().getDeclaredMethod("get" + methodSuffix);
-            setter = dataMethod.getClass().getDeclaredMethod("set" + methodSuffix);
+            getter = dataMethod.getDeclaringClass().getDeclaredMethod("get" + methodSuffix);
+            setter = dataMethod.getDeclaringClass().getDeclaredMethod("set" + methodSuffix, methodType);
             if (getter.getParameterCount() != 0 || getter.getReturnType() != methodType || Modifier.isStatic(getter.getModifiers()))
                 throw new RuntimeException("getter signature mismatch");
-            if (setter.getParameterCount() != 1 || getter.getParameterTypes()[0] != methodType ||
-                    (getter.getReturnType() != Void.class && getter.getReturnType() != Void.TYPE) ||
+            if (setter.getParameterCount() != 1 || setter.getParameterTypes()[0] != methodType ||
+                    (setter.getReturnType() != Void.class && setter.getReturnType() != Void.TYPE) ||
                     Modifier.isStatic(setter.getModifiers()))
                 throw new RuntimeException("setter signature mismatch");
             boolean primary = getter.getDeclaredAnnotation(PrimaryKey.class) != null;

@@ -41,14 +41,16 @@ public enum ColumnType {
             if (cls.isEnum()) return ((Enum) raw).name();
             if (cls == ItemStack.class) return ItemStackUtils.itemToBase64((ItemStack) raw);
         } else if (this == INTEGER) {
-            if (cls == Long.class) return raw;
-            if (cls == Boolean.class) return raw == Boolean.TRUE ? 1L : 0L;
+            if (cls == Boolean.class) return (Boolean)raw ? 1L : 0L;
+            if (cls == Long.class || cls == Integer.class || cls == Short.class || cls == Byte.class)
+                return ((Number)raw).longValue();
         } else if (this == REAL) {
-            if (cls == Double.class) return raw;
+            if (cls == Double.class || cls == Float.class)
+                return ((Number)raw).doubleValue();
         } else {
             throw new RuntimeException("Invalid ColumnType");
         }
-        throw new RuntimeException("Java object cannot be cast to designated SQL type: " + this.name());
+        throw new RuntimeException(String.format("Java object %s(%s) cannot be cast to designated SQL type %s", cls, raw, this.name()));
     }
 
     /**
@@ -72,7 +74,8 @@ public enum ColumnType {
         } else if (this == INTEGER) {
             Long num = ((Number) sqlObject).longValue();
             if (javaTypeClass == Long.class || javaTypeClass == long.class) return num;
-            if (javaTypeClass == Boolean.class || javaTypeClass == Boolean.TYPE) return num == 1L;
+            if (javaTypeClass == Boolean.class || javaTypeClass == Boolean.TYPE)
+                return num.equals(1L);
         } else if (this == REAL) {
             Double num = ((Number) sqlObject).doubleValue();
             if (javaTypeClass == Double.class || javaTypeClass == double.class) return num;
