@@ -2,186 +2,39 @@ package cat.nyaa.nyaacore.database;
 
 import org.apache.commons.lang.Validate;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.sql.*;
 import java.util.*;
 
 public abstract class BaseDatabase implements Cloneable {
 
-    protected class TableStructure<T> {
-
-        private final Class<T> tableClass;
-        private final String tableName;
-        protected final List<String> columnNames = new ArrayList<>();
-        protected final Map<String, Field> columnFields = new HashMap<>();
-        protected final Map<String, Method> columnGetters = new HashMap<>();
-        protected final Map<String, Method> columnSetters = new HashMap<>();
-        protected final Map<String, ColumnType> columnTypes = new HashMap<>();
-        protected final String primaryKeyName;
-
-        TableStructure(String tableName, Class<T> tableClass) {
-            this.tableName = tableName;
-            this.tableClass = tableClass;
-            String primKeyName = null;
-
-            // load all the fields
-            for (Field f : tableClass.getDeclaredFields()) {
-                DataColumn columnAnnotation = f.getAnnotation(DataColumn.class);
-                if (columnAnnotation == null) continue;
-                String name = columnAnnotation.value();
-                if ("".equals(name)) name = f.getName();
-                if (columnNames.contains(name)) throw new RuntimeException("Duplicated field column value: " + name);
-                columnNames.add(name);
-                f.setAccessible(true);
-                columnFields.put(name, f);
-                columnTypes.put(name, ColumnType.from(f.getType()));
-                PrimaryKey primAnnotation = f.getAnnotation(PrimaryKey.class);
-                if (primAnnotation == null) continue;
-                if (primKeyName != null) throw new RuntimeException("Duplicated primary key at: " + f.getName());
-                primKeyName = name;
-            }
-
-            // load all the getter/setter
-            for (Method m : tableClass.getDeclaredMethods()) {
-                DataColumn columnAnnotation = m.getAnnotation(DataColumn.class);
-                if (columnAnnotation == null) continue;
-                if (m.getName().startsWith("get")) {
-                    String name = "".equals(columnAnnotation.value()) ? m.getName().substring(3) : columnAnnotation.value();
-                    if (columnNames.contains(name))
-                        throw new RuntimeException("Duplicated getter column value: " + name);
-                    String setterName = "set" + m.getName().substring(3);
-                    Method setterMethod;
-                    try {
-                        setterMethod = tableClass.getDeclaredMethod(setterName, m.getReturnType());
-                    } catch (NoSuchMethodException ex) {
-                        throw new RuntimeException("setter not found: " + m.toString(), ex);
-                    }
-                    m.setAccessible(true);
-                    setterMethod.setAccessible(true);
-                    columnGetters.put(name, m);
-                    columnSetters.put(name, setterMethod);
-                    columnTypes.put(name, ColumnType.from(m.getReturnType()));
-                    columnNames.add(name);
-                } else if (m.getName().startsWith("set")) {
-                    String name = "".equals(columnAnnotation.value()) ? m.getName().substring(3) : columnAnnotation.value();
-                    if (columnNames.contains(name))
-                        throw new RuntimeException("Duplicated setter column value: " + name);
-                    String getterName = "get" + m.getName().substring(3);
-                    Method getterMethod;
-                    try {
-                        getterMethod = tableClass.getDeclaredMethod(getterName, void.class);
-                        if (getterMethod.getReturnType() != m.getParameterTypes()[0])
-                            throw new RuntimeException("getter return type mismatch: " + getterMethod.getName());
-                    } catch (NoSuchMethodException ex) {
-                        throw new RuntimeException("getter not found: " + m.toString(), ex);
-                    }
-                    m.setAccessible(true);
-                    getterMethod.setAccessible(true);
-                    columnGetters.put(name, getterMethod);
-                    columnSetters.put(name, m);
-                    columnTypes.put(name, ColumnType.from(getterMethod.getReturnType()));
-                    columnNames.add(name);
-                }
-                PrimaryKey primAnnotation = m.getAnnotation(PrimaryKey.class);
-                if (primAnnotation == null) continue;
-                if (primKeyName != null) throw new RuntimeException("Duplicated primary key at: " + m.getName());
-                primKeyName = columnNames.get(columnNames.size() - 1);
-            }
-            primaryKeyName = primKeyName;
-
-            // WARN: getDeclaredFields & getDeclaredMethods returns an unordered array
-            columnNames.sort(String::compareTo);
-
-        }
-
-        String getCreateTableSQL() {
-            String colStr = "";
-            for (int i = 0; i < columnNames.size(); i++) {
-                if (i != 0) colStr += ",";
-                String colName = columnNames.get(i);
-                colStr += String.format("%s %s NOT NULL", colName, columnTypes.get(colName).name());
-                if (colName.equals(primaryKeyName)) colStr += " PRIMARY KEY";
-            }
-            return String.format("CREATE TABLE IF NOT EXISTS %s(%s)", tableName, colStr);
-        }
-
-        /**
-         * return comma separated list of column names
-         */
-        String getColumns() {
-            String str = columnNames.get(0);
-            for (int i = 1; i < columnNames.size(); i++) {
-                str += "," + columnNames.get(i);
-            }
-            return str;
-        }
-
-        /* Only database acceptable objects can be returned: long/float/string */
-        Map<String, Object> getColumnObjectMap(T obj, String... columns) throws ReflectiveOperationException {
-            List<String> columnList = new ArrayList<>();
-            Map<String, Object> objects = new HashMap<>();
-            if (columns == null || columns.length == 0) {
-                columnList.addAll(columnNames);
-            } else {
-                columnList.addAll(Arrays.asList(columns));
-            }
-            for (String colName : columnList) {
-                if (columnFields.containsKey(colName)) {
-                    Object columnValue = columnFields.get(colName).get(obj);
-                    if (columnValue != null) objects.put(colName, columnTypes.get(colName).toDatabaseType(columnValue));
-                }
-                if (columnGetters.containsKey(colName)) {
-                    Object columnValue = columnGetters.get(colName).invoke(obj);
-                    if (columnValue != null) objects.put(colName, columnTypes.get(colName).toDatabaseType(columnValue));
-                }
-            }
-            return objects;
-        }
-
-        /**
-         * Pick CURRENT result from the result set
-         */
-        T getObjectFromResultSet(ResultSet rs) throws ReflectiveOperationException, SQLException {
-            T obj = tableClass.newInstance();
-            for (String colName : columnNames) {
-                Object colValue = rs.getObject(colName);
-                if (columnFields.containsKey(colName)) {
-                    Field f = columnFields.get(colName);
-                    f.set(obj, ColumnType.toSystemType(colValue, f.getType()));
-                }
-                if (columnSetters.containsKey(colName)) {
-                    Method m = columnSetters.get(colName);
-                    m.invoke(obj, ColumnType.toSystemType(colValue, m.getParameterTypes()[0]));
-                }
-            }
-            return obj;
-        }
-    }
-
+    /* TableName to TableStructure */
     protected final Map<String, TableStructure<?>> tables;
+    /* TableClass to TableName */
     protected final Map<Class<?>, String> tableName;
 
+    /**
+     * The return value should be constant
+     * and returned classes should be annotated by @DataTable().
+     * @return Table classes in this database.
+     */
     protected abstract Class<?>[] getTables();
 
-    /* auto commit should be set to `true` */
+    /* auto commit should be set to `true` for the returned connection */
     protected abstract Connection getConnection();
 
     public abstract void close();
 
     /**
-     * Scan through the whole class for column annotations
+     * Scan & construct all table structures.
      */
     protected BaseDatabase() {
         tables = new HashMap<>();
         tableName = new HashMap<>();
         for (Class<?> tableClass : getTables()) {
-            DataTable tableAnnotation = tableClass.getDeclaredAnnotation(DataTable.class);
-            if (tableAnnotation == null) continue; // TODO warning
-            String name = tableAnnotation.value();
-            if ("".equals(name)) name = tableClass.getName();
-            tables.put(name, new TableStructure<>(name, tableClass));
-            tableName.put(tableClass, name);
+            TableStructure<?> tableStructure = TableStructure.fromClass(tableClass);
+            if (tableStructure == null) throw new RuntimeException();
+            tables.put(tableStructure.getTableName(), tableStructure);
+            tableName.put(tableClass, tableStructure.getTableName());
         }
     }
 
@@ -201,6 +54,11 @@ public abstract class BaseDatabase implements Cloneable {
         createTable(tableName.get(cls));
     }
 
+    /**
+     * Create a table in this database.
+     * Note the table doesn't have to be defined in getTables().
+     * @param struct The table definition
+     */
     protected void createTable(TableStructure<?> struct) {
         Validate.notNull(struct);
         String sql = struct.getCreateTableSQL();
@@ -213,12 +71,18 @@ public abstract class BaseDatabase implements Cloneable {
         }
     }
 
+    /**
+     * Return the Query object for specified table class.
+     *
+     * @return Query object
+     */
     public <T> Query<T> query(Class<T> tableClass) {
         return new Query<>(tableClass);
     }
 
     public class Query<T> {
         private TableStructure<T> table;
+        /* NOTE: the values in the map must be SQL-type objects */
         private Map<String, Object> whereClause = new HashMap<>();
 
         public Query(Class<T> tableClass) {
@@ -247,8 +111,8 @@ public abstract class BaseDatabase implements Cloneable {
          * e.g. =, >, <
          */
         public Query<T> where(String columnName, String comparator, Object obj) {
-            if (!table.columnNames.contains(columnName)) throw new IllegalArgumentException("Unknown DataColumn Name");
-            obj = table.columnTypes.get(columnName).toDatabaseType(obj);
+            if (!table.hasColumn(columnName)) throw new IllegalArgumentException("Unknown DataColumn Name");
+            obj = table.getColumn(columnName).columnType.toDatabaseType(obj);
             whereClause.put(columnName + comparator + "?", obj);
             return this;
         }
@@ -257,7 +121,7 @@ public abstract class BaseDatabase implements Cloneable {
          * remove records matching the where clauses
          */
         public void delete() {
-            String sql = "DELETE FROM " + table.tableName;
+            String sql = "DELETE FROM " + table.getTableName();
             List<Object> objects = new ArrayList<>();
             if (whereClause.size() > 0) {
                 sql += " WHERE";
@@ -289,13 +153,13 @@ public abstract class BaseDatabase implements Cloneable {
          */
         public void insert(T object) {
             try {
-                String sql = String.format("INSERT INTO %s(%s) VALUES(?", table.tableName, table.getColumns());
-                for (int i = 1; i < table.columnNames.size(); i++) sql += ",?";
+                String sql = String.format("INSERT INTO %s(%s) VALUES(?", table.getTableName(), table.getColumnNamesString());
+                for (int i = 1; i < table.columns.size(); i++) sql += ",?";
                 sql += ")";
                 PreparedStatement stmt = getConnection().prepareStatement(sql);
                 Map<String, Object> objMap = table.getColumnObjectMap(object);
-                for (int i = 1; i <= table.columnNames.size(); i++) {
-                    String colName = table.columnNames.get(i - 1);
+                for (int i = 1; i <= table.orderedColumnName.size(); i++) {
+                    String colName = table.orderedColumnName.get(i - 1);
                     if (!objMap.containsKey(colName)) {
                         stmt.setNull(i, Types.NULL);
                     } else {
@@ -310,8 +174,12 @@ public abstract class BaseDatabase implements Cloneable {
         }
 
 
+        /**
+         * SELECT * FROM this_table WHERE ...
+         * @return all select rows
+         */
         public List<T> select() {
-            String sql = "SELECT " + table.getColumns() + " FROM " + table.tableName;
+            String sql = "SELECT " + table.getColumnNamesString() + " FROM " + table.tableName;
             List<Object> objects = new ArrayList<>();
             if (whereClause.size() > 0) {
                 sql += " WHERE";
@@ -341,6 +209,11 @@ public abstract class BaseDatabase implements Cloneable {
             }
         }
 
+        /**
+         * Select only one record.
+         *
+         * @return the record, or throw exception if not unique
+         */
         public T selectUnique() {
             List<T> results = select();
             if (results.size() < 1) throw new RuntimeException("SQL Selection has no result");
@@ -348,6 +221,21 @@ public abstract class BaseDatabase implements Cloneable {
             return results.get(0);
         }
 
+        /**
+         * Select only one record.
+         *
+         * @return the record, or null if not unique.
+         */
+        public T selectUniqueUnchecked() {
+            List<T> results = select();
+            return results.size() == 1 ? results.get(0) : null;
+        }
+
+        /**
+         * A short hand for select().size();
+         * Note the potential performance issue.
+         * @return number of records to be selected.
+         */
         public int count() {
             return select().size();
         }
@@ -363,10 +251,10 @@ public abstract class BaseDatabase implements Cloneable {
                 List<String> updatedColumns = new ArrayList<>();
                 Map<String, Object> newValues = table.getColumnObjectMap(obj, columns);
                 if (columns == null || columns.length <= 0) {
-                    updatedColumns.addAll(table.columnNames);
+                    updatedColumns.addAll(table.orderedColumnName);
                 } else {
                     for (String col : columns) {
-                        if (!table.columnNames.contains(col))
+                        if (!table.columns.containsKey(col))
                             throw new IllegalArgumentException("Unknown Column Name: " + col);
                     }
                     updatedColumns.addAll(Arrays.asList(columns));
