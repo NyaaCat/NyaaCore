@@ -2,7 +2,6 @@ package cat.nyaa.nyaacore.database;
 
 import org.apache.commons.lang.Validate;
 
-import java.io.InputStream;
 import java.sql.*;
 import java.util.*;
 
@@ -16,6 +15,7 @@ public abstract class BaseDatabase implements Cloneable {
     /**
      * The return value should be constant
      * and returned classes should be annotated by @DataTable().
+     *
      * @return Table classes in this database.
      */
     protected abstract Class<?>[] getTables();
@@ -58,6 +58,7 @@ public abstract class BaseDatabase implements Cloneable {
     /**
      * Create a table in this database.
      * Note the table doesn't have to be defined in getTables().
+     *
      * @param struct The table definition
      */
     protected void createTable(TableStructure<?> struct) {
@@ -75,9 +76,9 @@ public abstract class BaseDatabase implements Cloneable {
     /**
      * build a statement using provided parameters
      *
-     * @param sql SQL string
+     * @param sql            SQL string
      * @param replacementMap {{key}} in the file will be replaced by value. Ignored if null. NOTE: sql injection will happen
-     * @param parameters JDBC's positional parametrized query.
+     * @param parameters     JDBC's positional parametrized query.
      * @return statement
      */
     public PreparedStatement buildStatement(String sql, Map<String, String> replacementMap, Object... parameters) {
@@ -99,7 +100,8 @@ public abstract class BaseDatabase implements Cloneable {
 
     /**
      * Convert a result set to a list of java objects
-     * @param rs the result set
+     *
+     * @param rs  the result set
      * @param cls record type
      * @param <T> record type, do not have to be registered in getTables()
      * @return java object list
@@ -224,6 +226,7 @@ public abstract class BaseDatabase implements Cloneable {
 
         /**
          * SELECT * FROM this_table WHERE ...
+         *
          * @return all select rows
          */
         public List<T> select() {
@@ -282,6 +285,7 @@ public abstract class BaseDatabase implements Cloneable {
         /**
          * A short hand for select().size();
          * Note the potential performance issue.
+         *
          * @return number of records to be selected.
          */
         public int count() {

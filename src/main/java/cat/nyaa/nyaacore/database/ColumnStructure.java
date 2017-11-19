@@ -3,13 +3,12 @@ package cat.nyaa.nyaacore.database;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.time.ZonedDateTime;
 
 /**
  * A database column can be:
- *   1. A field of acceptable type: long/double/bool/Enum/String/ItemStack
- *   2. A field can be serialized/deserialized using toString() and fromString()/parse() (e.g. ZonedDateTime)
- *   3. A pair of getter/setter returning/accepting type listed in (1)
+ * 1. A field of acceptable type: long/double/bool/Enum/String/ItemStack
+ * 2. A field can be serialized/deserialized using toString() and fromString()/parse() (e.g. ZonedDateTime)
+ * 3. A pair of getter/setter returning/accepting type listed in (1)
  */
 public class ColumnStructure {
     final String name;

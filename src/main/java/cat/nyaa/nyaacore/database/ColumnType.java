@@ -11,7 +11,7 @@ public enum ColumnType {
     /**
      * Determine database type for the java type
      * Note: for FIELD_PARSE, database type will always be string
-     *       because it use toString() and fromString/parse().
+     * because it use toString() and fromString/parse().
      *
      * @return determined database type
      */
@@ -41,12 +41,12 @@ public enum ColumnType {
             if (cls.isEnum()) return ((Enum) raw).name();
             if (cls == ItemStack.class) return ItemStackUtils.itemToBase64((ItemStack) raw);
         } else if (this == INTEGER) {
-            if (cls == Boolean.class) return (Boolean)raw ? 1L : 0L;
+            if (cls == Boolean.class) return (Boolean) raw ? 1L : 0L;
             if (cls == Long.class || cls == Integer.class || cls == Short.class || cls == Byte.class)
-                return ((Number)raw).longValue();
+                return ((Number) raw).longValue();
         } else if (this == REAL) {
             if (cls == Double.class || cls == Float.class)
-                return ((Number)raw).doubleValue();
+                return ((Number) raw).doubleValue();
         } else {
             throw new RuntimeException("Invalid ColumnType");
         }
@@ -57,11 +57,11 @@ public enum ColumnType {
      * Convert a database object to a java object
      * Note: the database objects may not be types of: String/Long/Double but should be compatible
      * TODO: figure out what types they are
-     *
+     * <p>
      * Actually this method can be static because javaTypeClass itself
      * should bring enough information for determining how to parse sqlObject
      *
-     * @param sqlObject object from database query result
+     * @param sqlObject     object from database query result
      * @param javaTypeClass the desired java type
      * @return an object of type javaTypeClass
      */

@@ -113,7 +113,7 @@ class TableStructure<T> {
      * Get certain columns(fields) from a table object
      * and the column objects should have been converted to database acceptable objects: long/float/string
      *
-     * @param obj the java object
+     * @param obj     the java object
      * @param columns the column names, or null for all columns
      * @return columnName -> columnData map
      */

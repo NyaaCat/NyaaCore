@@ -66,10 +66,10 @@ public abstract class SQLiteDatabase extends BaseDatabase implements Cloneable {
     /**
      * Execute a SQL file bundled with the plugin
      *
-     * @param filename full file name, including extension, in resources/sql folder
+     * @param filename       full file name, including extension, in resources/sql folder
      * @param replacementMap {{key}} in the file will be replaced by value. Ignored if null. NOTE: sql injection will happen
-     * @param cls class of desired object
-     * @param parameters JDBC's positional parametrized query.
+     * @param cls            class of desired object
+     * @param parameters     JDBC's positional parametrized query.
      * @return the result set, null if cls is null.
      */
     public <T> List<T> queryBundledAs(String filename, Map<String, String> replacementMap, Class<T> cls, Object... parameters) {
@@ -89,7 +89,7 @@ public abstract class SQLiteDatabase extends BaseDatabase implements Cloneable {
             throw new RuntimeException(ex);
         }
 
-        try(PreparedStatement stat = buildStatement(sql, replacementMap, parameters)) {
+        try (PreparedStatement stat = buildStatement(sql, replacementMap, parameters)) {
             boolean hasResult = stat.execute();
             if (cls == null) {
                 return null;
