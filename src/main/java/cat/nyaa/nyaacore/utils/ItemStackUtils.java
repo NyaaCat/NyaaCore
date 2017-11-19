@@ -97,12 +97,12 @@ public final class ItemStackUtils {
 
     private static int readInt(byte[] b, int offset) throws IOException {
         if (offset < 0 || offset + 3 >= b.length) throw new IllegalArgumentException("bad offset");
-        return (b[offset] << 24) & (b[offset + 1] << 16) & (b[offset + 2] << 8) & b[offset];
+        return (b[offset] << 24) | (b[offset + 1] << 16) | (b[offset + 2] << 8) | b[offset+3];
     }
 
     /* *
      * Structure of binary NBT list:
-     * - First byte (n): number of items
+     * - First byte (n): number of items (currently limit to 0<=n<=127 i.e. MSB=0)
      * - Next 4*n bytes (s1~sn): size of binary nbt for each item
      * - Next sum(s1~sn) bytes: actual data nbt
      */
@@ -112,7 +112,7 @@ public final class ItemStackUtils {
      */
     public static String itemsToBase64(List<ItemStack> items) {
         if (items.size() <= 0) return "";
-        if (items.size() > 255) {
+        if (items.size() > 127) {
             throw new IllegalArgumentException("Too many items");
         }
 
@@ -181,10 +181,10 @@ public final class ItemStackUtils {
 
         List<ItemStack> ret = new ArrayList<>();
         try {
-            int n = uncompressed_binary[0];
+            int n = Byte.toUnsignedInt(uncompressed_binary[0]);
             int[] block_sizes = new int[n];
             for (int i = 0; i < n; i++) {
-                block_sizes[i] = readInt(uncompressed_binary, i + 4 * i);
+                block_sizes[i] = readInt(uncompressed_binary, 1 + 4 * i);
             }
 
             int offset = 1 + 4 * n;
