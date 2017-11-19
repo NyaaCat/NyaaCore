@@ -2,6 +2,7 @@ package cat.nyaa.nyaacore.database;
 
 import org.apache.commons.lang.Validate;
 
+import java.io.InputStream;
 import java.sql.*;
 import java.util.*;
 
@@ -67,6 +68,53 @@ public abstract class BaseDatabase implements Cloneable {
             smt.executeUpdate(sql);
             smt.close();
         } catch (SQLException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    /**
+     * build a statement using provided parameters
+     *
+     * @param sql SQL string
+     * @param replacementMap {{key}} in the file will be replaced by value. Ignored if null. NOTE: sql injection will happen
+     * @param parameters JDBC's positional parametrized query.
+     * @return statement
+     */
+    public PreparedStatement buildStatement(String sql, Map<String, String> replacementMap, Object... parameters) {
+        if (replacementMap != null) {
+            for (String key : replacementMap.keySet()) {
+                sql = sql.replace("{{" + key + "}}", replacementMap.get(key));
+            }
+        }
+        try {
+            PreparedStatement stmt = getConnection().prepareStatement(sql);
+            for (int i = 0; i < parameters.length; i++) {
+                stmt.setObject(i + 1, parameters[i]);
+            }
+            return stmt;
+        } catch (SQLException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    /**
+     * Convert a result set to a list of java objects
+     * @param rs the result set
+     * @param cls record type
+     * @param <T> record type, do not have to be registered in getTables()
+     * @return java object list
+     */
+    public <T> List<T> parseResultSet(ResultSet rs, Class<T> cls) {
+        try {
+            if (rs == null) return new ArrayList<>();
+            TableStructure<T> table = TableStructure.fromClass(cls);
+            List<T> results = new ArrayList<T>();
+            while (rs.next()) {
+                T obj = table.getObjectFromResultSet(rs);
+                results.add(obj);
+            }
+            return results;
+        } catch (SQLException | ReflectiveOperationException ex) {
             throw new RuntimeException(ex);
         }
     }
