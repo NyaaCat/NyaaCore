@@ -210,7 +210,7 @@ public abstract class BaseDatabase implements Cloneable {
                 Map<String, Object> objMap = table.getColumnObjectMap(object);
                 for (int i = 1; i <= table.orderedColumnName.size(); i++) {
                     String colName = table.orderedColumnName.get(i - 1);
-                    if (!objMap.containsKey(colName)) {
+                    if (!objMap.containsKey(colName) || objMap.get(colName) == null) {
                         stmt.setNull(i, Types.NULL);
                     } else {
                         stmt.setObject(i, objMap.get(colName));

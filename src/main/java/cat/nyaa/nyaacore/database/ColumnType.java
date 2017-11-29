@@ -35,6 +35,7 @@ public enum ColumnType {
      * @return an object of following types: String/Long/Double
      */
     public Object toDatabaseType(Object raw) {
+        if(raw == null) return null;
         Class cls = raw.getClass();
         if (this == TEXT) {
             if (cls == String.class) return raw;
