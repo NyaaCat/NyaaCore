@@ -3,6 +3,8 @@ package cat.nyaa.nyaacore.database;
 import cat.nyaa.nyaacore.utils.ItemStackUtils;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.UUID;
+
 public enum ColumnType {
     TEXT,
     INTEGER, // use long in java
@@ -41,6 +43,7 @@ public enum ColumnType {
             if (cls == String.class) return raw;
             if (cls.isEnum()) return ((Enum) raw).name();
             if (cls == ItemStack.class) return ItemStackUtils.itemToBase64((ItemStack) raw);
+            if (cls == UUID.class) return raw.toString();
         } else if (this == INTEGER) {
             if (cls == Boolean.class) return (Boolean) raw ? 1L : 0L;
             if (cls == Long.class || cls == Integer.class || cls == Short.class || cls == Byte.class)
