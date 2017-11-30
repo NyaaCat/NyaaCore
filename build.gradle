@@ -60,6 +60,8 @@ dependencies {
     compile('com.meowj:LangUtils:1.9') {
         transitive = false
     }
+    testCompile 'org.mockito:mockito-all:1.10.19'
+    testCompile 'org.xerial:sqlite-jdbc:3.21.0'
 }
 
 compileJava {

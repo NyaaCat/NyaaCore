@@ -3,8 +3,9 @@ package cat.nyaa.nyaacore.database;
 import cat.nyaa.nyaacore.utils.ItemStackUtils;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.UUID;
-
+/*
+ * TODO this enum may be replaced by {@link java.sql.Types}
+ */
 public enum ColumnType {
     TEXT,
     INTEGER, // use long in java
@@ -35,6 +36,7 @@ public enum ColumnType {
      *
      * @param raw java object
      * @return an object of following types: String/Long/Double
+     * @deprecated cannot handle FIELD_PARSE access type. Use {@link ColumnStructure#toDatabaseType(Object)}
      */
     public Object toDatabaseType(Object raw) {
         if(raw == null) return null;
@@ -43,7 +45,6 @@ public enum ColumnType {
             if (cls == String.class) return raw;
             if (cls.isEnum()) return ((Enum) raw).name();
             if (cls == ItemStack.class) return ItemStackUtils.itemToBase64((ItemStack) raw);
-            if (cls == UUID.class) return raw.toString();
         } else if (this == INTEGER) {
             if (cls == Boolean.class) return (Boolean) raw ? 1L : 0L;
             if (cls == Long.class || cls == Integer.class || cls == Short.class || cls == Byte.class)
@@ -68,8 +69,16 @@ public enum ColumnType {
      * @param sqlObject     object from database query result
      * @param javaTypeClass the desired java type
      * @return an object of type javaTypeClass
+     * @deprecated cannot handle FIELD_PARSE access type. Use {@link ColumnStructure#toJavaType(Object)}
      */
     public Object toJavaType(Object sqlObject, Class javaTypeClass) {
+        if (sqlObject == null) {
+            if (javaTypeClass.isPrimitive()) {
+                throw new RuntimeException("primitive types do not accept NULL values");
+            } else {
+                return null;
+            }
+        }
         if (this == TEXT) {
             String str = (String) sqlObject;
             if (javaTypeClass == String.class) return str;

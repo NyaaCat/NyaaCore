@@ -162,7 +162,7 @@ public abstract class BaseDatabase implements Cloneable {
          */
         public Query<T> where(String columnName, String comparator, Object obj) {
             if (!table.hasColumn(columnName)) throw new IllegalArgumentException("Unknown DataColumn Name");
-            obj = table.getColumn(columnName).columnType.toDatabaseType(obj);
+            obj = table.getColumn(columnName).toDatabaseType(obj);
             whereClause.put(columnName + comparator + "?", obj);
             return this;
         }

@@ -150,18 +150,18 @@ public class ColumnStructure {
      * Fetch the from the field/getter and return a SQL-typed object
      * Return type must be one of Long/Double/String
      */
+    @SuppressWarnings("deprecation")
     public Object fetchFromObject(Object javaObject) {
         Object raw;
         try {
             switch (accessMethod) {
                 case FIELD:
+                case FIELD_PARSE:
                     raw = field.get(javaObject);
                     break;
                 case METHOD:
                     raw = getter.invoke(javaObject);
                     break;
-                case FIELD_PARSE:
-                    return field.get(javaObject).toString();
                 default:
                     throw new RuntimeException("Invalid accessMethod");
             }
@@ -169,14 +169,22 @@ public class ColumnStructure {
             throw new RuntimeException(ex);
         }
 
+        if (raw == null) {
+            if (!isPrimary)
+                throw new IllegalArgumentException(String.format("NULL is not allowed for column: %s#%s ", table.tableName, name));
+            return null;
+        }
+        if (accessMethod == ColumnAccessMethod.FIELD_PARSE) return raw.toString();
         return columnType.toDatabaseType(raw);
     }
 
+    @SuppressWarnings("deprecation")
     public void saveToObject(Object javaObject, Object sqlValueObject) {
         try {
             Object raw;
             if (accessMethod == ColumnAccessMethod.FIELD_PARSE) {
                 raw = fieldParser.invoke(null, (String) sqlValueObject);
+                // TODO assert raw != null
             } else {
                 raw = columnType.toJavaType(sqlValueObject, fieldType);
             }
@@ -194,5 +202,31 @@ public class ColumnStructure {
         } catch (ReflectiveOperationException ex) {
             throw new RuntimeException(ex);
         }
+    }
+
+    /**
+     * ColumnType class does not handle FIELD_PARSE info.
+     */
+    @SuppressWarnings("deprecation")
+    public Object toDatabaseType(Object raw) {
+        if (raw == null) {
+            if (!isPrimary)
+                throw new IllegalArgumentException(String.format("NULL is not allowed for column: %s#%s ", table.tableName, name));
+            return null;
+        }
+        if (accessMethod == ColumnAccessMethod.FIELD_PARSE) raw = raw.toString();
+        return columnType.toDatabaseType(raw);
+    }
+
+    @SuppressWarnings("deprecation")
+    public Object toJavaType(Object sqlObject) {
+        if (sqlObject == null) return null;
+        try {
+            if (accessMethod == ColumnAccessMethod.FIELD_PARSE) return fieldParser.invoke(null, (String) sqlObject);
+            // TODO assert return != null
+        } catch (ReflectiveOperationException ex) {
+            throw new RuntimeException(ex);
+        }
+        return columnType.toJavaType(sqlObject, fieldType);
     }
 }
