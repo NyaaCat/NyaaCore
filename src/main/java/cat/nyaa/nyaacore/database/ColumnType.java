@@ -3,9 +3,8 @@ package cat.nyaa.nyaacore.database;
 import cat.nyaa.nyaacore.utils.ItemStackUtils;
 import org.bukkit.inventory.ItemStack;
 
-/**
+/*
  * TODO this enum may be replaced by {@link java.sql.Types}
- * @deprecated to be replaced by {@link ColumnStructure}
  */
 public enum ColumnType {
     TEXT,

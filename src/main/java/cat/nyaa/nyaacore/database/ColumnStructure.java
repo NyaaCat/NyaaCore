@@ -16,7 +16,7 @@ public class ColumnStructure {
     final boolean isPrimary;
 
     final Field field;      // for FIELD or FIELD_PARSER
-    final Class fieldType; // this is native java type
+    final Class fieldType; // only used if accessMethod is not FIELD_PARSER, this is native java type
     final Method fieldParser; // for FIELD_PARSER
     final Method setter; // for METHOD
     final Method getter; // for METHOD
@@ -188,10 +188,6 @@ public class ColumnStructure {
             } else {
                 raw = columnType.toJavaType(sqlValueObject, fieldType);
             }
-            if (raw != null && !fieldType.isInstance(raw)) {
-                throw new RuntimeException(String.format("%s(%s) is not a valid Java object for column %s#%s",
-                        raw.getClass(), raw.toString(), table.tableName, name));
-            }
             switch (accessMethod) {
                 case FIELD:
                 case FIELD_PARSE:
@@ -217,10 +213,6 @@ public class ColumnStructure {
             if (!isPrimary)
                 throw new IllegalArgumentException(String.format("NULL is not allowed for column: %s#%s ", table.tableName, name));
             return null;
-        }
-        if (!fieldType.isInstance(raw)) {
-            throw new RuntimeException(String.format("%s(%s) is not a valid Java object for column %s#%s",
-                    raw.getClass(), raw.toString(), table.tableName, name));
         }
         if (accessMethod == ColumnAccessMethod.FIELD_PARSE) raw = raw.toString();
         return columnType.toDatabaseType(raw);
