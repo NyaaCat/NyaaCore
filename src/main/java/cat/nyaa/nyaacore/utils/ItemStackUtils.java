@@ -1,6 +1,7 @@
 package cat.nyaa.nyaacore.utils;
 
 import com.google.common.io.BaseEncoding;
+import com.google.common.io.ByteStreams;
 import org.bukkit.inventory.ItemStack;
 
 import java.io.*;
@@ -10,9 +11,8 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.zip.DataFormatException;
-import java.util.zip.Deflater;
-import java.util.zip.Inflater;
+import java.util.zip.DeflaterInputStream;
+import java.util.zip.InflaterInputStream;
 
 public final class ItemStackUtils {
     /**
@@ -86,18 +86,28 @@ public final class ItemStackUtils {
         return (ItemStack) asBukkitCopy_CraftItemStack.invoke(null, reconstructedNativeItemStack);
     }
 
-    private static void writeInt(OutputStream s, int x) throws IOException {
-        byte[] b = new byte[4];
-        b[0] = (byte) ((x >> 24) & 0xFF);
-        b[1] = (byte) ((x >> 16) & 0xFF);
-        b[2] = (byte) ((x >> 8) & 0xFF);
-        b[3] = (byte) (x & 0xFF);
-        s.write(b);
+    private static byte[] compress(byte[] data) {
+        byte[] ret;
+        try (ByteArrayInputStream bis = new ByteArrayInputStream(data);
+             ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+            ByteStreams.copy(new DeflaterInputStream(bis), bos);
+            ret = bos.toByteArray();
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
+        return ret;
     }
 
-    private static int readInt(byte[] b, int offset) throws IOException {
-        if (offset < 0 || offset + 3 >= b.length) throw new IllegalArgumentException("bad offset");
-        return (b[offset] << 24) | (b[offset + 1] << 16) | (b[offset + 2] << 8) | b[offset+3];
+    private static byte[] decompress(byte[] data) {
+        byte[] ret;
+        try (ByteArrayInputStream bis = new ByteArrayInputStream(data);
+             ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+            ByteStreams.copy(new InflaterInputStream(bis), bos);
+            ret = bos.toByteArray();
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
+        return ret;
     }
 
     /* *
@@ -116,44 +126,27 @@ public final class ItemStackUtils {
             throw new IllegalArgumentException("Too many items");
         }
 
-        byte[] uncompressed_binary;
-        try (ByteArrayOutputStream uncompressed = new ByteArrayOutputStream()) {
-            uncompressed.write(items.size());
-            List<byte[]> nbts = new ArrayList<>();
-            for (ItemStack item : items) {
-                byte[] nbt;
-                try {
-                    nbt = itemToBinary(item);
-                } catch (Exception ex) {
-                    throw new RuntimeException(ex);
-                }
-                nbts.add(nbt);
+        List<byte[]> nbts = new ArrayList<>();
+        for (ItemStack item : items) {
+            try {
+                nbts.add(itemToBinary(item));
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
             }
-            for (byte[] nbt : nbts) writeInt(uncompressed, nbt.length);
-            for (byte[] nbt : nbts) uncompressed.write(nbt);
-            uncompressed_binary = uncompressed.toByteArray();
-        } catch (IOException ex) {
-            ex.printStackTrace();
-            return null;
         }
 
-        byte[] compressed_binary;
-        try (ByteArrayOutputStream compressed = new ByteArrayOutputStream()) {
-            Deflater compressor = new Deflater();
-            compressor.setInput(uncompressed_binary);
-            compressor.finish();
-            while (!compressor.finished()) {
-                byte[] buf = new byte[1024];
-                int len = compressor.deflate(buf);
-                compressed.write(buf, 0, len);
-            }
-            compressor.end();
-            compressed_binary = compressed.toByteArray();
+        byte[] uncompressed_binary;
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+             DataOutputStream dos = new DataOutputStream(bos)) {
+            dos.writeByte(items.size());
+            for (byte[] nbt : nbts) dos.writeInt(nbt.length);
+            for (byte[] nbt : nbts) dos.write(nbt);
+            uncompressed_binary = bos.toByteArray();
         } catch (IOException ex) {
-            ex.printStackTrace();
-            return null;
+            throw new RuntimeException(ex);
         }
-        return BaseEncoding.base64().encode(compressed_binary);
+
+        return BaseEncoding.base64().encode(compress(uncompressed_binary));
     }
 
     /**
@@ -161,40 +154,22 @@ public final class ItemStackUtils {
      */
     public static List<ItemStack> itemsFromBase64(String base64) {
         if (base64.length() <= 0) return new ArrayList<>();
-        byte[] compressed_binary = BaseEncoding.base64().decode(base64);
 
-        byte[] uncompressed_binary;
-        try (ByteArrayOutputStream uncompressed = new ByteArrayOutputStream()) {
-            Inflater inflater = new Inflater();
-            inflater.setInput(compressed_binary);
-            while (!inflater.finished()) {
-                byte[] buf = new byte[1024];
-                int len = inflater.inflate(buf);
-                uncompressed.write(buf, 0, len);
-            }
-            inflater.end();
-            uncompressed_binary = uncompressed.toByteArray();
-        } catch (IOException | DataFormatException ex) {
-            ex.printStackTrace();
-            return null;
-        }
-
+        byte[] uncompressed_binary = decompress(BaseEncoding.base64().decode(base64));
         List<ItemStack> ret = new ArrayList<>();
-        try {
-            int n = Byte.toUnsignedInt(uncompressed_binary[0]);
-            int[] block_sizes = new int[n];
-            for (int i = 0; i < n; i++) {
-                block_sizes[i] = readInt(uncompressed_binary, 1 + 4 * i);
-            }
 
-            int offset = 1 + 4 * n;
+        try (ByteArrayInputStream bis = new ByteArrayInputStream(uncompressed_binary);
+             DataInputStream dis = new DataInputStream(bis)) {
+            int n = dis.readByte();
+            int[] nbt_length = new int[n];
+            for (int i = 0; i < n; i++) nbt_length[i] = dis.readInt();
             for (int i = 0; i < n; i++) {
-                ret.add(itemFromBinary(uncompressed_binary, offset, block_sizes[i]));
-                offset += block_sizes[i];
+                byte[] tmp = new byte[nbt_length[i]];
+                dis.readFully(tmp);
+                ret.add(itemFromBinary(tmp));
             }
-        } catch (IOException | ReflectiveOperationException | IllegalArgumentException ex) {
-            ex.printStackTrace();
-            return null;
+        } catch (IOException | ReflectiveOperationException ex) {
+            throw new RuntimeException(ex);
         }
         return ret;
     }
@@ -210,7 +185,7 @@ public final class ItemStackUtils {
         if (ret != null && ret.size() >= 1) return ret.get(0);
         return null;
     }
-    
+
     /**
      * https://github.com/sainttx/Auctions/blob/12533c9af0b1dba700473bf728895abb9ff5b33b/Auctions/src/main/java/com/sainttx/auctions/SimpleMessageFactory.java#L197
      * Convert an item to its JSON representation to be shown in chat.
