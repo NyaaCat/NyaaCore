@@ -44,7 +44,7 @@ public enum ColumnType {
         if (this == TEXT) {
             if (cls == String.class) return raw;
             if (cls.isEnum()) return ((Enum) raw).name();
-            if (cls == ItemStack.class) return ItemStackUtils.itemToBase64((ItemStack) raw);
+            if (ItemStack.class.isAssignableFrom(cls)) return ItemStackUtils.itemToBase64((ItemStack) raw);
         } else if (this == INTEGER) {
             if (cls == Boolean.class) return (Boolean) raw ? 1L : 0L;
             if (cls == Long.class || cls == Integer.class || cls == Short.class || cls == Byte.class)
