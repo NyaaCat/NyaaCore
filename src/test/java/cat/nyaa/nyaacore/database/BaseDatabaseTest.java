@@ -20,6 +20,7 @@ public class BaseDatabaseTest {
         record.uuid = UUID.randomUUID();
         record.uuid_indirect = UUID.randomUUID();
         db.query(TestTable.class).insert(record);
+        //db.query(TestTable.class).insert(record);
         record.id = 1L; // SQLite auto inc for PRIMARY INT
     }
 
@@ -72,5 +73,10 @@ public class BaseDatabaseTest {
         assertEquals(record.string, ret.string);
         assertEquals(record.uuid, ret.uuid);
         assertEquals(record.uuid_indirect, ret.uuid_indirect);
+    }
+
+    @Test
+    public void test6() throws Exception {
+        assertEquals(1, db.query(TestTable.class).count());
     }
 }

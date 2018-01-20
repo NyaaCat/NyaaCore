@@ -266,10 +266,9 @@ public abstract class BaseDatabase implements Cloneable {
          * @return the record, or throw exception if not unique
          */
         public T selectUnique() {
-            List<T> results = select();
-            if (results.size() < 1) throw new RuntimeException("SQL Selection has no result");
-            if (results.size() > 1) throw new RuntimeException("SQL Selection result is not unique");
-            return results.get(0);
+            T result = selectUniqueUnchecked();
+            if (result == null) throw new RuntimeException("SQL Selection has no result or not unique");
+            return result;
         }
 
         /**
@@ -278,18 +277,72 @@ public abstract class BaseDatabase implements Cloneable {
          * @return the record, or null if not unique.
          */
         public T selectUniqueUnchecked() {
-            List<T> results = select();
-            return results.size() == 1 ? results.get(0) : null;
+            String sql = "SELECT " + table.getColumnNamesString() + " FROM " + table.tableName;
+            List<Object> objects = new ArrayList<>();
+            if (whereClause.size() > 0) {
+                sql += " WHERE";
+                for (Map.Entry e : whereClause.entrySet()) {
+                    if (objects.size() > 0) sql += " AND";
+                    sql += " " + e.getKey();
+                    objects.add(e.getValue());
+                }
+            }
+            try {
+                PreparedStatement stmt = getConnection().prepareStatement(sql);
+                int x = 1;
+                for (Object obj : objects) {
+                    stmt.setObject(x, obj);
+                    x++;
+                }
+                T result = null;
+                ResultSet rs = stmt.executeQuery();
+                if (rs.next()) {
+                    result = table.getObjectFromResultSet(rs);
+                    if (rs.next()) result = null;
+                }
+                stmt.close();
+                return result;
+            } catch (SQLException | ReflectiveOperationException ex) {
+                throw new RuntimeException(ex);
+            }
         }
 
         /**
          * A short hand for select().size();
-         * Note the potential performance issue.
          *
          * @return number of records to be selected.
          */
         public int count() {
-            return select().size();
+            String sql = "SELECT COUNT(*) AS C FROM " + table.tableName;
+            List<Object> objects = new ArrayList<>();
+            if (whereClause.size() > 0) {
+                sql += " WHERE";
+                for (Map.Entry e : whereClause.entrySet()) {
+                    if (objects.size() > 0) sql += " AND";
+                    sql += " " + e.getKey();
+                    objects.add(e.getValue());
+                }
+            }
+            try {
+                PreparedStatement stmt = getConnection().prepareStatement(sql);
+                int x = 1;
+                for (Object obj : objects) {
+                    stmt.setObject(x, obj);
+                    x++;
+                }
+                List<T> results = new ArrayList<T>();
+                ResultSet rs = stmt.executeQuery();
+                if (rs.next()) {
+                    int count = rs.getInt("C");
+                    stmt.close();
+                    return count;
+                } else {
+                    stmt.close();
+                    throw new RuntimeException("COUNT() returns empty result");
+                }
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
         }
 
         /**
