@@ -33,7 +33,7 @@ after_success:
 - export GIT_ORIGIN_URL=`git config --get remote.origin.url`
 - gradle publish
 - cd ..
-- git clone -b maven-repo $GIT_ORIGIN_URL nyaacore-mvn
+- git clone -b maven-repo-dev $GIT_ORIGIN_URL nyaacore-mvn
 - cp -r NyaaCore/build/repo/cat nyaacore-mvn/
 - cd nyaacore-mvn
 - git config credential.helper "store --file=.git/credentials"
@@ -50,4 +50,3 @@ deploy:
   file: ./NyaaCore-v$VERSION_STRING.jar
   on:
     tags: false
-    all_branches: true
