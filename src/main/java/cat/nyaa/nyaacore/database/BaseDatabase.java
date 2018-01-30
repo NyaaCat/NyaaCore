@@ -50,7 +50,7 @@ public abstract class BaseDatabase implements Cloneable {
         createTable(tables.get(name));
     }
 
-    protected void createTable(Class<?> cls) {
+    public void createTable(Class<?> cls) {
         Validate.notNull(cls);
         createTable(tableName.get(cls));
     }
@@ -127,15 +127,15 @@ public abstract class BaseDatabase implements Cloneable {
      * @return Query object
      */
     public <T> Query<T> query(Class<T> tableClass) {
-        return new Query<>(tableClass);
+        return new SQLiteQuery<>(tableClass);
     }
 
-    public class Query<T> {
+    public class SQLiteQuery<T> implements Query<T> {
         private TableStructure<T> table;
         /* NOTE: the values in the map must be SQL-type objects */
         private Map<String, Object> whereClause = new HashMap<>();
 
-        public Query(Class<T> tableClass) {
+        public SQLiteQuery(Class<T> tableClass) {
             if (!tableName.containsKey(tableClass)) throw new IllegalArgumentException("Unknown Table");
             if (!tables.containsKey(tableName.get(tableClass))) throw new IllegalArgumentException("Unknown Table");
             table = (TableStructure<T>) tables.get(tableName.get(tableClass));
@@ -147,11 +147,13 @@ public abstract class BaseDatabase implements Cloneable {
          *
          * @return self
          */
+        @Override
         public Query<T> clear() {
             whereClause.clear();
             return this;
         }
 
+        @Override
         public Query<T> whereEq(String columnName, Object obj) {
             return where(columnName, "=", obj);
         }
@@ -160,6 +162,7 @@ public abstract class BaseDatabase implements Cloneable {
          * comparator can be any SQL comparator.
          * e.g. =, >, <
          */
+        @Override
         public Query<T> where(String columnName, String comparator, Object obj) {
             if (!table.hasColumn(columnName)) throw new IllegalArgumentException("Unknown DataColumn Name");
             obj = table.getColumn(columnName).toDatabaseType(obj);
@@ -170,6 +173,7 @@ public abstract class BaseDatabase implements Cloneable {
         /**
          * remove records matching the where clauses
          */
+        @Override
         public void delete() {
             String sql = "DELETE FROM " + table.getTableName();
             List<Object> objects = new ArrayList<>();
@@ -201,6 +205,7 @@ public abstract class BaseDatabase implements Cloneable {
          *
          * @param object record to be inserted
          */
+        @Override
         public void insert(T object) {
             try {
                 String sql = String.format("INSERT INTO %s(%s) VALUES(?", table.getTableName(), table.getColumnNamesString());
@@ -229,6 +234,7 @@ public abstract class BaseDatabase implements Cloneable {
          *
          * @return all select rows
          */
+        @Override
         public List<T> select() {
             String sql = "SELECT " + table.getColumnNamesString() + " FROM " + table.tableName;
             List<Object> objects = new ArrayList<>();
@@ -265,6 +271,7 @@ public abstract class BaseDatabase implements Cloneable {
          *
          * @return the record, or throw exception if not unique
          */
+        @Override
         public T selectUnique() {
             T result = selectUniqueUnchecked();
             if (result == null) throw new RuntimeException("SQL Selection has no result or not unique");
@@ -312,6 +319,7 @@ public abstract class BaseDatabase implements Cloneable {
          *
          * @return number of records to be selected.
          */
+        @Override
         public int count() {
             String sql = "SELECT COUNT(*) AS C FROM " + table.tableName;
             List<Object> objects = new ArrayList<>();
@@ -351,6 +359,7 @@ public abstract class BaseDatabase implements Cloneable {
          * @param obj     new values for columns
          * @param columns columns need to be updated, update all columns if empty
          */
+        @Override
         public void update(T obj, String... columns) {
             try {
                 List<String> updatedColumns = new ArrayList<>();

@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public abstract class SQLiteDatabase extends BaseDatabase implements Cloneable {
+public abstract class SQLiteDatabase extends BaseDatabase implements Cloneable, RelationalDB {
     protected SQLiteDatabase() {
         super();
     }

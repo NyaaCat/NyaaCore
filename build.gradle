@@ -10,7 +10,7 @@ configurations.all {
 // Version strings used for CI
 // Note the spaces before and after the equals sign
 ext.majorVersion = 4
-ext.minorVersion = 1
+ext.minorVersion = 2
 ext.minecraftVersion = "1.12"
 
 sourceCompatibility = 1.8
