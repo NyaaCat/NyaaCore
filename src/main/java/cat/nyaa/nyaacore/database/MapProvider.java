@@ -1,5 +1,7 @@
 package cat.nyaa.nyaacore.database;
 
+import org.bukkit.plugin.Plugin;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -8,12 +10,12 @@ import java.util.function.Function;
 
 public class MapProvider implements DatabaseProvider {
     @Override
-    public Database get(Map<String, Object> configuration) {
+    public Database get(Plugin plugin, Map<String, Object> configuration) {
          return new MapDB<>();
     }
 
     public static class MapDB<K, V> implements KeyValueDB<K, V>{
-        private Map<K, V> map = new HashMap<>();
+        private Map<K, V> map;
 
         @Override
         public V get(K key) {
@@ -43,6 +45,11 @@ public class MapProvider implements DatabaseProvider {
         @Override
         public void clear() {
             map.clear();
+        }
+
+        @Override
+        public void connect(){
+            map = new HashMap<>();
         }
 
         @Override

@@ -19,16 +19,16 @@ public class DatabaseUtils {
     }
 
     @SuppressWarnings("unchecked")
-    public static <T extends Database> T get(String provider, Map<String, Object> configuration){
+    public static <T extends Database> T get(JavaPlugin plugin, String provider, Map<String, Object> configuration){
         DatabaseProvider p = providerRegistration.get(provider);
         Validate.notNull(p, "Provider '" + provider + "' not found");
-        Database db = p.get(configuration);
+        Database db = p.get(plugin, configuration);
         return (T) db;
     }
 
     public static <T extends Database> T get(JavaPlugin plugin, String sectionName){
         ConfigurationSection section = plugin.getConfig().getConfigurationSection(sectionName);
-        return get(section.getString("provider"), section.getConfigurationSection("connection").getValues(false));
+        return get(plugin, section.getString("provider"), section.getConfigurationSection("connection").getValues(false));
     }
 
     public static <T extends Database> T get(String sectionName){

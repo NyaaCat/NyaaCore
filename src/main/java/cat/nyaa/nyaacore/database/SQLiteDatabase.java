@@ -1,5 +1,8 @@
 package cat.nyaa.nyaacore.database;
 
+import org.apache.commons.lang.NotImplementedException;
+import org.bukkit.Bukkit;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.*;
@@ -8,27 +11,31 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-public abstract class SQLiteDatabase extends BaseDatabase implements Cloneable, RelationalDB {
-    protected SQLiteDatabase() {
+public class SQLiteDatabase extends BaseDatabase implements Cloneable, RelationalDB {
+
+    private Plugin plugin;
+
+    private String file;
+
+    private Class<?>[] classes;
+
+    public SQLiteDatabase(Plugin basePlugin, String fileName, Class<?>[] tableClasses) {
         super();
+        file = fileName;
+        plugin = basePlugin;
+        classes = tableClasses;
     }
 
     protected Connection dbConn;
 
-    protected abstract String getFileName();
-
-    protected abstract JavaPlugin getPlugin();
-
-    protected void connect() {
-        File dbFile = new File(getPlugin().getDataFolder(), getFileName());
+    public void connect() {
+        File dbFile = new File(plugin.getDataFolder(), file);
         try {
             Class.forName("org.sqlite.JDBC");
             String connStr = "jdbc:sqlite:" + dbFile.getAbsolutePath();
-            getPlugin().getLogger().info("Connecting database: " + connStr);
+            plugin.getLogger().info("Connecting database: " + connStr);
             dbConn = DriverManager.getConnection(connStr);
             dbConn.setAutoCommit(true);
             createTables();
@@ -46,6 +53,11 @@ public abstract class SQLiteDatabase extends BaseDatabase implements Cloneable, 
         } catch (SQLException ex) {
             throw new RuntimeException(ex);
         }
+    }
+
+    @Override
+    protected Class<?>[] getTables() {
+        return classes;
     }
 
     @Override
@@ -75,7 +87,7 @@ public abstract class SQLiteDatabase extends BaseDatabase implements Cloneable, 
     public <T> List<T> queryBundledAs(String filename, Map<String, String> replacementMap, Class<T> cls, Object... parameters) {
         String sql;
         try (
-                InputStream inputStream = getPlugin().getResource("sql/" + filename);
+                InputStream inputStream = plugin.getResource("sql/" + filename);
                 BufferedInputStream bis = new BufferedInputStream(inputStream);
                 ByteArrayOutputStream buf = new ByteArrayOutputStream()
         ) {
@@ -105,5 +117,15 @@ public abstract class SQLiteDatabase extends BaseDatabase implements Cloneable, 
 
     public void queryBundled(String filename, Map<String, String> replacementMap, Object... parameters) {
         queryBundledAs(filename, replacementMap, null, parameters);
+    }
+
+    @Override
+    public void updateTable(Class<?> cls) {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public void deleteTable(Class<?> cls) {
+        throw new NotImplementedException();
     }
 }
