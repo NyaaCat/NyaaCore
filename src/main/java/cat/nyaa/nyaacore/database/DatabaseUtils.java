@@ -1,7 +1,5 @@
 package cat.nyaa.nyaacore.database;
 
-import com.sun.istack.internal.NotNull;
-import com.sun.istack.internal.Nullable;
 import org.apache.commons.lang.Validate;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -40,7 +38,7 @@ public class DatabaseUtils {
      * @return database instance
      */
     @SuppressWarnings("unchecked")
-    public static <T extends Database> T get(@NotNull String provider, @Nullable JavaPlugin plugin, @Nullable Map<String, Object> configuration){
+    public static <T extends Database> T get(String provider, JavaPlugin plugin, Map<String, Object> configuration){
         DatabaseProvider p = providerRegistration.get(provider);
         Validate.notNull(p, "Provider '" + provider + "' not found");
         Database db = p.get(plugin, configuration);
@@ -56,7 +54,7 @@ public class DatabaseUtils {
      * @param sectionName   configuration section in plugin's config
      * @return database instance
      */
-    public static <T extends Database> T get(@NotNull JavaPlugin plugin, @NotNull String sectionName){
+    public static <T extends Database> T get(JavaPlugin plugin, String sectionName){
         ConfigurationSection section = plugin.getConfig().getConfigurationSection(sectionName);
         Validate.notNull(section, "Please add a 'database' section containing a 'provider' value and (if provider requires) a 'connection' section");
         ConfigurationSection conn = section.getConfigurationSection("connection");
@@ -72,7 +70,7 @@ public class DatabaseUtils {
      * @param sectionName   configuration section in plugin's config
      * @return database instance
      */
-    public static <T extends Database> T get(@NotNull String sectionName){
+    public static <T extends Database> T get(String sectionName){
         try {
             return get(JavaPlugin.getProvidingPlugin(Class.forName(Thread.currentThread().getStackTrace()[2].getClassName())), sectionName);
         } catch (ClassNotFoundException e) {
