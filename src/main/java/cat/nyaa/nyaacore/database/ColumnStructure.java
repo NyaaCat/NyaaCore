@@ -14,7 +14,7 @@ public class ColumnStructure {
     final String name;
     final TableStructure table;
     final boolean isPrimary;
-
+    final int length;
     final Field field;      // for FIELD or FIELD_PARSER
     final Class fieldType; // only used if accessMethod is not FIELD_PARSER, this is native java type
     final Method fieldParser; // for FIELD_PARSER
@@ -34,6 +34,7 @@ public class ColumnStructure {
         if ("".equals(name)) name = dataField.getName();
         this.name = name;
         this.isPrimary = dataField.getDeclaredAnnotation(PrimaryKey.class) != null;
+        length = anno.length();
         dataField.setAccessible(true);
         field = dataField;
         fieldType = field.getType();
@@ -101,11 +102,14 @@ public class ColumnStructure {
                     (setter.getReturnType() != Void.class && setter.getReturnType() != Void.TYPE) ||
                     Modifier.isStatic(setter.getModifiers()))
                 throw new RuntimeException("setter signature mismatch");
-            boolean primary = getter.getDeclaredAnnotation(PrimaryKey.class) != null;
-            primary |= setter.getDeclaredAnnotation(PrimaryKey.class) != null;
+            PrimaryKey primary = getter.getDeclaredAnnotation(PrimaryKey.class);
+            if(primary == null){
+                primary = setter.getDeclaredAnnotation(PrimaryKey.class);
+            }
             getter.setAccessible(true);
             setter.setAccessible(true);
-            this.isPrimary = primary;
+            this.isPrimary = primary != null;
+            length = anno.length();
         } catch (ReflectiveOperationException ex) {
             ex.printStackTrace();
             throw new RuntimeException(ex);
@@ -141,8 +145,10 @@ public class ColumnStructure {
     }
 
     public String getTableCreationScheme() {
-        String ret = String.format("%s %s NOT NULL", name, columnType.name());
-        if (isPrimary) ret += " PRIMARY KEY";
+        String type = columnType.name();
+        String ret = String.format("%s %s NOT NULL", name, type);
+        if (isPrimary && length == 0) ret += " PRIMARY KEY";
+        else if(isPrimary) ret += String.format(", CONSTRAINT PRIMARY KEY (%s(%d))", name, length);
         return ret;
     }
 

@@ -4,8 +4,13 @@ import org.apache.commons.lang.Validate;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Database utils that provide database access according to plugin's configuration
@@ -26,6 +31,7 @@ public class DatabaseUtils {
     static {
         registerProvider("map", new MapProvider());
         registerProvider("sqlite", new SQLiteProvider());
+        registerProvider("mysql", new MysqlProvider());
     }
 
     /**
@@ -90,5 +96,38 @@ public class DatabaseUtils {
         } catch (ClassNotFoundException e) {
             throw new IllegalStateException();
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    static Class<?>[] scanClasses(JavaPlugin plugin, Map<String, Object> configuration) {
+        Class<?>[] classes;
+        if(Boolean.parseBoolean(configuration.get("autoscan").toString())){
+            Object pack = configuration.get("package");
+            try {
+                Set<ClassPath.ClassInfo> classInfos = ClassPath.from(new File(plugin.getClass().getProtectionDomain().getCodeSource().getLocation().toURI()), plugin.getClass().getClassLoader()).getAllClasses();
+                classes = classInfos
+                           .stream()
+                           .filter(c -> pack == null || c.getPackageName().startsWith((String) pack))
+                           .map(ClassPath.ClassInfo::load)
+                           .filter(c -> c != null && c.getAnnotation(DataTable.class) != null)
+                           .toArray(Class<?>[]::new);
+            } catch (IOException|URISyntaxException e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            Object obj = configuration.get("tables");
+            if(!(obj instanceof Collection)){
+                throw new IllegalArgumentException();
+            }
+            Collection<String> tables = ((Collection<String>) configuration.get("tables"));
+            classes = tables.stream().map(s -> {
+                try {
+                    return Class.forName(s);
+                } catch (ClassNotFoundException e) {
+                    throw new IllegalArgumentException(e);
+                }
+            }).toArray(Class<?>[]::new);
+        }
+        return classes;
     }
 }
