@@ -101,10 +101,10 @@ class TableStructure<T> {
         return sb.toString();
     }
 
-    public String getCreateTableSQL() {
+    public String getCreateTableSQL(boolean sqlite) {
         StringJoiner colStr = new StringJoiner(",");
         for (String colName : orderedColumnName) {
-            colStr.add(columns.get(colName).getTableCreationScheme());
+            colStr.add(columns.get(colName).getTableCreationScheme(sqlite));
         }
         return String.format("CREATE TABLE IF NOT EXISTS %s(%s)", tableName, colStr.toString());
     }

@@ -38,7 +38,7 @@ public class SQLiteDatabase extends BaseDatabase implements Cloneable, Relationa
             plugin.getLogger().info("Connecting database: " + connStr);
             dbConn = DriverManager.getConnection(connStr);
             dbConn.setAutoCommit(true);
-            createTables();
+            createTables(true);
         } catch (ClassNotFoundException | SQLException ex) {
             dbConn = null;
             throw new RuntimeException(ex);
@@ -117,6 +117,11 @@ public class SQLiteDatabase extends BaseDatabase implements Cloneable, Relationa
 
     public void queryBundled(String filename, Map<String, String> replacementMap, Object... parameters) {
         queryBundledAs(filename, replacementMap, null, parameters);
+    }
+
+    @Override
+    public void createTable(Class<?> cls) {
+        createTable(cls, true);
     }
 
     @Override

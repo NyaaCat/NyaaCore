@@ -12,7 +12,7 @@ public class MysqlProvider implements DatabaseProvider {
     public MysqlDatabase get(Plugin plugin, Map<String, Object> configuration) {
         Class<?>[] classes = DatabaseUtils.scanClasses((JavaPlugin) plugin, configuration);
         String jdbc = (String)configuration.get("jdbc");
-        return new MysqlDatabase(jdbc == null? "com.mysql.jdbc.Driver" : jdbc, (String)configuration.get("url"), (String)configuration.get("username"), (String)configuration.get("password"), classes);
+        return new MysqlDatabase(plugin, jdbc == null? "com.mysql.jdbc.Driver" : jdbc, (String)configuration.get("url"), (String)configuration.get("username"), (String)configuration.get("password"), classes);
     }
 
 }

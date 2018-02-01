@@ -144,10 +144,10 @@ public class ColumnStructure {
         return columnType;
     }
 
-    public String getTableCreationScheme() {
+    public String getTableCreationScheme(boolean sqlite) {
         String type = columnType.name();
         String ret = String.format("%s %s NOT NULL", name, type);
-        if (isPrimary && length == 0) ret += " PRIMARY KEY";
+        if (isPrimary && (length == 0 || sqlite)) ret += " PRIMARY KEY";
         else if(isPrimary) ret += String.format(", CONSTRAINT PRIMARY KEY (%s(%d))", name, length);
         return ret;
     }

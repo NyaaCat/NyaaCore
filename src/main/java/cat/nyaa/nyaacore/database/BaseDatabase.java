@@ -50,20 +50,20 @@ public abstract class BaseDatabase implements Cloneable {
         }
     }
 
-    protected void createTables() {
+    protected void createTables(boolean sqlite) {
         for (TableStructure<?> c : tables.values()) {
-            createTable(c);
+            createTable(c, sqlite);
         }
     }
 
-    protected void createTable(String name) {
+    protected void createTable(String name, boolean sqlite) {
         Validate.notNull(name);
-        createTable(tables.get(name));
+        createTable(tables.get(name), sqlite);
     }
 
-    public void createTable(Class<?> cls) {
+    public void createTable(Class<?> cls, boolean sqlite) {
         Validate.notNull(cls);
-        createTable(tableName.get(cls));
+        createTable(tableName.get(cls), sqlite);
     }
 
     /**
@@ -72,9 +72,9 @@ public abstract class BaseDatabase implements Cloneable {
      *
      * @param struct The table definition
      */
-    protected void createTable(TableStructure<?> struct) {
+    protected void createTable(TableStructure<?> struct, boolean sqlite) {
         Validate.notNull(struct);
-        String sql = struct.getCreateTableSQL();
+        String sql = struct.getCreateTableSQL(sqlite);
         try {
             Statement smt = getConnection().createStatement();
             smt.executeUpdate(sql);
