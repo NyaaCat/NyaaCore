@@ -6,14 +6,14 @@ import org.junit.Test;
 public class MapProviderTest {
     @Test
     public void test1() {
-        KeyValueDB<Integer, String> db = DatabaseUtils.get(null, "map", null);
+        KeyValueDB<Integer, String> db = DatabaseUtils.get("map",  null, null);
         db.connect();
         Assert.assertNull(db.get(1));
     }
 
     @Test
     public void test2() {
-        KeyValueDB<String, String> db = DatabaseUtils.get(null,  "map", null);
+        KeyValueDB<String, String> db = DatabaseUtils.get("map",  null, null);
         db.connect();
         db.put("s", "t");
         db.put("k", "v");
@@ -22,7 +22,7 @@ public class MapProviderTest {
 
     @Test
     public void test3() {
-        KeyValueDB<String, String> db = DatabaseUtils.get(null, "map", null);
+        KeyValueDB<String, String> db = DatabaseUtils.get("map",  null, null);
         db.connect();
         db.put("k", "v");
         db.asMap().clear();
