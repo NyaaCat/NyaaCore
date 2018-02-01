@@ -21,14 +21,14 @@ public class SQLiteDatabase extends BaseDatabase implements Cloneable, Relationa
 
     private Class<?>[] classes;
 
-    public SQLiteDatabase(Plugin basePlugin, String fileName, Class<?>[] tableClasses) {
-        super();
+    SQLiteDatabase(Plugin basePlugin, String fileName, Class<?>[] tableClasses) {
+        super(tableClasses);
         file = fileName;
         plugin = basePlugin;
         classes = tableClasses;
     }
 
-    protected Connection dbConn;
+    private Connection dbConn;
 
     public void connect() {
         File dbFile = new File(plugin.getDataFolder(), file);

@@ -39,6 +39,17 @@ public abstract class BaseDatabase implements Cloneable {
         }
     }
 
+    protected BaseDatabase(Class<?>[] tableClasses) {
+        tables = new HashMap<>();
+        tableName = new HashMap<>();
+        for (Class<?> tableClass : tableClasses) {
+            TableStructure<?> tableStructure = TableStructure.fromClass(tableClass);
+            if (tableStructure == null) throw new RuntimeException();
+            tables.put(tableStructure.getTableName(), tableStructure);
+            tableName.put(tableClass, tableStructure.getTableName());
+        }
+    }
+
     protected void createTables() {
         for (TableStructure<?> c : tables.values()) {
             createTable(c);
