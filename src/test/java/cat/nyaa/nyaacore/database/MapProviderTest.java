@@ -9,6 +9,7 @@ public class MapProviderTest {
         KeyValueDB<Integer, String> db = DatabaseUtils.get("map",  null, null);
         db.connect();
         Assert.assertNull(db.get(1));
+        db.close();
     }
 
     @Test
@@ -18,16 +19,17 @@ public class MapProviderTest {
         db.put("s", "t");
         db.put("k", "v");
         Assert.assertEquals("v", db.get("k"));
+        db.close();
     }
 
     @Test
     public void test3() {
-        KeyValueDB<String, String> db = DatabaseUtils.get("map",  null, null);
-        db.connect();
-        db.put("k", "v");
-        db.asMap().clear();
-        Assert.assertNull(db.get("k"));
-        db.put("k", "v0");
-        Assert.assertTrue(db.getAll("k").contains("v0"));
+        try(KeyValueDB<String, String> db = DatabaseUtils.get("map",  null, null).connect()){
+            db.put("k", "v");
+            db.asMap().clear();
+            Assert.assertNull(db.get("k"));
+            db.put("k", "v0");
+            Assert.assertTrue(db.getAll("k").contains("v0"));
+        }
     }
 }

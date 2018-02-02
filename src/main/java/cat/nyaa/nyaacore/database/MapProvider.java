@@ -48,8 +48,10 @@ public class MapProvider implements DatabaseProvider {
         }
 
         @Override
-        public void connect(){
+        @SuppressWarnings("unchecked")
+        public <T extends Database> T connect(){
             map = new HashMap<>();
+            return (T) this;
         }
 
         @Override

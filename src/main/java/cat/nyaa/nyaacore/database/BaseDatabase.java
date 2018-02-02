@@ -23,8 +23,6 @@ public abstract class BaseDatabase implements Cloneable {
     /* auto commit should be set to `true` for the returned connection */
     protected abstract Connection getConnection();
 
-    public abstract void close();
-
     /**
      * Scan & construct all table structures.
      */

@@ -28,7 +28,8 @@ public class MysqlDatabase extends BaseDatabase implements RelationalDB {
     }
 
     @Override
-    public void connect() {
+    @SuppressWarnings("unchecked")
+    public <T extends Database> T connect() {
         try {
             Class.forName(jdbcDriver);
         } catch (ClassNotFoundException e) {
@@ -42,6 +43,7 @@ public class MysqlDatabase extends BaseDatabase implements RelationalDB {
             throw new RuntimeException("connection failed", e);
         }
         createTables(false);
+        return (T) this;
     }
 
     @Override

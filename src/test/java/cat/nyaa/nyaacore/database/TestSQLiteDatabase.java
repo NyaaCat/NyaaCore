@@ -37,7 +37,6 @@ public class TestSQLiteDatabase extends BaseDatabase {
         }
     }
 
-    @Override
     public void close() {
         try {
             dbConn.close();

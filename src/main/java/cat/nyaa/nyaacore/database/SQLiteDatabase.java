@@ -1,9 +1,7 @@
 package cat.nyaa.nyaacore.database;
 
 import org.apache.commons.lang.NotImplementedException;
-import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -30,7 +28,8 @@ public class SQLiteDatabase extends BaseDatabase implements Cloneable, Relationa
 
     private Connection dbConn;
 
-    public void connect() {
+    @SuppressWarnings("unchecked")
+    public <T extends Database> T connect() {
         File dbFile = new File(plugin.getDataFolder(), file);
         try {
             Class.forName("org.sqlite.JDBC");
@@ -43,6 +42,7 @@ public class SQLiteDatabase extends BaseDatabase implements Cloneable, Relationa
             dbConn = null;
             throw new RuntimeException(ex);
         }
+        return (T) this;
     }
 
     @Override
