@@ -2,6 +2,7 @@ package cat.nyaa.nyaacore.database;
 
 import org.apache.commons.lang.Validate;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -107,7 +108,7 @@ public class DatabaseUtils {
     }
 
     @SuppressWarnings("unchecked")
-    public static Class<?>[] scanClasses(JavaPlugin plugin, Map<String, Object> configuration) {
+    public static Class<?>[] scanClasses(Plugin plugin, Map<String, Object> configuration) {
         Class<?>[] classes;
         if(Boolean.parseBoolean(configuration.get("autoscan").toString())){
             Object pack = configuration.get("package");
