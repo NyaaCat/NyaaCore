@@ -16,7 +16,7 @@ import java.util.Set;
  * Database utils that provide database access according to plugin's configuration
  */
 public class DatabaseUtils {
-    private static Map<String, DatabaseProvider> providerRegistration = new HashMap<>();
+    private static Map<String, DatabaseProvider> providerRegistry = new HashMap<>();
 
     /**
      * Register provider.
@@ -25,7 +25,15 @@ public class DatabaseUtils {
      * @param provider provider instance
      */
     public static void registerProvider(String name, DatabaseProvider provider){
-        providerRegistration.put(name, provider);
+        providerRegistry.put(name, provider);
+    }
+
+    public static boolean hasProvider(String name){
+        return providerRegistry.containsKey(name);
+    }
+
+    public static DatabaseProvider unregisterProvider(String name){
+        return providerRegistry.remove(name);
     }
 
     static {
@@ -45,7 +53,7 @@ public class DatabaseUtils {
      */
     @SuppressWarnings("unchecked")
     public static <T extends Database> T get(String provider, JavaPlugin plugin, Map<String, Object> configuration){
-        DatabaseProvider p = providerRegistration.get(provider);
+        DatabaseProvider p = providerRegistry.get(provider);
         Validate.notNull(p, "Provider '" + provider + "' not found");
         Database db = p.get(plugin, configuration);
         Validate.notNull(db, "Provider '" + provider + "' returned null");
@@ -65,7 +73,7 @@ public class DatabaseUtils {
         Validate.notNull(section, "Please add a 'database' section containing a 'provider' value and (if provider requires) a 'connection' section");
         ConfigurationSection conn = section.getConfigurationSection("connection");
         String provider = section.getString("provider");
-        Validate.notNull(provider, "Please add a 'provider' value in 'database' section. Available: " + providerRegistration.keySet().stream().reduce("", (s, s2) -> s + ", " + s2));
+        Validate.notNull(provider, "Please add a 'provider' value in 'database' section. Available: " + providerRegistry.keySet().stream().reduce("", (s, s2) -> s + ", " + s2));
         return get(provider, plugin, conn == null ? null : conn.getValues(false));
     }
 
@@ -99,7 +107,7 @@ public class DatabaseUtils {
     }
 
     @SuppressWarnings("unchecked")
-    static Class<?>[] scanClasses(JavaPlugin plugin, Map<String, Object> configuration) {
+    public static Class<?>[] scanClasses(JavaPlugin plugin, Map<String, Object> configuration) {
         Class<?>[] classes;
         if(Boolean.parseBoolean(configuration.get("autoscan").toString())){
             Object pack = configuration.get("package");
