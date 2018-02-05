@@ -20,12 +20,6 @@ public interface KeyValueDB<K, V> extends Database{
         return CompletableFuture.supplyAsync(() -> get(key, mappingFunction));
     }
 
-    void put(K key, V value);
-
-    default CompletableFuture<Void> putAsync(K key, V value) {
-        return CompletableFuture.supplyAsync(() -> {put(key, value);return null;});
-    }
-
     Collection<V> getAll(K key);
 
     default CompletableFuture<Collection<V>> getAllAsync(K key) {
@@ -33,6 +27,18 @@ public interface KeyValueDB<K, V> extends Database{
     }
 
     Map<K, V> asMap();
+
+    V put(K key, V value);
+
+    default CompletableFuture<V> putAsync(K key, V value) {
+        return CompletableFuture.supplyAsync(() -> put(key, value));
+    }
+
+    V remove(K key);
+
+    default CompletableFuture<V> removeAsync(K key) {
+        return CompletableFuture.supplyAsync(() -> remove(key));
+    }
 
     void clear();
 

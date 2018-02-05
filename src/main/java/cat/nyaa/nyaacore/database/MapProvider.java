@@ -28,8 +28,13 @@ public class MapProvider implements DatabaseProvider {
         }
 
         @Override
-        public void put(K key, V value) {
-            map.put(key, value);
+        public V put(K key, V value) {
+            return map.put(key, value);
+        }
+
+        @Override
+        public V remove(K key) {
+            return map.remove(key);
         }
 
         @Override
