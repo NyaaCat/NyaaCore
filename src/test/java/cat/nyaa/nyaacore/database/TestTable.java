@@ -1,22 +1,26 @@
 package cat.nyaa.nyaacore.database;
 
+import javax.persistence.Column;
+import javax.persistence.Id;
+import javax.persistence.Table;
 import java.util.UUID;
 
-@DataTable("test1")
+@Table(name = "test1")
 public class TestTable {
-    @DataColumn
-    @PrimaryKey
+
+    @Id
+    @Column
     public Long id;
 
-    @DataColumn
+    @Column
     public String string;
 
-    @DataColumn
+    @Column
     public UUID uuid;
 
     public UUID uuid_indirect;
 
-    @DataColumn("uuid_indirect")
+    @Column(name = "uuid_indirect")
     public String getUuidIndirect() {
         return uuid_indirect.toString();
     }

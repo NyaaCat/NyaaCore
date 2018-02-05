@@ -1,5 +1,7 @@
 package cat.nyaa.nyaacore.database;
 
+import javax.persistence.Column;
+import javax.persistence.Table;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.sql.ResultSet;
@@ -24,16 +26,16 @@ class TableStructure<T> {
     final List<String> orderedColumnName = new ArrayList<>();
 
     private TableStructure(Class<T> tableClass) {
-        DataTable annoDT = tableClass.getDeclaredAnnotation(DataTable.class);
+        Table annoDT = tableClass.getDeclaredAnnotation(Table.class);
         if (annoDT == null)
             throw new IllegalArgumentException("Class missing table annotation: " + tableClass.getName());
-        this.tableName = annoDT.value();
+        this.tableName = annoDT.name();
         this.tableClass = tableClass;
         String primKeyName = null;
 
         // load all the fields
         for (Field f : tableClass.getDeclaredFields()) {
-            DataColumn columnAnnotation = f.getAnnotation(DataColumn.class);
+            Column columnAnnotation = f.getAnnotation(Column.class);
             if (columnAnnotation == null) continue;
             ColumnStructure structure = new ColumnStructure(this, f, columnAnnotation);
             if (columns.containsKey(structure.getName()))
@@ -47,7 +49,7 @@ class TableStructure<T> {
 
         // load all the getter/setter
         for (Method m : tableClass.getDeclaredMethods()) {
-            DataColumn columnAnnotation = m.getAnnotation(DataColumn.class);
+            Column columnAnnotation = m.getAnnotation(Column.class);
             if (columnAnnotation == null) continue;
             ColumnStructure structure = new ColumnStructure(this, m, columnAnnotation);
             if (columns.containsKey(structure.getName()))

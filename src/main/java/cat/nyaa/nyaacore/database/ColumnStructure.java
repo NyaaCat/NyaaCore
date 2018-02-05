@@ -1,5 +1,7 @@
 package cat.nyaa.nyaacore.database;
 
+import javax.persistence.Column;
+import javax.persistence.Id;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -27,13 +29,13 @@ public class ColumnStructure {
     /**
      * Constructor for field based table columns
      */
-    public ColumnStructure(TableStructure table, Field dataField, DataColumn anno) {
+    public ColumnStructure(TableStructure table, Field dataField, Column anno) {
         if (anno == null) throw new IllegalArgumentException();
         this.table = table;
-        String name = anno.value();
+        String name = anno.name();
         if ("".equals(name)) name = dataField.getName();
         this.name = name;
-        this.isPrimary = dataField.getDeclaredAnnotation(PrimaryKey.class) != null;
+        this.isPrimary = dataField.getDeclaredAnnotation(Id.class) != null;
         length = anno.length();
         dataField.setAccessible(true);
         field = dataField;
@@ -73,14 +75,14 @@ public class ColumnStructure {
     /**
      * Constructor for method based table columns
      */
-    public ColumnStructure(TableStructure table, Method dataMethod, DataColumn anno) {
+    public ColumnStructure(TableStructure table, Method dataMethod, Column anno) {
         if (anno == null) throw new IllegalArgumentException();
         this.table = table;
         String methodName = dataMethod.getName();
         if (!methodName.startsWith("get") && !methodName.startsWith("set"))
             throw new IllegalArgumentException("Method is neither a setter nor a getter: " + dataMethod.toString());
         String methodSuffix = methodName.substring(3);
-        String name = ("".equals(anno.value())) ? methodSuffix : anno.value();
+        String name = ("".equals(anno.name())) ? methodSuffix : anno.name();
         Class methodType;
         if (methodName.startsWith("get")) {
             methodType = dataMethod.getReturnType();
@@ -102,9 +104,9 @@ public class ColumnStructure {
                     (setter.getReturnType() != Void.class && setter.getReturnType() != Void.TYPE) ||
                     Modifier.isStatic(setter.getModifiers()))
                 throw new RuntimeException("setter signature mismatch");
-            PrimaryKey primary = getter.getDeclaredAnnotation(PrimaryKey.class);
+            Id primary = getter.getDeclaredAnnotation(Id.class);
             if(primary == null){
-                primary = setter.getDeclaredAnnotation(PrimaryKey.class);
+                primary = setter.getDeclaredAnnotation(Id.class);
             }
             getter.setAccessible(true);
             setter.setAccessible(true);
