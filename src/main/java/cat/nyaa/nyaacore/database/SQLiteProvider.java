@@ -8,7 +8,7 @@ import java.util.Map;
 public class SQLiteProvider implements DatabaseProvider {
     @Override
     public SQLiteDatabase get(Plugin plugin, Map<String, Object> configuration) {
-        Class<?>[] classes = DatabaseUtils.scanClasses(plugin, configuration);
+        Class<?>[] classes = DatabaseUtils.scanClasses(plugin, configuration, DataTable.class);
         return new SQLiteDatabase(plugin, (String)configuration.get("file"), classes);
     }
 }

@@ -136,15 +136,15 @@ public abstract class BaseDatabase implements Cloneable {
      * @return Query object
      */
     public <T> Query<T> query(Class<T> tableClass) {
-        return new SQLiteQuery<>(tableClass);
+        return new SqlQuery<>(tableClass);
     }
 
-    public class SQLiteQuery<T> implements Query<T> {
+    public class SqlQuery<T> implements Query<T> {
         private TableStructure<T> table;
         /* NOTE: the values in the map must be SQL-type objects */
         private Map<String, Object> whereClause = new HashMap<>();
 
-        public SQLiteQuery(Class<T> tableClass) {
+        public SqlQuery(Class<T> tableClass) {
             if (!tableName.containsKey(tableClass)) throw new IllegalArgumentException("Unknown Table");
             if (!tables.containsKey(tableName.get(tableClass))) throw new IllegalArgumentException("Unknown Table");
             table = (TableStructure<T>) tables.get(tableName.get(tableClass));

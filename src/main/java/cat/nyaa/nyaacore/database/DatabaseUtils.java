@@ -7,6 +7,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.HashMap;
@@ -108,7 +109,7 @@ public class DatabaseUtils {
     }
 
     @SuppressWarnings("unchecked")
-    public static Class<?>[] scanClasses(Plugin plugin, Map<String, Object> configuration) {
+    public static Class<?>[] scanClasses(Plugin plugin, Map<String, Object> configuration, Class<? extends Annotation> annotation) {
         Class<?>[] classes;
         if(Boolean.parseBoolean(configuration.get("autoscan").toString())){
             Object pack = configuration.get("package");
@@ -118,7 +119,7 @@ public class DatabaseUtils {
                            .stream()
                            .filter(c -> pack == null || c.getPackageName().startsWith((String) pack))
                            .map(ClassPath.ClassInfo::load)
-                           .filter(c -> c != null && c.getAnnotation(DataTable.class) != null)
+                           .filter(c -> c != null && c.getAnnotation(annotation) != null)
                            .toArray(Class<?>[]::new);
             } catch (IOException|URISyntaxException e) {
                 throw new RuntimeException(e);
