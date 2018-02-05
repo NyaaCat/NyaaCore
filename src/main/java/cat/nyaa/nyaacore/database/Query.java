@@ -14,7 +14,7 @@ public interface Query<T> {
 
     void delete();
 
-    default Future<Void> deleteAsync()
+    default CompletableFuture<Void> deleteAsync()
     {
         delete();
         return CompletableFuture.completedFuture(null);
@@ -22,7 +22,7 @@ public interface Query<T> {
 
     void insert(T object);
 
-    default Future<Void> insertAsync(T object)
+    default CompletableFuture<Void> insertAsync(T object)
     {
         insert(object);
         return CompletableFuture.completedFuture(null);
@@ -30,25 +30,25 @@ public interface Query<T> {
 
     List<T> select();
 
-    default Future<List<T>> selectAsync() {
+    default CompletableFuture<List<T>> selectAsync() {
         return CompletableFuture.supplyAsync(this::select);
     }
 
     T selectUnique();
 
-    default Future<T> selectUniqueAsync() {
+    default CompletableFuture<T> selectUniqueAsync() {
         return CompletableFuture.supplyAsync(this::selectUnique);
     }
 
     int count();
 
-    default Future<Integer> countAsync() {
+    default CompletableFuture<Integer> countAsync() {
         return CompletableFuture.supplyAsync(this::count);
     }
 
     void update(T obj, String... columns);
 
-    default Future<Void> updateAsync(T obj, String... columns) {
+    default CompletableFuture<Void> updateAsync(T obj, String... columns) {
         return CompletableFuture.supplyAsync(() -> {update(obj, columns); return null;});
     }
 }
