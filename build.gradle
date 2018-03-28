@@ -53,12 +53,12 @@ repositories {
 dependencies {
     api "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT"
     api 'javax.persistence:persistence-api:1.0'
-    implementation 'net.milkbowl.vault:VaultAPI:1.6'
-    implementation 'org.librazy:NyaaUtilsLangChecker:1.0-SNAPSHOT'
-    implementation('net.ess3:Essentials:2.13-SNAPSHOT') {
+    api 'org.librazy:NyaaUtilsLangChecker:1.0-SNAPSHOT'
+    compileOnly 'net.milkbowl.vault:VaultAPI:1.6'
+    compileOnly('net.ess3:Essentials:2.13-SNAPSHOT') {
         transitive = false
     }
-    implementation('com.meowj:LangUtils:1.9') {
+    compileOnly('com.meowj:LangUtils:1.9') {
         transitive = false
     }
     testImplementation 'org.mockito:mockito-all:1.10.19'
