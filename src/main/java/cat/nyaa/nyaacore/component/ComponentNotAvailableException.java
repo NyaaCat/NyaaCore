@@ -1,6 +1,8 @@
 package cat.nyaa.nyaacore.component;
 
-public class ComponentNotAvailableException extends RuntimeException {
+import java.io.Serializable;
+
+public class ComponentNotAvailableException extends RuntimeException implements Serializable {
     private final Class<? extends IComponent> componentInterface;
 
     public ComponentNotAvailableException(Class<? extends IComponent> componentInterface) {

@@ -12,6 +12,7 @@ class TableStructure<T> {
     /* class -> TableStructure cache */
     private static final Map<Class<?>, TableStructure<?>> structured_tables = new HashMap<>();
 
+    @SuppressWarnings("unchecked")
     public static <X> TableStructure<X> fromClass(Class<X> cls) {
         if (structured_tables.containsKey(cls)) return (TableStructure<X>) structured_tables.get(cls);
         TableStructure<X> ts = new TableStructure<>(cls);

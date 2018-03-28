@@ -266,7 +266,7 @@ public abstract class BaseDatabase implements Cloneable {
         private String buildWhereClause(String sql, List<Object> objects) {
             if (whereClause.size() > 0) {
                 sql += " WHERE";
-                for (Map.Entry e : whereClause.entrySet()) {
+                for (Map.Entry<?,?> e : whereClause.entrySet()) {
                     if (objects.size() > 0) sql += " AND";
                     sql += " " + e.getKey();
                     objects.add(e.getValue());
@@ -380,7 +380,7 @@ public abstract class BaseDatabase implements Cloneable {
                 boolean firstClause = true;
                 if (whereClause.size() > 0) {
                     sql += " WHERE";
-                    for (Map.Entry e : whereClause.entrySet()) {
+                    for (Map.Entry<?,?> e : whereClause.entrySet()) {
                         if (!firstClause) sql += " AND";
                         firstClause = false;
                         sql += " " + e.getKey();

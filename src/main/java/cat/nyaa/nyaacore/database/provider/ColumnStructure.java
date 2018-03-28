@@ -12,6 +12,7 @@ import java.lang.reflect.Modifier;
  * 2. A field can be serialized/deserialized using toString() and fromString()/parse() (e.g. ZonedDateTime)
  * 3. A pair of getter/setter returning/accepting type listed in (1)
  */
+@SuppressWarnings("rawtypes")
 public class ColumnStructure {
     final String name;
     final TableStructure table;

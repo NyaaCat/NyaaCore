@@ -22,7 +22,7 @@ import java.lang.reflect.Method;
 import java.text.DecimalFormat;
 import java.util.*;
 
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "rawtypes"})
 public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
     //==== Error Definitions ====//
     private static class NotPlayerException extends RuntimeException {
@@ -147,6 +147,7 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private CommandReceiver newInstance(Class cls, Object arg1, Object arg2) throws ReflectiveOperationException {
         for (Constructor c : cls.getConstructors()) {
             if (c.getParameterCount() == 2 &&
@@ -409,6 +410,7 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
         /**
          * @deprecated hard coded indexes are not recommended
          */
+        @Deprecated
         public String at(int index) {
             return parsedArguments.get(index);
         }

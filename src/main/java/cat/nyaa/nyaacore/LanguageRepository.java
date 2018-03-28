@@ -179,6 +179,7 @@ public abstract class LanguageRepository implements ILocalizer {
     /**
      * @deprecated rename to getFormatted
      */
+    @Deprecated
     public String get(@LangKey String key, Object... para) {
         return getFormatted(key, para);
     }
