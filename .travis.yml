@@ -27,6 +27,7 @@ cache:
     - $HOME/.gradle/caches/
     - $HOME/.gradle/wrapper/
 after_success:
+- if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then exit 0; fi
 - cp build/libs/NyaaCore.jar ./NyaaCore-v$VERSION_STRING.jar
 - export GIT_TAG=v$VERSION_STRING
 - git tag $GIT_TAG -a -m "Generated tag from TravisCI for build $TRAVIS_BUILD_NUMBER"
