@@ -21,6 +21,11 @@ public class MapProvider implements DatabaseProvider {
         private Map<K, V> map;
 
         @Override
+        public int size() {
+            return map.size();
+        }
+
+        @Override
         public V get(K key) {
             return map.get(key);
         }

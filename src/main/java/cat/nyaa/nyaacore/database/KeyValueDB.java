@@ -8,6 +8,8 @@ import java.util.function.Function;
 
 public interface KeyValueDB<K, V> extends Database{
 
+    int size();
+
     V get(K key);
 
     default CompletableFuture<V> getAsync(K key) {
