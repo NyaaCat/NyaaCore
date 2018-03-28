@@ -135,4 +135,23 @@ public class SQLiteDatabase extends BaseDatabase implements Cloneable, Relationa
     public void deleteTable(Class<?> cls) {
         throw new NotImplementedException();
     }
+
+    @Override
+    public void enableAutoCommit() {
+        try {
+            dbConn.commit();
+            dbConn.setAutoCommit(true);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void disableAutoCommit() {
+        try {
+            dbConn.setAutoCommit(false);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

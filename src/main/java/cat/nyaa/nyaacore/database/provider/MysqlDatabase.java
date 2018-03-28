@@ -82,4 +82,23 @@ public class MysqlDatabase extends BaseDatabase implements RelationalDB {
     public void deleteTable(Class<?> cls) {
         throw new NotImplementedException();
     }
+
+    @Override
+    public void enableAutoCommit() {
+        try {
+            connection.commit();
+            connection.setAutoCommit(true);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void disableAutoCommit() {
+        try {
+            connection.setAutoCommit(false);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }
