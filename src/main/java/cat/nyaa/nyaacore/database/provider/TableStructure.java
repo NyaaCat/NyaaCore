@@ -1,4 +1,4 @@
-package cat.nyaa.nyaacore.database;
+package cat.nyaa.nyaacore.database.provider;
 
 import javax.persistence.Column;
 import javax.persistence.Table;

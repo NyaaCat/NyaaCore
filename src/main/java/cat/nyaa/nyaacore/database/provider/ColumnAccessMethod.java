@@ -1,4 +1,4 @@
-package cat.nyaa.nyaacore.database;
+package cat.nyaa.nyaacore.database.provider;
 
 public enum ColumnAccessMethod {
     FIELD,        // go through normal type conversion routing, and Enum/ItemStacks etc. are handled automatically.

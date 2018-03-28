@@ -1,5 +1,8 @@
-package cat.nyaa.nyaacore.database;
+package cat.nyaa.nyaacore.database.provider;
 
+import cat.nyaa.nyaacore.database.Database;
+import cat.nyaa.nyaacore.database.DatabaseProvider;
+import cat.nyaa.nyaacore.database.KeyValueDB;
 import org.bukkit.plugin.Plugin;
 
 import java.util.Collection;
@@ -14,7 +17,7 @@ public class MapProvider implements DatabaseProvider {
          return new MapDB<>();
     }
 
-    public static class MapDB<K, V> implements KeyValueDB<K, V>{
+    public static class MapDB<K, V> implements KeyValueDB<K, V> {
         private Map<K, V> map;
 
         @Override

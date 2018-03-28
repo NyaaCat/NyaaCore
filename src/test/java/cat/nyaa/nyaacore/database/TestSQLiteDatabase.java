@@ -1,6 +1,6 @@
 package cat.nyaa.nyaacore.database;
 
-import org.bukkit.plugin.java.JavaPlugin;
+import cat.nyaa.nyaacore.database.provider.BaseDatabase;
 
 import java.io.File;
 import java.sql.Connection;

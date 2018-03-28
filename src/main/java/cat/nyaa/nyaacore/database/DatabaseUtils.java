@@ -1,5 +1,9 @@
 package cat.nyaa.nyaacore.database;
 
+import cat.nyaa.nyaacore.database.provider.MapProvider;
+import cat.nyaa.nyaacore.database.provider.MysqlProvider;
+import cat.nyaa.nyaacore.database.provider.SQLiteProvider;
+import cat.nyaa.nyaacore.utils.ClassPathUtils;
 import org.apache.commons.lang.Validate;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.Plugin;
@@ -72,7 +76,7 @@ public class DatabaseUtils {
      */
     public static <T extends Database> T get(JavaPlugin plugin, String sectionName){
         ConfigurationSection section = plugin.getConfig().getConfigurationSection(sectionName);
-        Validate.notNull(section, "Please add a 'database' section containing a 'provider' value and (if provider requires) a 'connection' section");
+        Validate.notNull(section, "Please add a '" + sectionName + "' section containing a 'provider' value and (if provider requires) a 'connection' section to your " + plugin.getName() + "'s config file");
         ConfigurationSection conn = section.getConfigurationSection("connection");
         String provider = section.getString("provider");
         Validate.notNull(provider, "Please add a 'provider' value in 'database' section. Available: " + providerRegistry.keySet().stream().reduce("", (s, s2) -> s + ", " + s2));
@@ -114,11 +118,11 @@ public class DatabaseUtils {
         if(Boolean.parseBoolean(configuration.get("autoscan").toString())){
             Object pack = configuration.get("package");
             try {
-                Set<ClassPath.ClassInfo> classInfos = ClassPath.from(new File(plugin.getClass().getProtectionDomain().getCodeSource().getLocation().toURI()), plugin.getClass().getClassLoader()).getAllClasses();
+                Set<ClassPathUtils.ClassInfo> classInfos = ClassPathUtils.from(new File(plugin.getClass().getProtectionDomain().getCodeSource().getLocation().toURI()), plugin.getClass().getClassLoader()).getAllClasses();
                 classes = classInfos
                            .stream()
                            .filter(c -> pack == null || c.getPackageName().startsWith((String) pack))
-                           .map(ClassPath.ClassInfo::load)
+                           .map(ClassPathUtils.ClassInfo::load)
                            .filter(c -> c != null && c.getAnnotation(annotation) != null)
                            .toArray(Class<?>[]::new);
             } catch (IOException|URISyntaxException e) {

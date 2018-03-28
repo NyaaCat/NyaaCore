@@ -1,5 +1,6 @@
-package cat.nyaa.nyaacore.database;
+package cat.nyaa.nyaacore.database.provider;
 
+import cat.nyaa.nyaacore.database.Query;
 import org.apache.commons.lang.Validate;
 
 import java.sql.*;
@@ -139,6 +140,7 @@ public abstract class BaseDatabase implements Cloneable {
         return new SqlQuery<>(tableClass);
     }
 
+    @SuppressWarnings("unchecked")
     public class SqlQuery<T> implements Query<T> {
         private TableStructure<T> table;
         /* NOTE: the values in the map must be SQL-type objects */
@@ -186,14 +188,7 @@ public abstract class BaseDatabase implements Cloneable {
         public void delete() {
             String sql = "DELETE FROM " + table.getTableName();
             List<Object> objects = new ArrayList<>();
-            if (whereClause.size() > 0) {
-                sql += " WHERE";
-                for (Map.Entry e : whereClause.entrySet()) {
-                    if (objects.size() > 0) sql += " AND";
-                    sql += " " + e.getKey();
-                    objects.add(e.getValue());
-                }
-            }
+            sql = buildWhereClause(sql, objects);
             try {
                 PreparedStatement stmt = getConnection().prepareStatement(sql);
                 int x = 1;
@@ -247,14 +242,7 @@ public abstract class BaseDatabase implements Cloneable {
         public List<T> select() {
             String sql = "SELECT " + table.getColumnNamesString() + " FROM " + table.tableName;
             List<Object> objects = new ArrayList<>();
-            if (whereClause.size() > 0) {
-                sql += " WHERE";
-                for (Map.Entry e : whereClause.entrySet()) {
-                    if (objects.size() > 0) sql += " AND";
-                    sql += " " + e.getKey();
-                    objects.add(e.getValue());
-                }
-            }
+            sql = buildWhereClause(sql, objects);
             try {
                 PreparedStatement stmt = getConnection().prepareStatement(sql);
                 int x = 1;
@@ -273,6 +261,18 @@ public abstract class BaseDatabase implements Cloneable {
             } catch (SQLException | ReflectiveOperationException ex) {
                 throw new RuntimeException(ex);
             }
+        }
+
+        private String buildWhereClause(String sql, List<Object> objects) {
+            if (whereClause.size() > 0) {
+                sql += " WHERE";
+                for (Map.Entry e : whereClause.entrySet()) {
+                    if (objects.size() > 0) sql += " AND";
+                    sql += " " + e.getKey();
+                    objects.add(e.getValue());
+                }
+            }
+            return sql;
         }
 
         /**
@@ -295,14 +295,7 @@ public abstract class BaseDatabase implements Cloneable {
         public T selectUniqueUnchecked() {
             String sql = "SELECT " + table.getColumnNamesString() + " FROM " + table.tableName;
             List<Object> objects = new ArrayList<>();
-            if (whereClause.size() > 0) {
-                sql += " WHERE";
-                for (Map.Entry e : whereClause.entrySet()) {
-                    if (objects.size() > 0) sql += " AND";
-                    sql += " " + e.getKey();
-                    objects.add(e.getValue());
-                }
-            }
+            sql = buildWhereClause(sql, objects);
             try {
                 PreparedStatement stmt = getConnection().prepareStatement(sql);
                 int x = 1;
@@ -332,14 +325,7 @@ public abstract class BaseDatabase implements Cloneable {
         public int count() {
             String sql = "SELECT COUNT(*) AS C FROM " + table.tableName;
             List<Object> objects = new ArrayList<>();
-            if (whereClause.size() > 0) {
-                sql += " WHERE";
-                for (Map.Entry e : whereClause.entrySet()) {
-                    if (objects.size() > 0) sql += " AND";
-                    sql += " " + e.getKey();
-                    objects.add(e.getValue());
-                }
-            }
+            sql = buildWhereClause(sql, objects);
             try {
                 PreparedStatement stmt = getConnection().prepareStatement(sql);
                 int x = 1;

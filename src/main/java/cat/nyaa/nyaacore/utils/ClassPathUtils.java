@@ -1,6 +1,6 @@
-package cat.nyaa.nyaacore.database;
+package cat.nyaa.nyaacore.utils;
 
-// A stripped version from guava 6f22af40 as guava 21 contains suffers from https://github.com/google/guava/issues/2152
+// A stripped version from guava 6f22af40 as ClassPath contained in guava 21 suffers from https://github.com/google/guava/issues/2152
 /*
  * Copyright (C) 2012 The Guava Authors
  *
@@ -15,6 +15,7 @@ package cat.nyaa.nyaacore.database;
  * the License.
  */
 
+import cat.nyaa.nyaacore.NyaaCoreLoader;
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
@@ -41,10 +42,11 @@ import static com.google.common.base.StandardSystemProperty.JAVA_CLASS_PATH;
 import static com.google.common.base.StandardSystemProperty.PATH_SEPARATOR;
 import static java.util.logging.Level.WARNING;
 
-final class ClassPath {
-    private static final Logger logger = Logger.getLogger(ClassPath.class.getName());
+public final class ClassPathUtils {
 
-    /** Separator for the Class-Path manifest attribute value in jar files. */
+    /**
+     * Separator for the Class-Path manifest attribute value in jar files.
+     */
     private static final Splitter CLASS_PATH_ATTRIBUTE_SEPARATOR =
             Splitter.on(" ").omitEmptyStrings();
 
@@ -52,30 +54,34 @@ final class ClassPath {
 
     private final ImmutableSet<ResourceInfo> resources;
 
-    private ClassPath(ImmutableSet<ResourceInfo> resources) {
+    private ClassPathUtils(ImmutableSet<ResourceInfo> resources) {
         this.resources = resources;
     }
 
     /**
-     * Returns a {@code ClassPath} representing all classes and resources loadable from {@code
+     * Returns a {@code ClassPathUtils} representing all classes and resources loadable from {@code
      * classloader} and its ancestor class loaders.
      *
-     * <p><b>Warning:</b> {@code ClassPath} can find classes and resources only from:
+     * <p><b>Warning:</b> {@code ClassPathUtils} can find classes and resources only from:
      *
      * <ul>
-     *   <li>{@link URLClassLoader} instances' {@code file:} URLs
-     *   <li>the {@linkplain ClassLoader#getSystemClassLoader() system class loader}. To search the
-     *       system class loader even when it is not a {@link URLClassLoader} (as in Java 9), {@code
-     *       ClassPath} searches the files from the {@code java.class.path} system property.
+     * <li>{@link URLClassLoader} instances' {@code file:} URLs
+     * <li>the {@linkplain ClassLoader#getSystemClassLoader() system class loader}. To search the
+     * system class loader even when it is not a {@link URLClassLoader} (as in Java 9), {@code
+     * ClassPathUtils} searches the files from the {@code java.class.path} system property.
      * </ul>
      *
      * @throws IOException if the attempt to read class path resources (jar files or directories)
-     *     failed.
+     *                     failed.
      */
-    public static ClassPath from(File file, ClassLoader classloader) throws IOException {
+    public static ClassPathUtils from(File file, ClassLoader classloader) throws IOException {
         DefaultScanner scanner = new DefaultScanner();
         scanner.scan(file, classloader);
-        return new ClassPath(scanner.getResources());
+        return new ClassPathUtils(scanner.getResources());
+    }
+
+    private static Logger getLogger() {
+        return NyaaCoreLoader.getInstance().getLogger();
     }
 
     /**
@@ -171,7 +177,7 @@ final class ClassPath {
          * Loads (but doesn't link or initialize) the class.
          *
          * @throws LinkageError when there were errors in loading classes that this class depends on.
-         *     For example, {@link NoClassDefFoundError}.
+         *                      For example, {@link NoClassDefFoundError}.
          */
         public Class<?> load() {
             try {
@@ -199,10 +205,14 @@ final class ClassPath {
         // with.
         private final Set<File> scannedUris = Sets.newHashSet();
 
-        /** Called when a directory is scanned for resource files. */
+        /**
+         * Called when a directory is scanned for resource files.
+         */
         protected abstract void scanDirectory(ClassLoader loader, File directory) throws IOException;
 
-        /** Called when a jar file is scanned for resource entries. */
+        /**
+         * Called when a jar file is scanned for resource entries.
+         */
         protected abstract void scanJarFile(ClassLoader loader, JarFile file) throws IOException;
 
         final void scan(File file, ClassLoader classloader) throws IOException {
@@ -217,7 +227,7 @@ final class ClassPath {
                     return;
                 }
             } catch (SecurityException e) {
-                logger.warning("Cannot access " + file + ": " + e);
+                getLogger().warning("Cannot access " + file + ": " + e);
                 // TODO(emcmanus): consider whether to log other failure cases too.
                 return;
             }
@@ -271,7 +281,7 @@ final class ClassPath {
                         url = getClassPathEntry(jarFile, path);
                     } catch (MalformedURLException e) {
                         // Ignore bad entry
-                        logger.warning("Invalid Class-Path entry: " + path);
+                        getLogger().warning("Invalid Class-Path entry: " + path);
                         continue;
                     }
                     if (url.getProtocol().equals("file")) {
@@ -324,7 +334,7 @@ final class ClassPath {
                         urls.add(new URL("file", null, new File(entry).getAbsolutePath()));
                     }
                 } catch (MalformedURLException e) {
-                    logger.log(WARNING, "malformed classpath entry: " + entry, e);
+                    getLogger().log(WARNING, "malformed classpath entry: " + entry, e);
                 }
             }
             return urls.build();
@@ -377,19 +387,19 @@ final class ClassPath {
          * which have already been traversed in the current tree path will be skipped to eliminate
          * cycles; otherwise symlinks are traversed.
          *
-         * @param directory the root of the directory to scan
-         * @param classloader the classloader that includes resources found in {@code directory}
+         * @param directory     the root of the directory to scan
+         * @param classloader   the classloader that includes resources found in {@code directory}
          * @param packagePrefix resource path prefix inside {@code classloader} for any files found
-         *     under {@code directory}
-         * @param currentPath canonical files already visited in the current directory tree path, for
-         *     cycle elimination
+         *                      under {@code directory}
+         * @param currentPath   canonical files already visited in the current directory tree path, for
+         *                      cycle elimination
          */
         private void scanDirectory(
                 File directory, ClassLoader classloader, String packagePrefix, Set<File> currentPath)
                 throws IOException {
             File[] files = directory.listFiles();
             if (files == null) {
-                logger.warning("Cannot read directory " + directory);
+                getLogger().warning("Cannot read directory " + directory);
                 // IO error, just skip the directory
                 return;
             }
