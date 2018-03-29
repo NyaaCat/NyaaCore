@@ -1,6 +1,7 @@
 plugins {
     id 'java-library'
     id 'maven-publish'
+    id 'com.github.johnrengelman.shadow' version '2.0.2'
 }
 
 configurations.all {
@@ -50,9 +51,14 @@ repositories {
     }
 }
 
+shadowJar {
+    configurations = [project.configurations.shadow]
+}
+
 dependencies {
     api "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT"
     api 'javax.persistence:persistence-api:1.0'
+    shadow 'javax.persistence:persistence-api:1.0'
     annotationProcessor 'org.librazy:NyaaUtilsLangChecker:1.0-SNAPSHOT'
     annotationProcessor "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT"
     compileOnly 'org.librazy:NyaaUtilsLangChecker:1.0-SNAPSHOT'
