@@ -57,8 +57,8 @@ shadowJar {
 
 dependencies {
     api "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT"
-    api 'javax.persistence:persistence-api:1.0'
-    shadow 'javax.persistence:persistence-api:1.0'
+    api 'javax.persistence:javax.persistence-api:2.2'
+    shadow 'javax.persistence:javax.persistence-api:2.2'
     annotationProcessor 'org.librazy:NyaaUtilsLangChecker:1.0-SNAPSHOT'
     annotationProcessor "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT"
     compileOnly 'org.librazy:NyaaUtilsLangChecker:1.0-SNAPSHOT'
