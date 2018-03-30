@@ -16,16 +16,14 @@ public interface Query<T> {
 
     default CompletableFuture<Void> deleteAsync()
     {
-        delete();
-        return CompletableFuture.completedFuture(null);
+        return CompletableFuture.runAsync(this::delete);
     }
 
     void insert(T object);
 
     default CompletableFuture<Void> insertAsync(T object)
     {
-        insert(object);
-        return CompletableFuture.completedFuture(null);
+        return CompletableFuture.runAsync(() -> insert(object));
     }
 
     List<T> select();
@@ -49,6 +47,6 @@ public interface Query<T> {
     void update(T obj, String... columns);
 
     default CompletableFuture<Void> updateAsync(T obj, String... columns) {
-        return CompletableFuture.supplyAsync(() -> {update(obj, columns); return null;});
+        return CompletableFuture.runAsync(() -> update(obj, columns));
     }
 }
