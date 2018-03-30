@@ -79,7 +79,7 @@ public abstract class BaseDatabase implements Cloneable {
             smt.executeUpdate(sql);
             smt.close();
         } catch (SQLException ex) {
-            throw new RuntimeException(ex);
+            throw new RuntimeException(sql, ex);
         }
     }
 
@@ -104,7 +104,7 @@ public abstract class BaseDatabase implements Cloneable {
             }
             return stmt;
         } catch (SQLException ex) {
-            throw new RuntimeException(ex);
+            throw new RuntimeException(sql, ex);
         }
     }
 
@@ -200,7 +200,7 @@ public abstract class BaseDatabase implements Cloneable {
                 stmt.execute();
                 stmt.close();
             } catch (SQLException ex) {
-                throw new RuntimeException(ex);
+                throw new RuntimeException(sql, ex);
             }
         }
 
@@ -211,10 +211,10 @@ public abstract class BaseDatabase implements Cloneable {
          */
         @Override
         public void insert(T object) {
+            String sql = String.format("INSERT INTO %s(%s) VALUES(?", table.getTableName(), table.getColumnNamesString());
+            for (int i = 1; i < table.columns.size(); i++) sql += ",?";
+            sql += ")";
             try {
-                String sql = String.format("INSERT INTO %s(%s) VALUES(?", table.getTableName(), table.getColumnNamesString());
-                for (int i = 1; i < table.columns.size(); i++) sql += ",?";
-                sql += ")";
                 PreparedStatement stmt = getConnection().prepareStatement(sql);
                 Map<String, Object> objMap = table.getColumnObjectMap(object);
                 for (int i = 1; i <= table.orderedColumnName.size(); i++) {
@@ -228,7 +228,7 @@ public abstract class BaseDatabase implements Cloneable {
                 stmt.execute();
                 stmt.close();
             } catch (SQLException | ReflectiveOperationException ex) {
-                throw new RuntimeException(ex);
+                throw new RuntimeException(sql, ex);
             }
         }
 
@@ -259,7 +259,7 @@ public abstract class BaseDatabase implements Cloneable {
                 stmt.close();
                 return results;
             } catch (SQLException | ReflectiveOperationException ex) {
-                throw new RuntimeException(ex);
+                throw new RuntimeException(sql, ex);
             }
         }
 
@@ -312,7 +312,7 @@ public abstract class BaseDatabase implements Cloneable {
                 stmt.close();
                 return result;
             } catch (SQLException | ReflectiveOperationException ex) {
-                throw new RuntimeException(ex);
+                throw new RuntimeException(sql, ex);
             }
         }
 
@@ -344,7 +344,7 @@ public abstract class BaseDatabase implements Cloneable {
                     throw new RuntimeException("COUNT() returns empty result");
                 }
             } catch (SQLException ex) {
-                throw new RuntimeException(ex);
+                throw new RuntimeException(sql, ex);
             }
         }
 
@@ -356,6 +356,7 @@ public abstract class BaseDatabase implements Cloneable {
          */
         @Override
         public void update(T obj, String... columns) {
+            String sql = "";
             try {
                 List<String> updatedColumns = new ArrayList<>();
                 Map<String, Object> newValues = table.getColumnObjectMap(obj, columns);
@@ -370,7 +371,7 @@ public abstract class BaseDatabase implements Cloneable {
                 }
 
                 List<Object> parameters = new ArrayList<>();
-                String sql = "UPDATE " + table.tableName + " SET ";
+                sql = "UPDATE " + table.tableName + " SET ";
                 for (int i = 0; i < updatedColumns.size(); i++) {
                     if (i > 0) sql += ",";
                     sql += updatedColumns.get(i) + "=?";
@@ -401,7 +402,7 @@ public abstract class BaseDatabase implements Cloneable {
                 stmt.execute();
                 stmt.close();
             } catch (ReflectiveOperationException | SQLException ex) {
-                throw new RuntimeException(ex);
+                throw new RuntimeException(sql, ex);
             }
         }
     }
