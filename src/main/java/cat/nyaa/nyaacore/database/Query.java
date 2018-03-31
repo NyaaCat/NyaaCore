@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 
-public interface Query<T> {
+public interface Query<T> extends AutoCloseable {
 
     Query<T> clear();
 
@@ -49,4 +49,7 @@ public interface Query<T> {
     default CompletableFuture<Void> updateAsync(T obj, String... columns) {
         return CompletableFuture.runAsync(() -> update(obj, columns));
     }
+
+    @Override
+    default void close() { }
 }
