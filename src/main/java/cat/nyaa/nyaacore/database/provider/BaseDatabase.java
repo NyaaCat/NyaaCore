@@ -6,6 +6,7 @@ import org.apache.commons.lang.Validate;
 
 import java.sql.*;
 import java.util.*;
+import javax.persistence.NonUniqueResultException;
 
 public abstract class BaseDatabase implements Cloneable {
 
@@ -301,7 +302,7 @@ public abstract class BaseDatabase implements Cloneable {
             T result = selectUniqueUnchecked();
             if (result == null) {
                 rollback = true;
-                throw new RuntimeException("SQL Selection has no result or not unique");
+                throw new NonUniqueResultException("SQL Selection has no result or not unique");
             }
             return result;
         }

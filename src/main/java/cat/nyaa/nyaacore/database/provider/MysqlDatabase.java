@@ -84,8 +84,7 @@ public class MysqlDatabase extends BaseDatabase implements RelationalDB {
     }
 
     @Override
-    @Deprecated
-    public void enableAutoCommit() {
+    public void commitTransaction() {
         try {
             connection.commit();
             connection.setAutoCommit(true);
@@ -95,10 +94,19 @@ public class MysqlDatabase extends BaseDatabase implements RelationalDB {
     }
 
     @Override
-    @Deprecated
-    public void disableAutoCommit() {
+    public void beginTransaction() {
         try {
             connection.setAutoCommit(false);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void rollbackTransaction() {
+        try {
+            connection.rollback();
+            connection.setAutoCommit(true);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

@@ -12,19 +12,13 @@ public interface RelationalDB extends Database {
 
     void deleteTable(Class<?> cls);
 
-    /**
-     * deprecated see {@link RelationalDB#transaction(Class)}
-     */
-    @Deprecated
-    void enableAutoCommit();
+    void beginTransaction();
 
-    /**
-     * @deprecated see {@link RelationalDB#transaction(Class)}
-     */
-    @Deprecated
-    void disableAutoCommit();
+    void rollbackTransaction();
 
-    default <T> TransactionalQuery<T> auto(Class<T> tableClass) {
+    void commitTransaction();
+
+    default <T> Query<T> auto(Class<T> tableClass) {
         return new AutoQuery<>(transaction(tableClass));
     }
 }

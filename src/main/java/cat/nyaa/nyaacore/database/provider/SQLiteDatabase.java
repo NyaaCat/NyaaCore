@@ -137,8 +137,7 @@ public class SQLiteDatabase extends BaseDatabase implements Cloneable, Relationa
     }
 
     @Override
-    @Deprecated
-    public void enableAutoCommit() {
+    public void commitTransaction() {
         try {
             dbConn.commit();
             dbConn.setAutoCommit(true);
@@ -148,10 +147,19 @@ public class SQLiteDatabase extends BaseDatabase implements Cloneable, Relationa
     }
 
     @Override
-    @Deprecated
-    public void disableAutoCommit() {
+    public void beginTransaction() {
         try {
             dbConn.setAutoCommit(false);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void rollbackTransaction() {
+        try {
+            dbConn.rollback();
+            dbConn.setAutoCommit(true);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
