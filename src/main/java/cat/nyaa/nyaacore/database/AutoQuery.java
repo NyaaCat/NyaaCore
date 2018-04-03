@@ -3,26 +3,26 @@ package cat.nyaa.nyaacore.database;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-public class AutoQuery<T> implements TransactionalQuery<T> {
+public class AutoQuery<T> implements Query<T> {
 
-    private final TransactionalQuery<T> query;
+    private final Query<T> query;
 
-    public AutoQuery(TransactionalQuery<T> query) {
+    public AutoQuery(Query<T> query) {
         this.query = query;
     }
 
     @Override
-    public TransactionalQuery<T> clear() {
+    public Query<T> clear() {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public TransactionalQuery<T> whereEq(String columnName, Object obj) {
+    public Query<T> whereEq(String columnName, Object obj) {
         return query.whereEq(columnName, obj);
     }
 
     @Override
-    public TransactionalQuery<T> where(String columnName, String comparator, Object obj) {
+    public Query<T> where(String columnName, String comparator, Object obj) {
         return query.where(columnName, comparator, obj);
     }
 
@@ -161,16 +161,6 @@ public class AutoQuery<T> implements TransactionalQuery<T> {
 
     @Override
     public void close() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void rollback() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void commit() {
         throw new UnsupportedOperationException();
     }
 }
