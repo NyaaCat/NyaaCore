@@ -101,6 +101,26 @@ public class AutoQuery<T> implements TransactionalQuery<T> {
     }
 
     @Override
+    public T selectUniqueUnchecked() {
+        try {
+            return query.selectUniqueUnchecked();
+        } finally {
+            query.close();
+        }
+    }
+
+    @Override
+    public CompletableFuture<T> selectUniqueUncheckedAsync() {
+        return query.selectUniqueUncheckedAsync().thenApply(t -> {
+            query.close();
+            return t;
+        }).exceptionally(e -> {
+            query.close();
+            throw new RuntimeException(e);
+        });
+    }
+
+    @Override
     public int count() {
         try {
             return query.count();

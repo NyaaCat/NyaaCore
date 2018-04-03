@@ -38,6 +38,12 @@ public interface Query<T> extends AutoCloseable {
         return CompletableFuture.supplyAsync(this::selectUnique);
     }
 
+    T selectUniqueUnchecked();
+
+    default CompletableFuture<T> selectUniqueUncheckedAsync() {
+        return CompletableFuture.supplyAsync(this::selectUniqueUnchecked);
+    }
+
     int count();
 
     default CompletableFuture<Integer> countAsync() {

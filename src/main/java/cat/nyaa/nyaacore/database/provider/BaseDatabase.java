@@ -311,6 +311,7 @@ public abstract class BaseDatabase implements Cloneable {
          *
          * @return the record, or null if not unique.
          */
+        @Override
         public T selectUniqueUnchecked() {
             String sql = "SELECT " + table.getColumnNamesString() + " FROM " + table.tableName;
             List<Object> objects = new ArrayList<>();
