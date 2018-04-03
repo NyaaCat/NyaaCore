@@ -12,7 +12,15 @@ public interface RelationalDB extends Database {
 
     void deleteTable(Class<?> cls);
 
+    /**
+     * deprecated see {@link RelationalDB#transaction(Class)}
+     */
+    @Deprecated
     void enableAutoCommit();
 
+    /**
+     * @deprecated see {@link RelationalDB#transaction(Class)}
+     */
+    @Deprecated
     void disableAutoCommit();
 }

@@ -152,14 +152,15 @@ public abstract class BaseDatabase implements Cloneable {
         private Map<String, Object> whereClause = new HashMap<>();
         private Boolean rollback = false;
 
-        public SqlQuery(Class<T> tableClass, boolean autoCommit) {
-            if(!autoCommit){
+        public SqlQuery(Class<T> tableClass, boolean trans) {
+            if(!trans){
                 rollback = null;
-            }
-            try {
-                getConnection().setAutoCommit(autoCommit);
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
+            } else  {
+                try {
+                    getConnection().setAutoCommit(false);
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
             }
             if (!tableName.containsKey(tableClass)) throw new IllegalArgumentException("Unknown Table");
             if (!tables.containsKey(tableName.get(tableClass))) throw new IllegalArgumentException("Unknown Table");
@@ -435,6 +436,7 @@ public abstract class BaseDatabase implements Cloneable {
             rollback = null;
             try {
                 getConnection().rollback();
+                getConnection().setAutoCommit(true);
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
@@ -445,6 +447,7 @@ public abstract class BaseDatabase implements Cloneable {
             rollback = null;
             try {
                 getConnection().commit();
+                getConnection().setAutoCommit(true);
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }

@@ -84,6 +84,7 @@ public class MysqlDatabase extends BaseDatabase implements RelationalDB {
     }
 
     @Override
+    @Deprecated
     public void enableAutoCommit() {
         try {
             connection.commit();
@@ -94,6 +95,7 @@ public class MysqlDatabase extends BaseDatabase implements RelationalDB {
     }
 
     @Override
+    @Deprecated
     public void disableAutoCommit() {
         try {
             connection.setAutoCommit(false);
