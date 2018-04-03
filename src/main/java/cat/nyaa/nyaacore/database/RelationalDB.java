@@ -24,7 +24,7 @@ public interface RelationalDB extends Database {
     @Deprecated
     void disableAutoCommit();
 
-    default <T> AutoQuery<T> auto(Class<T> tableClass) {
+    default <T> TransactionalQuery<T> auto(Class<T> tableClass) {
         return new AutoQuery<>(transaction(tableClass));
     }
 }
