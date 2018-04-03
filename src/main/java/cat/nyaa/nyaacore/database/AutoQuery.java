@@ -7,7 +7,7 @@ public class AutoQuery<T> implements TransactionalQuery<T> {
 
     private final TransactionalQuery<T> query;
 
-    AutoQuery(TransactionalQuery<T> query) {
+    public AutoQuery(TransactionalQuery<T> query) {
         this.query = query;
     }
 
