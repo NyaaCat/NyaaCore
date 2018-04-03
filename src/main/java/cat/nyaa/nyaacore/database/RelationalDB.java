@@ -4,6 +4,8 @@ public interface RelationalDB extends Database {
 
     <T> Query<T> query(Class<T> tableClass);
 
+    <T> TransactionalQuery<T> transaction(Class<T> tableClass);
+
     void createTable(Class<?> cls);
 
     void updateTable(Class<?> cls);

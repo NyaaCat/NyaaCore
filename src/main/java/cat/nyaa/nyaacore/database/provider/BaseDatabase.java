@@ -1,6 +1,7 @@
 package cat.nyaa.nyaacore.database.provider;
 
 import cat.nyaa.nyaacore.database.Query;
+import cat.nyaa.nyaacore.database.TransactionalQuery;
 import org.apache.commons.lang.Validate;
 
 import java.sql.*;
@@ -137,21 +138,29 @@ public abstract class BaseDatabase implements Cloneable {
      * @return Query object
      */
     public <T> Query<T> query(Class<T> tableClass) {
-        return new SqlQuery<>(tableClass);
+        return new SqlQuery<>(tableClass, true);
+    }
+
+    public <T> TransactionalQuery<T> transaction(Class<T> tableClass) {
+        return new SqlQuery<>(tableClass, false);
     }
 
     @SuppressWarnings("unchecked")
-    public class SqlQuery<T> implements Query<T> {
+    public class SqlQuery<T> implements TransactionalQuery<T> {
         private TableStructure<T> table;
         /* NOTE: the values in the map must be SQL-type objects */
         private Map<String, Object> whereClause = new HashMap<>();
 
-        public SqlQuery(Class<T> tableClass) {
+        public SqlQuery(Class<T> tableClass, boolean autoCommit) {
+            try {
+                getConnection().setAutoCommit(autoCommit);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
             if (!tableName.containsKey(tableClass)) throw new IllegalArgumentException("Unknown Table");
             if (!tables.containsKey(tableName.get(tableClass))) throw new IllegalArgumentException("Unknown Table");
             table = (TableStructure<T>) tables.get(tableName.get(tableClass));
         }
-
 
         /**
          * clear the where clauses
@@ -231,7 +240,6 @@ public abstract class BaseDatabase implements Cloneable {
                 throw new RuntimeException(sql, ex);
             }
         }
-
 
         /**
          * SELECT * FROM this_table WHERE ...
@@ -404,6 +412,29 @@ public abstract class BaseDatabase implements Cloneable {
             } catch (ReflectiveOperationException | SQLException ex) {
                 throw new RuntimeException(sql, ex);
             }
+        }
+
+        @Override
+        public void rollback() {
+            try {
+                getConnection().rollback();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        @Override
+        public void commit() {
+            try {
+                getConnection().commit();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        @Override
+        public void close() {
+            commit();
         }
     }
 }
