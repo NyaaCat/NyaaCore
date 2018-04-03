@@ -153,6 +153,9 @@ public abstract class BaseDatabase implements Cloneable {
         private Boolean rollback = false;
 
         public SqlQuery(Class<T> tableClass, boolean autoCommit) {
+            if(!autoCommit){
+                rollback = null;
+            }
             try {
                 getConnection().setAutoCommit(autoCommit);
             } catch (SQLException e) {
