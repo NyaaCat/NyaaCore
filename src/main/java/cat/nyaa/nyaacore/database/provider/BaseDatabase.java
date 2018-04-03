@@ -172,13 +172,13 @@ public abstract class BaseDatabase implements Cloneable {
          * @return self
          */
         @Override
-        public Query<T> clear() {
+        public TransactionalQuery<T> clear() {
             whereClause.clear();
             return this;
         }
 
         @Override
-        public Query<T> whereEq(String columnName, Object obj) {
+        public TransactionalQuery<T> whereEq(String columnName, Object obj) {
             return where(columnName, "=", obj);
         }
 
@@ -187,7 +187,7 @@ public abstract class BaseDatabase implements Cloneable {
          * e.g. =, >, <
          */
         @Override
-        public Query<T> where(String columnName, String comparator, Object obj) {
+        public TransactionalQuery<T> where(String columnName, String comparator, Object obj) {
             if (!table.hasColumn(columnName)) throw new IllegalArgumentException("Unknown DataColumn Name");
             obj = table.getColumn(columnName).toDatabaseType(obj);
             whereClause.put(columnName + comparator + "?", obj);

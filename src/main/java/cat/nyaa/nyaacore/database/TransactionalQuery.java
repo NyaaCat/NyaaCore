@@ -1,8 +1,17 @@
 package cat.nyaa.nyaacore.database;
 
-import java.sql.SQLException;
-
 public interface TransactionalQuery<T> extends Query<T> {
+
+    @Override
+    TransactionalQuery<T> clear();
+
+    @Override
+    TransactionalQuery<T> whereEq(String columnName, Object obj);
+
+    @Override
+    TransactionalQuery<T> where(String columnName, String comparator, Object obj);
+
     void rollback();
+
     void commit();
 }
