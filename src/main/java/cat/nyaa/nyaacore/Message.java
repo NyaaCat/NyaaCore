@@ -148,7 +148,7 @@ public class Message {
             }
         }
         Bukkit.getConsoleSender().sendMessage(inner.toLegacyText());
-        Bukkit.getConsoleSender().sendMessage("broadcast to players with permission:" + permission);
+        Bukkit.getConsoleSender().sendMessage("broadcast to players with permission:" + permission.getName());
         return this;
     }
 

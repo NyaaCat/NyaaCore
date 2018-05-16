@@ -18,12 +18,12 @@ public class AutoQuery<T> implements Query<T> {
 
     @Override
     public Query<T> whereEq(String columnName, Object obj) {
-        return query.whereEq(columnName, obj);
+        return new AutoQuery<>(query.whereEq(columnName, obj));
     }
 
     @Override
     public Query<T> where(String columnName, String comparator, Object obj) {
-        return query.where(columnName, comparator, obj);
+        return new AutoQuery<>(query.where(columnName, comparator, obj));
     }
 
     @Override

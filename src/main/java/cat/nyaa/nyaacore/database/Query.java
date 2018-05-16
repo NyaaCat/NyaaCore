@@ -57,5 +57,5 @@ public interface Query<T> extends AutoCloseable {
     }
 
     @Override
-    default void close() { }
+    void close();
 }
