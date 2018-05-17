@@ -1,7 +1,7 @@
 plugins {
     id 'java-library'
     id 'maven-publish'
-    id 'com.github.johnrengelman.shadow' version '2.0.2'
+    id 'com.github.johnrengelman.shadow' version '2.0.4'
 }
 
 configurations.all {
@@ -70,7 +70,7 @@ dependencies {
         transitive = false
     }
     testImplementation 'org.mockito:mockito-all:1.10.19'
-    testImplementation 'org.xerial:sqlite-jdbc:3.21.0'
+    testImplementation 'org.xerial:sqlite-jdbc:3.21.0.1'
 }
 
 compileJava {
