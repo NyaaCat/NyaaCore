@@ -170,6 +170,7 @@ public final class ReflectionUtils {
     /**
      * @deprecated
      */
+    @Deprecated
     public static String convertItemStackToJson(ItemStack itemStack) throws RuntimeException {
         return ItemStackUtils.itemToJson(itemStack);
     }

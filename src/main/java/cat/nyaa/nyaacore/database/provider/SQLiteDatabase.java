@@ -1,6 +1,9 @@
-package cat.nyaa.nyaacore.database;
+package cat.nyaa.nyaacore.database.provider;
 
-import org.bukkit.plugin.java.JavaPlugin;
+import cat.nyaa.nyaacore.database.Database;
+import cat.nyaa.nyaacore.database.RelationalDB;
+import org.apache.commons.lang.NotImplementedException;
+import org.bukkit.plugin.Plugin;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -8,34 +11,40 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-public abstract class SQLiteDatabase extends BaseDatabase implements Cloneable {
-    protected SQLiteDatabase() {
-        super();
+public class SQLiteDatabase extends BaseDatabase implements Cloneable, RelationalDB {
+
+    private Plugin plugin;
+
+    private String file;
+
+    private Class<?>[] classes;
+
+    SQLiteDatabase(Plugin basePlugin, String fileName, Class<?>[] tableClasses) {
+        super(tableClasses);
+        file = fileName;
+        plugin = basePlugin;
+        classes = tableClasses;
     }
 
-    protected Connection dbConn;
+    private Connection dbConn;
 
-    protected abstract String getFileName();
-
-    protected abstract JavaPlugin getPlugin();
-
-    protected void connect() {
-        File dbFile = new File(getPlugin().getDataFolder(), getFileName());
+    @SuppressWarnings("unchecked")
+    public <T extends Database> T connect() {
+        File dbFile = new File(plugin.getDataFolder(), file);
         try {
             Class.forName("org.sqlite.JDBC");
             String connStr = "jdbc:sqlite:" + dbFile.getAbsolutePath();
-            getPlugin().getLogger().info("Connecting database: " + connStr);
+            plugin.getLogger().info("Connecting database: " + connStr);
             dbConn = DriverManager.getConnection(connStr);
             dbConn.setAutoCommit(true);
-            createTables();
+            createTables(true);
         } catch (ClassNotFoundException | SQLException ex) {
             dbConn = null;
             throw new RuntimeException(ex);
         }
+        return (T) this;
     }
 
     @Override
@@ -46,6 +55,11 @@ public abstract class SQLiteDatabase extends BaseDatabase implements Cloneable {
         } catch (SQLException ex) {
             throw new RuntimeException(ex);
         }
+    }
+
+    @Override
+    protected Class<?>[] getTables() {
+        return classes;
     }
 
     @Override
@@ -75,7 +89,7 @@ public abstract class SQLiteDatabase extends BaseDatabase implements Cloneable {
     public <T> List<T> queryBundledAs(String filename, Map<String, String> replacementMap, Class<T> cls, Object... parameters) {
         String sql;
         try (
-                InputStream inputStream = getPlugin().getResource("sql/" + filename);
+                InputStream inputStream = plugin.getResource("sql/" + filename);
                 BufferedInputStream bis = new BufferedInputStream(inputStream);
                 ByteArrayOutputStream buf = new ByteArrayOutputStream()
         ) {
@@ -105,5 +119,49 @@ public abstract class SQLiteDatabase extends BaseDatabase implements Cloneable {
 
     public void queryBundled(String filename, Map<String, String> replacementMap, Object... parameters) {
         queryBundledAs(filename, replacementMap, null, parameters);
+    }
+
+    @Override
+    public void createTable(Class<?> cls) {
+        createTable(cls, true);
+    }
+
+    @Override
+    public void updateTable(Class<?> cls) {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public void deleteTable(Class<?> cls) {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public void commitTransaction() {
+        try {
+            dbConn.commit();
+            dbConn.setAutoCommit(true);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void beginTransaction() {
+        try {
+            dbConn.setAutoCommit(false);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void rollbackTransaction() {
+        try {
+            dbConn.rollback();
+            dbConn.setAutoCommit(true);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

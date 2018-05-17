@@ -1,6 +1,6 @@
 package cat.nyaa.nyaacore.database;
 
-import org.bukkit.plugin.java.JavaPlugin;
+import cat.nyaa.nyaacore.database.provider.BaseDatabase;
 
 import java.io.File;
 import java.sql.Connection;
@@ -30,14 +30,13 @@ public class TestSQLiteDatabase extends BaseDatabase {
             //getPlugin().getLogger().info("Connecting database: " + connStr);
             dbConn = DriverManager.getConnection(connStr);
             dbConn.setAutoCommit(true);
-            createTables();
+            createTables(true);
         } catch (ClassNotFoundException | SQLException ex) {
             dbConn = null;
             throw new RuntimeException(ex);
         }
     }
 
-    @Override
     public void close() {
         try {
             dbConn.close();

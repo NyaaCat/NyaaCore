@@ -18,7 +18,7 @@ public class RayTraceUtils {
     }
 
     public static Block rayTraceBlock(World world, Vector start, Vector end, boolean stopOnLiquid, boolean ignoreBlockWithoutBoundingBox, boolean returnLastUncollidableBlock) throws ReflectiveOperationException {
-        Class craftWorld = ReflectionUtils.getOBCClass("CraftWorld");
+        Class<?> craftWorld = ReflectionUtils.getOBCClass("CraftWorld");
         Method getHandleMethod = ReflectionUtils.getMethod(craftWorld, "getHandle");
         Class<?> vec3D = ReflectionUtils.getNMSClass("Vec3D");
         Class<?> nmsWorld = ReflectionUtils.getNMSClass("World");

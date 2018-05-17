@@ -1,6 +1,7 @@
 plugins {
-    id 'java'
+    id 'java-library'
     id 'maven-publish'
+    id 'com.github.johnrengelman.shadow' version '2.0.4'
 }
 
 configurations.all {
@@ -9,8 +10,8 @@ configurations.all {
 
 // Version strings used for CI
 // Note the spaces before and after the equals sign
-ext.majorVersion = 4
-ext.minorVersion = 1
+ext.majorVersion = 5
+ext.minorVersion = 0
 ext.minecraftVersion = "1.12"
 
 sourceCompatibility = 1.8
@@ -50,22 +51,30 @@ repositories {
     }
 }
 
+shadowJar {
+    configurations = [project.configurations.shadow]
+}
+
 dependencies {
-    compile 'org.spigotmc:spigot-api:1.12-R0.1-SNAPSHOT'
-    compile 'net.milkbowl.vault:VaultAPI:1.6'
-    compile 'org.librazy:NyaaUtilsLangChecker:1.0-SNAPSHOT'
-    compile('net.ess3:Essentials:2.13-SNAPSHOT') {
+    api "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT"
+    api 'javax.persistence:javax.persistence-api:2.2'
+    shadow 'javax.persistence:javax.persistence-api:2.2'
+    annotationProcessor 'org.librazy:NyaaUtilsLangChecker:1.0-SNAPSHOT'
+    annotationProcessor "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT"
+    compileOnly 'org.librazy:NyaaUtilsLangChecker:1.0-SNAPSHOT'
+    compileOnly 'net.milkbowl.vault:VaultAPI:1.6'
+    compileOnly('net.ess3:Essentials:2.13-SNAPSHOT') {
         transitive = false
     }
-    compile('com.meowj:LangUtils:1.9') {
+    compileOnly('com.meowj:LangUtils:1.9') {
         transitive = false
     }
-    testCompile 'org.mockito:mockito-all:1.10.19'
-    testCompile 'org.xerial:sqlite-jdbc:3.21.0'
+    testImplementation 'org.mockito:mockito-all:1.10.19'
+    testImplementation 'org.xerial:sqlite-jdbc:3.21.0.1'
 }
 
 compileJava {
-    options.compilerArgs += ["-Xplugin:NyaaUtilsLangAnnotationProcessor", "-Xlint:deprecation"]
+    options.compilerArgs += ["-Xplugin:NyaaUtilsLangAnnotationProcessor", "-Xlint:deprecation,unchecked,rawtypes"]
 }
 
 publishing {

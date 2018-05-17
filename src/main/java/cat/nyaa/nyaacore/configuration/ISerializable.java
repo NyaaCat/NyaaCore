@@ -78,6 +78,7 @@ public interface ISerializable {
         serialize(config, this);
     }
 
+    @SuppressWarnings({"unchecked", "rawtypes"})
     static void deserialize(ConfigurationSection config, Object obj) {
         Class<?> clz = obj.getClass();
         for (Field f : clz.getDeclaredFields()) {
@@ -173,6 +174,8 @@ public interface ISerializable {
         }
     }
 
+
+    @SuppressWarnings("rawtypes")
     static void serialize(ConfigurationSection config, Object obj) {
         Class<?> clz = obj.getClass();
         for (Field f : clz.getDeclaredFields()) {

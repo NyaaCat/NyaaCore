@@ -1,9 +1,12 @@
-package cat.nyaa.nyaacore.database;
+package cat.nyaa.nyaacore.database.provider;
 
+import cat.nyaa.nyaacore.database.Query;
+import cat.nyaa.nyaacore.database.TransactionalQuery;
 import org.apache.commons.lang.Validate;
 
 import java.sql.*;
 import java.util.*;
+import javax.persistence.NonUniqueResultException;
 
 public abstract class BaseDatabase implements Cloneable {
 
@@ -23,8 +26,6 @@ public abstract class BaseDatabase implements Cloneable {
     /* auto commit should be set to `true` for the returned connection */
     protected abstract Connection getConnection();
 
-    public abstract void close();
-
     /**
      * Scan & construct all table structures.
      */
@@ -39,20 +40,31 @@ public abstract class BaseDatabase implements Cloneable {
         }
     }
 
-    protected void createTables() {
-        for (TableStructure<?> c : tables.values()) {
-            createTable(c);
+    protected BaseDatabase(Class<?>[] tableClasses) {
+        tables = new HashMap<>();
+        tableName = new HashMap<>();
+        for (Class<?> tableClass : tableClasses) {
+            TableStructure<?> tableStructure = TableStructure.fromClass(tableClass);
+            if (tableStructure == null) throw new RuntimeException();
+            tables.put(tableStructure.getTableName(), tableStructure);
+            tableName.put(tableClass, tableStructure.getTableName());
         }
     }
 
-    protected void createTable(String name) {
-        Validate.notNull(name);
-        createTable(tables.get(name));
+    protected void createTables(boolean sqlite) {
+        for (TableStructure<?> c : tables.values()) {
+            createTable(c, sqlite);
+        }
     }
 
-    protected void createTable(Class<?> cls) {
+    protected void createTable(String name, boolean sqlite) {
+        Validate.notNull(name);
+        createTable(tables.get(name), sqlite);
+    }
+
+    public void createTable(Class<?> cls, boolean sqlite) {
         Validate.notNull(cls);
-        createTable(tableName.get(cls));
+        createTable(tableName.get(cls), sqlite);
     }
 
     /**
@@ -61,15 +73,15 @@ public abstract class BaseDatabase implements Cloneable {
      *
      * @param struct The table definition
      */
-    protected void createTable(TableStructure<?> struct) {
+    protected void createTable(TableStructure<?> struct, boolean sqlite) {
         Validate.notNull(struct);
-        String sql = struct.getCreateTableSQL();
+        String sql = struct.getCreateTableSQL(sqlite);
         try {
             Statement smt = getConnection().createStatement();
             smt.executeUpdate(sql);
             smt.close();
         } catch (SQLException ex) {
-            throw new RuntimeException(ex);
+            throw new RuntimeException(sql, ex);
         }
     }
 
@@ -94,7 +106,7 @@ public abstract class BaseDatabase implements Cloneable {
             }
             return stmt;
         } catch (SQLException ex) {
-            throw new RuntimeException(ex);
+            throw new RuntimeException(sql, ex);
         }
     }
 
@@ -127,32 +139,48 @@ public abstract class BaseDatabase implements Cloneable {
      * @return Query object
      */
     public <T> Query<T> query(Class<T> tableClass) {
-        return new Query<>(tableClass);
+        return new SqlQuery<>(tableClass, true);
     }
 
-    public class Query<T> {
+    public <T> TransactionalQuery<T> transaction(Class<T> tableClass) {
+        return new SqlQuery<>(tableClass, false);
+    }
+
+    @SuppressWarnings("unchecked")
+    public class SqlQuery<T> implements TransactionalQuery<T> {
         private TableStructure<T> table;
         /* NOTE: the values in the map must be SQL-type objects */
         private Map<String, Object> whereClause = new HashMap<>();
+        private Boolean rollback = false;
 
-        public Query(Class<T> tableClass) {
+        public SqlQuery(Class<T> tableClass, boolean trans) {
+            if(!trans){
+                rollback = null;
+            } else  {
+                try {
+                    getConnection().setAutoCommit(false);
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
             if (!tableName.containsKey(tableClass)) throw new IllegalArgumentException("Unknown Table");
             if (!tables.containsKey(tableName.get(tableClass))) throw new IllegalArgumentException("Unknown Table");
             table = (TableStructure<T>) tables.get(tableName.get(tableClass));
         }
-
 
         /**
          * clear the where clauses
          *
          * @return self
          */
-        public Query<T> clear() {
+        @Override
+        public TransactionalQuery<T> clear() {
             whereClause.clear();
             return this;
         }
 
-        public Query<T> whereEq(String columnName, Object obj) {
+        @Override
+        public TransactionalQuery<T> whereEq(String columnName, Object obj) {
             return where(columnName, "=", obj);
         }
 
@@ -160,7 +188,8 @@ public abstract class BaseDatabase implements Cloneable {
          * comparator can be any SQL comparator.
          * e.g. =, >, <
          */
-        public Query<T> where(String columnName, String comparator, Object obj) {
+        @Override
+        public TransactionalQuery<T> where(String columnName, String comparator, Object obj) {
             if (!table.hasColumn(columnName)) throw new IllegalArgumentException("Unknown DataColumn Name");
             obj = table.getColumn(columnName).toDatabaseType(obj);
             whereClause.put(columnName + comparator + "?", obj);
@@ -170,17 +199,11 @@ public abstract class BaseDatabase implements Cloneable {
         /**
          * remove records matching the where clauses
          */
+        @Override
         public void delete() {
             String sql = "DELETE FROM " + table.getTableName();
             List<Object> objects = new ArrayList<>();
-            if (whereClause.size() > 0) {
-                sql += " WHERE";
-                for (Map.Entry e : whereClause.entrySet()) {
-                    if (objects.size() > 0) sql += " AND";
-                    sql += " " + e.getKey();
-                    objects.add(e.getValue());
-                }
-            }
+            sql = buildWhereClause(sql, objects);
             try {
                 PreparedStatement stmt = getConnection().prepareStatement(sql);
                 int x = 1;
@@ -192,7 +215,8 @@ public abstract class BaseDatabase implements Cloneable {
                 stmt.execute();
                 stmt.close();
             } catch (SQLException ex) {
-                throw new RuntimeException(ex);
+                rollback = true;
+                throw new RuntimeException(sql, ex);
             }
         }
 
@@ -201,11 +225,12 @@ public abstract class BaseDatabase implements Cloneable {
          *
          * @param object record to be inserted
          */
+        @Override
         public void insert(T object) {
+            String sql = String.format("INSERT INTO %s(%s) VALUES(?", table.getTableName(), table.getColumnNamesString());
+            for (int i = 1; i < table.columns.size(); i++) sql += ",?";
+            sql += ")";
             try {
-                String sql = String.format("INSERT INTO %s(%s) VALUES(?", table.getTableName(), table.getColumnNamesString());
-                for (int i = 1; i < table.columns.size(); i++) sql += ",?";
-                sql += ")";
                 PreparedStatement stmt = getConnection().prepareStatement(sql);
                 Map<String, Object> objMap = table.getColumnObjectMap(object);
                 for (int i = 1; i <= table.orderedColumnName.size(); i++) {
@@ -219,27 +244,21 @@ public abstract class BaseDatabase implements Cloneable {
                 stmt.execute();
                 stmt.close();
             } catch (SQLException | ReflectiveOperationException ex) {
-                throw new RuntimeException(ex);
+                rollback = true;
+                throw new RuntimeException(sql, ex);
             }
         }
-
 
         /**
          * SELECT * FROM this_table WHERE ...
          *
          * @return all select rows
          */
+        @Override
         public List<T> select() {
             String sql = "SELECT " + table.getColumnNamesString() + " FROM " + table.tableName;
             List<Object> objects = new ArrayList<>();
-            if (whereClause.size() > 0) {
-                sql += " WHERE";
-                for (Map.Entry e : whereClause.entrySet()) {
-                    if (objects.size() > 0) sql += " AND";
-                    sql += " " + e.getKey();
-                    objects.add(e.getValue());
-                }
-            }
+            sql = buildWhereClause(sql, objects);
             try {
                 PreparedStatement stmt = getConnection().prepareStatement(sql);
                 int x = 1;
@@ -256,8 +275,21 @@ public abstract class BaseDatabase implements Cloneable {
                 stmt.close();
                 return results;
             } catch (SQLException | ReflectiveOperationException ex) {
-                throw new RuntimeException(ex);
+                rollback = true;
+                throw new RuntimeException(sql, ex);
             }
+        }
+
+        private String buildWhereClause(String sql, List<Object> objects) {
+            if (whereClause.size() > 0) {
+                sql += " WHERE";
+                for (Map.Entry<?, ?> e : whereClause.entrySet()) {
+                    if (objects.size() > 0) sql += " AND";
+                    sql += " " + e.getKey();
+                    objects.add(e.getValue());
+                }
+            }
+            return sql;
         }
 
         /**
@@ -265,9 +297,13 @@ public abstract class BaseDatabase implements Cloneable {
          *
          * @return the record, or throw exception if not unique
          */
+        @Override
         public T selectUnique() {
             T result = selectUniqueUnchecked();
-            if (result == null) throw new RuntimeException("SQL Selection has no result or not unique");
+            if (result == null) {
+                rollback = true;
+                throw new NonUniqueResultException("SQL Selection has no result or not unique");
+            }
             return result;
         }
 
@@ -276,17 +312,11 @@ public abstract class BaseDatabase implements Cloneable {
          *
          * @return the record, or null if not unique.
          */
+        @Override
         public T selectUniqueUnchecked() {
             String sql = "SELECT " + table.getColumnNamesString() + " FROM " + table.tableName;
             List<Object> objects = new ArrayList<>();
-            if (whereClause.size() > 0) {
-                sql += " WHERE";
-                for (Map.Entry e : whereClause.entrySet()) {
-                    if (objects.size() > 0) sql += " AND";
-                    sql += " " + e.getKey();
-                    objects.add(e.getValue());
-                }
-            }
+            sql = buildWhereClause(sql, objects);
             try {
                 PreparedStatement stmt = getConnection().prepareStatement(sql);
                 int x = 1;
@@ -303,7 +333,8 @@ public abstract class BaseDatabase implements Cloneable {
                 stmt.close();
                 return result;
             } catch (SQLException | ReflectiveOperationException ex) {
-                throw new RuntimeException(ex);
+                rollback = true;
+                throw new RuntimeException(sql, ex);
             }
         }
 
@@ -312,17 +343,11 @@ public abstract class BaseDatabase implements Cloneable {
          *
          * @return number of records to be selected.
          */
+        @Override
         public int count() {
             String sql = "SELECT COUNT(*) AS C FROM " + table.tableName;
             List<Object> objects = new ArrayList<>();
-            if (whereClause.size() > 0) {
-                sql += " WHERE";
-                for (Map.Entry e : whereClause.entrySet()) {
-                    if (objects.size() > 0) sql += " AND";
-                    sql += " " + e.getKey();
-                    objects.add(e.getValue());
-                }
-            }
+            sql = buildWhereClause(sql, objects);
             try {
                 PreparedStatement stmt = getConnection().prepareStatement(sql);
                 int x = 1;
@@ -337,11 +362,13 @@ public abstract class BaseDatabase implements Cloneable {
                     stmt.close();
                     return count;
                 } else {
+                    rollback = true;
                     stmt.close();
                     throw new RuntimeException("COUNT() returns empty result");
                 }
             } catch (SQLException ex) {
-                throw new RuntimeException(ex);
+                rollback = true;
+                throw new RuntimeException(sql, ex);
             }
         }
 
@@ -351,7 +378,9 @@ public abstract class BaseDatabase implements Cloneable {
          * @param obj     new values for columns
          * @param columns columns need to be updated, update all columns if empty
          */
+        @Override
         public void update(T obj, String... columns) {
+            String sql = "";
             try {
                 List<String> updatedColumns = new ArrayList<>();
                 Map<String, Object> newValues = table.getColumnObjectMap(obj, columns);
@@ -359,14 +388,16 @@ public abstract class BaseDatabase implements Cloneable {
                     updatedColumns.addAll(table.orderedColumnName);
                 } else {
                     for (String col : columns) {
-                        if (!table.columns.containsKey(col))
+                        if (!table.columns.containsKey(col)) {
+                            rollback = true;
                             throw new IllegalArgumentException("Unknown Column Name: " + col);
+                        }
                     }
                     updatedColumns.addAll(Arrays.asList(columns));
                 }
 
                 List<Object> parameters = new ArrayList<>();
-                String sql = "UPDATE " + table.tableName + " SET ";
+                sql = "UPDATE " + table.tableName + " SET ";
                 for (int i = 0; i < updatedColumns.size(); i++) {
                     if (i > 0) sql += ",";
                     sql += updatedColumns.get(i) + "=?";
@@ -376,7 +407,7 @@ public abstract class BaseDatabase implements Cloneable {
                 boolean firstClause = true;
                 if (whereClause.size() > 0) {
                     sql += " WHERE";
-                    for (Map.Entry e : whereClause.entrySet()) {
+                    for (Map.Entry<?, ?> e : whereClause.entrySet()) {
                         if (!firstClause) sql += " AND";
                         firstClause = false;
                         sql += " " + e.getKey();
@@ -397,7 +428,41 @@ public abstract class BaseDatabase implements Cloneable {
                 stmt.execute();
                 stmt.close();
             } catch (ReflectiveOperationException | SQLException ex) {
-                throw new RuntimeException(ex);
+                rollback = true;
+                throw new RuntimeException(sql, ex);
+            }
+        }
+
+        @Override
+        public void rollback() {
+            rollback = null;
+            try {
+                getConnection().rollback();
+                getConnection().setAutoCommit(true);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        @Override
+        public void commit() {
+            rollback = null;
+            try {
+                getConnection().commit();
+                getConnection().setAutoCommit(true);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        @Override
+        public void close() {
+            if (rollback != null) {
+                if (rollback) {
+                    rollback();
+                } else {
+                    commit();
+                }
             }
         }
     }

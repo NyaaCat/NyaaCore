@@ -148,7 +148,7 @@ public class Message {
             }
         }
         Bukkit.getConsoleSender().sendMessage(inner.toLegacyText());
-        Bukkit.getConsoleSender().sendMessage("broadcast to players with permission:" + permission);
+        Bukkit.getConsoleSender().sendMessage("broadcast to players with permission:" + permission.getName());
         return this;
     }
 
@@ -234,28 +234,21 @@ public class Message {
         return item;
     }
 
+    @SuppressWarnings("unchecked")
     public static void sendActionBarMessage(Player player, BaseComponent msg) {
         try {
-            Class craftPlayer = ReflectionUtils.getOBCClass("entity.CraftPlayer");
+            Class<?> craftPlayer = ReflectionUtils.getOBCClass("entity.CraftPlayer");
             Method getHandleMethod = craftPlayer.getMethod("getHandle");
             Object handle = getHandleMethod.invoke(player);
-            Class iChatBaseComponent = ReflectionUtils.getNMSClass("IChatBaseComponent");
-            Class packetPlayOutChat = ReflectionUtils.getNMSClass("PacketPlayOutChat");
-            Constructor constructor = packetPlayOutChat.getConstructor(iChatBaseComponent, byte.class);
+            Class<?> iChatBaseComponent = ReflectionUtils.getNMSClass("IChatBaseComponent");
+            Class<?> packetPlayOutChat = ReflectionUtils.getNMSClass("PacketPlayOutChat");
+            Constructor<?> constructor = packetPlayOutChat.getConstructor(iChatBaseComponent, byte.class);
             Object packet = constructor.newInstance(null, (byte) ChatMessageType.ACTION_BAR.ordinal());
             packet.getClass().getField("components").set(packet, new BaseComponent[]{msg});
             Object playerConnection = handle.getClass().getField("playerConnection").get(handle);
             playerConnection.getClass().getMethod("sendPacket",
                     ReflectionUtils.getNMSClass("Packet")).invoke(playerConnection, packet);
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (NoSuchFieldException e) {
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | NoSuchFieldException | InstantiationException e) {
             e.printStackTrace();
         }
     }

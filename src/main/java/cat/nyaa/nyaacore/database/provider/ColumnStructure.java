@@ -1,5 +1,7 @@
-package cat.nyaa.nyaacore.database;
+package cat.nyaa.nyaacore.database.provider;
 
+import javax.persistence.Column;
+import javax.persistence.Id;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -10,11 +12,12 @@ import java.lang.reflect.Modifier;
  * 2. A field can be serialized/deserialized using toString() and fromString()/parse() (e.g. ZonedDateTime)
  * 3. A pair of getter/setter returning/accepting type listed in (1)
  */
+@SuppressWarnings("rawtypes")
 public class ColumnStructure {
     final String name;
     final TableStructure table;
     final boolean isPrimary;
-
+    final int length;
     final Field field;      // for FIELD or FIELD_PARSER
     final Class fieldType; // only used if accessMethod is not FIELD_PARSER, this is native java type
     final Method fieldParser; // for FIELD_PARSER
@@ -27,13 +30,14 @@ public class ColumnStructure {
     /**
      * Constructor for field based table columns
      */
-    public ColumnStructure(TableStructure table, Field dataField, DataColumn anno) {
+    public ColumnStructure(TableStructure table, Field dataField, Column anno) {
         if (anno == null) throw new IllegalArgumentException();
         this.table = table;
-        String name = anno.value();
+        String name = anno.name();
         if ("".equals(name)) name = dataField.getName();
         this.name = name;
-        this.isPrimary = dataField.getDeclaredAnnotation(PrimaryKey.class) != null;
+        this.isPrimary = dataField.getDeclaredAnnotation(Id.class) != null;
+        length = anno.length();
         dataField.setAccessible(true);
         field = dataField;
         fieldType = field.getType();
@@ -72,14 +76,14 @@ public class ColumnStructure {
     /**
      * Constructor for method based table columns
      */
-    public ColumnStructure(TableStructure table, Method dataMethod, DataColumn anno) {
+    public ColumnStructure(TableStructure table, Method dataMethod, Column anno) {
         if (anno == null) throw new IllegalArgumentException();
         this.table = table;
         String methodName = dataMethod.getName();
         if (!methodName.startsWith("get") && !methodName.startsWith("set"))
             throw new IllegalArgumentException("Method is neither a setter nor a getter: " + dataMethod.toString());
         String methodSuffix = methodName.substring(3);
-        String name = ("".equals(anno.value())) ? methodSuffix : anno.value();
+        String name = ("".equals(anno.name())) ? methodSuffix : anno.name();
         Class methodType;
         if (methodName.startsWith("get")) {
             methodType = dataMethod.getReturnType();
@@ -101,11 +105,14 @@ public class ColumnStructure {
                     (setter.getReturnType() != Void.class && setter.getReturnType() != Void.TYPE) ||
                     Modifier.isStatic(setter.getModifiers()))
                 throw new RuntimeException("setter signature mismatch");
-            boolean primary = getter.getDeclaredAnnotation(PrimaryKey.class) != null;
-            primary |= setter.getDeclaredAnnotation(PrimaryKey.class) != null;
+            Id primary = getter.getDeclaredAnnotation(Id.class);
+            if(primary == null){
+                primary = setter.getDeclaredAnnotation(Id.class);
+            }
             getter.setAccessible(true);
             setter.setAccessible(true);
-            this.isPrimary = primary;
+            this.isPrimary = primary != null;
+            length = anno.length();
         } catch (ReflectiveOperationException ex) {
             ex.printStackTrace();
             throw new RuntimeException(ex);
@@ -140,9 +147,12 @@ public class ColumnStructure {
         return columnType;
     }
 
-    public String getTableCreationScheme() {
-        String ret = String.format("%s %s NOT NULL", name, columnType.name());
-        if (isPrimary) ret += " PRIMARY KEY";
+    public String getTableCreationScheme(boolean sqlite) {
+        String type = columnType.name();
+        String ret = String.format("%s %s NOT NULL", name, type);
+        if (isPrimary && (length == 0 || sqlite)) ret += " PRIMARY KEY";
+        else if(isPrimary && columnType == ColumnType.TEXT) ret += String.format(", CONSTRAINT PRIMARY KEY (%s(%d))", name, length);
+        else if(isPrimary) ret += String.format(", CONSTRAINT PRIMARY KEY (%s)", name);
         return ret;
     }
 

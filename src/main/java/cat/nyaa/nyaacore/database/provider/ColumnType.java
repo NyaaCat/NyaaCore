@@ -1,4 +1,4 @@
-package cat.nyaa.nyaacore.database;
+package cat.nyaa.nyaacore.database.provider;
 
 import cat.nyaa.nyaacore.utils.ItemStackUtils;
 import org.bukkit.inventory.ItemStack;
@@ -18,7 +18,7 @@ public enum ColumnType {
      *
      * @return determined database type
      */
-    public static ColumnType getType(ColumnAccessMethod accessMethod, Class cls) {
+    public static ColumnType getType(ColumnAccessMethod accessMethod, Class<?> cls) {
         if (accessMethod == ColumnAccessMethod.FIELD_PARSE) return TEXT;
         if (cls == long.class || cls == Long.class) return INTEGER;
         if (cls == boolean.class || cls == Boolean.class) return INTEGER;
@@ -38,9 +38,10 @@ public enum ColumnType {
      * @return an object of following types: String/Long/Double
      * @deprecated cannot handle FIELD_PARSE access type. Use {@link ColumnStructure#toDatabaseType(Object)}
      */
+    @Deprecated
     public Object toDatabaseType(Object raw) {
         if(raw == null) return null;
-        Class cls = raw.getClass();
+        Class<?> cls = raw.getClass();
         if (this == TEXT) {
             if (cls == String.class) return raw;
             if (cls.isEnum()) return ((Enum) raw).name();
@@ -71,6 +72,8 @@ public enum ColumnType {
      * @return an object of type javaTypeClass
      * @deprecated cannot handle FIELD_PARSE access type. Use {@link ColumnStructure#toJavaType(Object)}
      */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    @Deprecated
     public Object toJavaType(Object sqlObject, Class javaTypeClass) {
         if (sqlObject == null) {
             if (javaTypeClass.isPrimitive()) {
