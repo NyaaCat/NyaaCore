@@ -2,7 +2,6 @@ package cat.nyaa.nyaacore;
 
 import cat.nyaa.nyaacore.utils.ItemStackUtils;
 import cat.nyaa.nyaacore.utils.LocaleUtils;
-import cat.nyaa.nyaacore.utils.ReflectionUtils;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.HoverEvent;
@@ -21,9 +20,6 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.permissions.Permission;
 import org.librazy.nyaautils_lang_checker.LangKey;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -234,23 +230,8 @@ public class Message {
         return item;
     }
 
-    @SuppressWarnings("unchecked")
     public static void sendActionBarMessage(Player player, BaseComponent msg) {
-        try {
-            Class<?> craftPlayer = ReflectionUtils.getOBCClass("entity.CraftPlayer");
-            Method getHandleMethod = craftPlayer.getMethod("getHandle");
-            Object handle = getHandleMethod.invoke(player);
-            Class<?> iChatBaseComponent = ReflectionUtils.getNMSClass("IChatBaseComponent");
-            Class<?> packetPlayOutChat = ReflectionUtils.getNMSClass("PacketPlayOutChat");
-            Constructor<?> constructor = packetPlayOutChat.getConstructor(iChatBaseComponent, byte.class);
-            Object packet = constructor.newInstance(null, (byte) ChatMessageType.ACTION_BAR.ordinal());
-            packet.getClass().getField("components").set(packet, new BaseComponent[]{msg});
-            Object playerConnection = handle.getClass().getField("playerConnection").get(handle);
-            playerConnection.getClass().getMethod("sendPacket",
-                    ReflectionUtils.getNMSClass("Packet")).invoke(playerConnection, packet);
-        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | NoSuchFieldException | InstantiationException e) {
-            e.printStackTrace();
-        }
+        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, msg);
     }
 
     public static void sendTitle(Player player, BaseComponent title, BaseComponent subtitle, int fadeInTicks, int stayTicks, int fadeOutTicks) {
