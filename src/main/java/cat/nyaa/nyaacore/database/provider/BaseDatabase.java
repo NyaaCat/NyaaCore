@@ -139,11 +139,19 @@ public abstract class BaseDatabase implements Cloneable {
      * @return Query object
      */
     public <T> Query<T> query(Class<T> tableClass) {
-        return new SqlQuery<>(tableClass, false);
+        return new SqlQuery<>(tableClass, false, false);
+    }
+
+    public <T> Query<T> auto(Class<T> tableClass) {
+        return new SqlQuery<>(tableClass, false, false);
     }
 
     public <T> TransactionalQuery<T> transaction(Class<T> tableClass) {
-        return new SqlQuery<>(tableClass, true);
+        return new SqlQuery<>(tableClass, true, false);
+    }
+
+    public <T> TransactionalQuery<T> transaction(Class<T> tableClass, boolean manualCommit) {
+        return new SqlQuery<>(tableClass, true, manualCommit);
     }
 
     @SuppressWarnings("unchecked")
@@ -153,10 +161,11 @@ public abstract class BaseDatabase implements Cloneable {
         private Map<String, Object> whereClause = new HashMap<>();
         private Boolean rollback = false;
 
-        public SqlQuery(Class<T> tableClass, boolean trans) {
+        public SqlQuery(Class<T> tableClass, boolean trans, boolean defaultRollback) {
             if(!trans){
                 rollback = null;
             } else  {
+                rollback = defaultRollback;
                 try {
                     getConnection().setAutoCommit(false);
                 } catch (SQLException e) {
@@ -169,12 +178,12 @@ public abstract class BaseDatabase implements Cloneable {
         }
 
         /**
-         * clear the where clauses
+         * reset the where clauses
          *
          * @return self
          */
         @Override
-        public TransactionalQuery<T> clear() {
+        public TransactionalQuery<T> reset() {
             whereClause.clear();
             return this;
         }

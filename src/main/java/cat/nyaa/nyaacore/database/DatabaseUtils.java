@@ -58,12 +58,17 @@ public class DatabaseUtils {
      * @return database instance
      */
     @SuppressWarnings("unchecked")
-    public static <T extends Database> T get(String provider, JavaPlugin plugin, Map<String, Object> configuration){
+    public static <T extends Database> T get(String provider, Plugin plugin, Map<String, Object> configuration){
         DatabaseProvider p = providerRegistry.get(provider);
         Validate.notNull(p, "Provider '" + provider + "' not found");
         Database db = p.get(plugin, configuration);
         Validate.notNull(db, "Provider '" + provider + "' returned null");
         return (T) db;
+    }
+
+    @Deprecated
+    public static <T extends Database> T get(String provider, JavaPlugin plugin, Map<String, Object> configuration) {
+        return get(provider, (Plugin)plugin, configuration);
     }
 
     /**
@@ -74,13 +79,18 @@ public class DatabaseUtils {
      * @param sectionName   configuration section in plugin's config
      * @return database instance
      */
-    public static <T extends Database> T get(JavaPlugin plugin, String sectionName){
+    public static <T extends Database> T get(Plugin plugin, String sectionName){
         ConfigurationSection section = plugin.getConfig().getConfigurationSection(sectionName);
         Validate.notNull(section, "Please add a '" + sectionName + "' section containing a 'provider' value and (if provider requires) a 'connection' section to your " + plugin.getName() + "'s config file");
         ConfigurationSection conn = section.getConfigurationSection("connection");
         String provider = section.getString("provider");
         Validate.notNull(provider, "Please add a 'provider' value in 'database' section. Available: " + providerRegistry.keySet().stream().reduce("", (s, s2) -> s + ", " + s2));
         return get(provider, plugin, conn == null ? null : conn.getValues(false));
+    }
+
+    @Deprecated
+    public static <T extends Database> T get(JavaPlugin plugin, String sectionName) {
+        return get((Plugin)plugin, sectionName);
     }
 
     /**
@@ -92,7 +102,7 @@ public class DatabaseUtils {
      */
     public static <T extends Database> T get(String sectionName){
         try {
-            return get(JavaPlugin.getProvidingPlugin(Class.forName(Thread.currentThread().getStackTrace()[2].getClassName())), sectionName);
+            return get((Plugin) JavaPlugin.getProvidingPlugin(Class.forName(Thread.currentThread().getStackTrace()[2].getClassName())), sectionName);
         } catch (ClassNotFoundException e) {
             throw new IllegalStateException();
         }
@@ -106,7 +116,7 @@ public class DatabaseUtils {
      */
     public static <T extends Database> T get(){
         try {
-            return get(JavaPlugin.getProvidingPlugin(Class.forName(Thread.currentThread().getStackTrace()[2].getClassName())), "database");
+            return get((Plugin) JavaPlugin.getProvidingPlugin(Class.forName(Thread.currentThread().getStackTrace()[2].getClassName())), "database");
         } catch (ClassNotFoundException e) {
             throw new IllegalStateException();
         }

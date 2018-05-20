@@ -3,7 +3,7 @@ package cat.nyaa.nyaacore.database;
 public interface TransactionalQuery<T> extends Query<T> {
 
     @Override
-    TransactionalQuery<T> clear();
+    TransactionalQuery<T> reset();
 
     @Override
     TransactionalQuery<T> whereEq(String columnName, Object obj);

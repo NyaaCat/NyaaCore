@@ -2,6 +2,7 @@ package cat.nyaa.nyaacore.database.provider;
 
 import cat.nyaa.nyaacore.database.Database;
 import cat.nyaa.nyaacore.database.RelationalDB;
+import cat.nyaa.nyaacore.database.TransactionalQuery;
 import org.apache.commons.lang.NotImplementedException;
 import org.bukkit.plugin.Plugin;
 

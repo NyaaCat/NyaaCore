@@ -6,7 +6,7 @@ import java.util.concurrent.Future;
 
 public interface Query<T> extends AutoCloseable {
 
-    Query<T> clear();
+    Query<T> reset();
 
     Query<T> whereEq(String columnName, Object obj);
 

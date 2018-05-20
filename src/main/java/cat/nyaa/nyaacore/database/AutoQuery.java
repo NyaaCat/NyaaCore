@@ -12,7 +12,7 @@ public class AutoQuery<T> implements Query<T> {
     }
 
     @Override
-    public Query<T> clear() {
+    public Query<T> reset() {
         throw new UnsupportedOperationException();
     }
 

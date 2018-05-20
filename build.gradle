@@ -69,7 +69,7 @@ dependencies {
     compileOnly('com.meowj:LangUtils:1.9') {
         transitive = false
     }
-    testImplementation 'org.mockito:mockito-all:1.10.19'
+    testImplementation 'org.mockito:mockito-core:2.18.3'
     testImplementation 'org.xerial:sqlite-jdbc:3.21.0.1'
 }
 

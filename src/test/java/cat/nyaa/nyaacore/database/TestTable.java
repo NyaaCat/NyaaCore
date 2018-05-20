@@ -20,6 +20,15 @@ public class TestTable {
 
     public UUID uuid_indirect;
 
+    public TestTable(){}
+
+    public TestTable(Long id, String string, UUID uuid, UUID uuid_indirect) {
+        this.id = id;
+        this.string = string;
+        this.uuid = uuid;
+        this.uuid_indirect = uuid_indirect;
+    }
+
     @Column(name = "uuid_indirect")
     public String getUuidIndirect() {
         return uuid_indirect.toString();
