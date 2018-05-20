@@ -139,11 +139,11 @@ public abstract class BaseDatabase implements Cloneable {
      * @return Query object
      */
     public <T> Query<T> query(Class<T> tableClass) {
-        return new SqlQuery<>(tableClass, true);
+        return new SqlQuery<>(tableClass, false);
     }
 
     public <T> TransactionalQuery<T> transaction(Class<T> tableClass) {
-        return new SqlQuery<>(tableClass, false);
+        return new SqlQuery<>(tableClass, true);
     }
 
     @SuppressWarnings("unchecked")
