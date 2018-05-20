@@ -15,7 +15,7 @@ public class TestSQLiteDatabase extends BaseDatabase {
     }
 
     @Override
-    protected Class<?>[] getTables() {
+    public Class<?>[] getTables() {
         return new Class[]{TestTable.class};
     }
 
