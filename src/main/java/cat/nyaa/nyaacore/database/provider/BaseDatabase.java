@@ -230,9 +230,9 @@ public abstract class BaseDatabase implements Cloneable {
             String sql = String.format("INSERT INTO %s(%s) VALUES(?", table.getTableName(), table.getColumnNamesString());
             for (int i = 1; i < table.columns.size(); i++) sql += ",?";
             sql += ")";
+            Map<String, Object> objMap = table.getColumnObjectMap(object);
             try {
                 PreparedStatement stmt = getConnection().prepareStatement(sql);
-                Map<String, Object> objMap = table.getColumnObjectMap(object);
                 for (int i = 1; i <= table.orderedColumnName.size(); i++) {
                     String colName = table.orderedColumnName.get(i - 1);
                     if (!objMap.containsKey(colName) || objMap.get(colName) == null) {
@@ -243,9 +243,9 @@ public abstract class BaseDatabase implements Cloneable {
                 }
                 stmt.execute();
                 stmt.close();
-            } catch (SQLException | ReflectiveOperationException ex) {
+            } catch (SQLException ex) {
                 rollback = true;
-                throw new RuntimeException(sql, ex);
+                throw new RuntimeException(sql + "\n" + objMap.toString(), ex);
             }
         }
 
@@ -427,7 +427,7 @@ public abstract class BaseDatabase implements Cloneable {
                 }
                 stmt.execute();
                 stmt.close();
-            } catch (ReflectiveOperationException | SQLException ex) {
+            } catch (SQLException ex) {
                 rollback = true;
                 throw new RuntimeException(sql, ex);
             }

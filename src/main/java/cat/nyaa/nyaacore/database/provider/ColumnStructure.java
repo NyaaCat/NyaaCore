@@ -151,7 +151,7 @@ public class ColumnStructure {
         String type = columnType.name();
         String ret = String.format("%s %s NOT NULL", name, type);
         if (isPrimary && (length == 0 || sqlite)) ret += " PRIMARY KEY";
-        else if(isPrimary && columnType == ColumnType.TEXT) ret += String.format(", CONSTRAINT PRIMARY KEY (%s(%d))", name, length);
+        else if(isPrimary && columnType == ColumnType.MEDIUMTEXT) ret += String.format(", CONSTRAINT PRIMARY KEY (%s(%d))", name, length);
         else if(isPrimary) ret += String.format(", CONSTRAINT PRIMARY KEY (%s)", name);
         return ret;
     }

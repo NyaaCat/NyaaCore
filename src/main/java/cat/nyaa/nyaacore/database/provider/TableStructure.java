@@ -120,7 +120,7 @@ class TableStructure<T> {
      * @param columns the column names, or null for all columns
      * @return columnName -> columnData map
      */
-    public Map<String, Object> getColumnObjectMap(T obj, String... columns) throws ReflectiveOperationException {
+    public Map<String, Object> getColumnObjectMap(T obj, String... columns) {
         List<String> columnList = new ArrayList<>();
         Map<String, Object> objects = new HashMap<>();
         if (columns == null || columns.length == 0) {

@@ -7,7 +7,7 @@ import org.bukkit.inventory.ItemStack;
  * TODO this enum may be replaced by {@link java.sql.Types}
  */
 public enum ColumnType {
-    TEXT,
+    MEDIUMTEXT,
     INTEGER, // use long in java
     REAL; //use double in java
 
@@ -19,13 +19,13 @@ public enum ColumnType {
      * @return determined database type
      */
     public static ColumnType getType(ColumnAccessMethod accessMethod, Class<?> cls) {
-        if (accessMethod == ColumnAccessMethod.FIELD_PARSE) return TEXT;
+        if (accessMethod == ColumnAccessMethod.FIELD_PARSE) return MEDIUMTEXT;
         if (cls == long.class || cls == Long.class) return INTEGER;
         if (cls == boolean.class || cls == Boolean.class) return INTEGER;
         if (cls == double.class || cls == Double.class) return REAL;
-        if (cls == String.class) return TEXT;
-        if (cls.isEnum()) return TEXT;
-        if (cls == ItemStack.class) return TEXT;
+        if (cls == String.class) return MEDIUMTEXT;
+        if (cls.isEnum()) return MEDIUMTEXT;
+        if (cls == ItemStack.class) return MEDIUMTEXT;
         throw new IllegalArgumentException("Unsupported type");
     }
 
@@ -42,7 +42,7 @@ public enum ColumnType {
     public Object toDatabaseType(Object raw) {
         if(raw == null) return null;
         Class<?> cls = raw.getClass();
-        if (this == TEXT) {
+        if (this == MEDIUMTEXT) {
             if (cls == String.class) return raw;
             if (cls.isEnum()) return ((Enum) raw).name();
             if (ItemStack.class.isAssignableFrom(cls)) return ItemStackUtils.itemToBase64((ItemStack) raw);
@@ -82,7 +82,7 @@ public enum ColumnType {
                 return null;
             }
         }
-        if (this == TEXT) {
+        if (this == MEDIUMTEXT) {
             String str = (String) sqlObject;
             if (javaTypeClass == String.class) return str;
             if (javaTypeClass.isEnum()) return Enum.valueOf(javaTypeClass, str);
