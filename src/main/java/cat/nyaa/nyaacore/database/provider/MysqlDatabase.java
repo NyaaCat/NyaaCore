@@ -49,7 +49,7 @@ public class MysqlDatabase extends BaseDatabase implements RelationalDB {
     }
 
     @Override
-    protected Class<?>[] getTables() {
+    public Class<?>[] getTables() {
         return classes;
     }
 

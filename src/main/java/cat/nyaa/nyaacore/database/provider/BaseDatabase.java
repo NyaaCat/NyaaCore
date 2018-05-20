@@ -17,11 +17,11 @@ public abstract class BaseDatabase implements Cloneable {
 
     /**
      * The return value should be constant
-     * and returned classes should be annotated by @DataTable().
+     * and returned classes should be annotated by @Table().
      *
      * @return Table classes in this database.
      */
-    protected abstract Class<?>[] getTables();
+    public abstract Class<?>[] getTables();
 
     /* auto commit should be set to `true` for the returned connection */
     protected abstract Connection getConnection();

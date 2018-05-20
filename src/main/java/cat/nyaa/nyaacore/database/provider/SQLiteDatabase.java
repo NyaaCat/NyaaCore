@@ -58,7 +58,7 @@ public class SQLiteDatabase extends BaseDatabase implements Cloneable, Relationa
     }
 
     @Override
-    protected Class<?>[] getTables() {
+    public Class<?>[] getTables() {
         return classes;
     }
 

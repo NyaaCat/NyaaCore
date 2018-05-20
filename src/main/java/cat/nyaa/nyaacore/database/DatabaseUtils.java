@@ -5,18 +5,18 @@ import cat.nyaa.nyaacore.database.provider.MysqlProvider;
 import cat.nyaa.nyaacore.database.provider.SQLiteProvider;
 import cat.nyaa.nyaacore.utils.ClassPathUtils;
 import org.apache.commons.lang.Validate;
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.net.URISyntaxException;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.function.BiConsumer;
 
 /**
  * Database utils that provide database access according to plugin's configuration
@@ -143,5 +143,39 @@ public class DatabaseUtils {
             }).toArray(Class<?>[]::new);
         }
         return classes;
+    }
+
+    public static BukkitTask dumpDatabaseAsync(Plugin plugin, RelationalDB from, RelationalDB to, BiConsumer<Class<?>, Integer> progressCallback){
+        List<Class<?>> fromTables = Arrays.asList(from.getTables());
+        List<Class<?>> toTables = Arrays.asList(to.getTables());
+        if(!toTables.containsAll(fromTables)){
+            throw new IllegalArgumentException("Destination database do not contains all tables to be dumped");
+        }
+        return Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                from.beginTransaction();
+                to.beginTransaction();
+
+                for(Class<?> table : fromTables){
+                    dumpTable(from, to, progressCallback, table);
+                }
+
+                from.commitTransaction();
+                to.commitTransaction();
+                progressCallback.accept(null, 0);
+
+        });
+    }
+
+    private static <T> void dumpTable(RelationalDB from, RelationalDB to, BiConsumer<Class<?>, Integer> progressCallback, Class<T> table) {
+        List<T> rows = from.query(table).select();
+        int r = rows.size();
+        progressCallback.accept(table, r);
+        for (T row : rows) {
+            r--;
+            to.query(table).insert(row);
+            if(r %100 == 0){
+                progressCallback.accept(table, r);
+            }
+        }
     }
 }
