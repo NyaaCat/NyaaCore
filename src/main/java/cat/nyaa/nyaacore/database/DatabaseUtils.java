@@ -152,6 +152,7 @@ public class DatabaseUtils {
             throw new IllegalArgumentException("Destination database do not contains all tables to be dumped");
         }
         return Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            try {
                 from.beginTransaction();
                 to.beginTransaction();
 
@@ -162,7 +163,10 @@ public class DatabaseUtils {
                 from.commitTransaction();
                 to.commitTransaction();
                 progressCallback.accept(null, 0);
-
+            } catch (Exception e){
+                progressCallback.accept(null, -1);
+                throw e;
+            }
         });
     }
 
