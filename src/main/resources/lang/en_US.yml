@@ -3,6 +3,9 @@ internal:
     using_language: "Now using language: %s"
     command_complete: "Command Executed!"
     usage_prompt: "Usage: %s"
+    dump:
+      ing: "Dumping %s from %s, %d remaining."
+      finished: "Finished database dumping from %s."
   error:
     bad_subcommand: "Bad subcommand handler: %s"
     not_player: "Only players can do this"
