@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.IllegalFormatConversionException;
 import java.util.Map;
@@ -77,7 +78,7 @@ public abstract class LanguageRepository implements ILocalizer {
         if (plugin == null || codeName == null || targetMap == null) throw new IllegalArgumentException();
         InputStream stream = plugin.getResource("lang/" + codeName + ".yml");
         if (stream != null) {
-            YamlConfiguration section = YamlConfiguration.loadConfiguration(new InputStreamReader(stream));
+            YamlConfiguration section = YamlConfiguration.loadConfiguration(new InputStreamReader(stream, Charset.forName("UTF8")));
             loadLanguageSection(targetMap, section, "", ignoreInternal, ignoreNormal);
         }
     }
