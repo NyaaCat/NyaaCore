@@ -71,5 +71,10 @@ public class MapProvider implements DatabaseProvider {
         public void close() {
             map = null;
         }
+
+        @Override
+        public boolean containsKey(K key){
+            return map.containsKey(key);
+        }
     }
 }

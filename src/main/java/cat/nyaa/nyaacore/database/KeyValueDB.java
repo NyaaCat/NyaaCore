@@ -47,4 +47,8 @@ public interface KeyValueDB<K, V> extends Database{
     default CompletableFuture<Void> clearAsync() {
         return CompletableFuture.supplyAsync(() -> {clear();return null;});
     }
+
+    default boolean containsKey(K key){
+        return get(key) != null;
+    }
 }
