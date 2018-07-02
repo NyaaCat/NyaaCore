@@ -11,13 +11,22 @@ import java.util.*;
 class TableStructure<T> {
     /* class -> TableStructure cache */
     private static final Map<Class<?>, TableStructure<?>> structured_tables = new HashMap<>();
+    private static final Map<Class<?>, TableStructure<?>> sqlite_structured_tables = new HashMap<>();
 
     @SuppressWarnings("unchecked")
     public static <X> TableStructure<X> fromClass(Class<X> cls, boolean sqlite) {
-        if (structured_tables.containsKey(cls)) return (TableStructure<X>) structured_tables.get(cls);
-        TableStructure<X> ts = new TableStructure<>(cls, sqlite);
-        structured_tables.put(cls, ts);
-        return ts;
+        if(sqlite){
+            if (sqlite_structured_tables.containsKey(cls)) return (TableStructure<X>) sqlite_structured_tables.get(cls);
+            TableStructure<X> ts = new TableStructure<>(cls, true);
+            sqlite_structured_tables.put(cls, ts);
+            return ts;
+        }else{
+            if (structured_tables.containsKey(cls)) return (TableStructure<X>) structured_tables.get(cls);
+            TableStructure<X> ts = new TableStructure<>(cls, false);
+            structured_tables.put(cls, ts);
+            return ts;
+        }
+
     }
     final boolean sqlite;
     final Class<T> tableClass;
