@@ -15,12 +15,12 @@ class TableStructure<T> {
 
     @SuppressWarnings("unchecked")
     public static <X> TableStructure<X> fromClass(Class<X> cls, boolean sqlite) {
-        if(sqlite){
+        if (sqlite) {
             if (sqlite_structured_tables.containsKey(cls)) return (TableStructure<X>) sqlite_structured_tables.get(cls);
             TableStructure<X> ts = new TableStructure<>(cls, true);
             sqlite_structured_tables.put(cls, ts);
             return ts;
-        }else{
+        } else {
             if (structured_tables.containsKey(cls)) return (TableStructure<X>) structured_tables.get(cls);
             TableStructure<X> ts = new TableStructure<>(cls, false);
             structured_tables.put(cls, ts);
@@ -28,6 +28,7 @@ class TableStructure<T> {
         }
 
     }
+
     final boolean sqlite;
     final Class<T> tableClass;
     final String tableName;
@@ -45,7 +46,7 @@ class TableStructure<T> {
         String primKeyName = null;
 
         // load all the fields
-        for (Field f : tableClass.getDeclaredFields()) {
+        for (Field f: tableClass.getDeclaredFields()) {
             Column columnAnnotation = f.getAnnotation(Column.class);
             if (columnAnnotation == null) continue;
             ColumnStructure structure = new ColumnStructure(this, f, columnAnnotation, sqlite);
@@ -59,7 +60,7 @@ class TableStructure<T> {
         }
 
         // load all the getter/setter
-        for (Method m : tableClass.getDeclaredMethods()) {
+        for (Method m: tableClass.getDeclaredMethods()) {
             Column columnAnnotation = m.getAnnotation(Column.class);
             if (columnAnnotation == null) continue;
             ColumnStructure structure = new ColumnStructure(this, m, columnAnnotation, sqlite);
@@ -116,7 +117,7 @@ class TableStructure<T> {
 
     public String getCreateTableSQL() {
         StringJoiner colStr = new StringJoiner(",");
-        for (String colName : orderedColumnName) {
+        for (String colName: orderedColumnName) {
             colStr.add(columns.get(colName).getTableCreationScheme());
         }
         return String.format("CREATE TABLE IF NOT EXISTS %s(%s)", tableName, colStr.toString());
@@ -138,7 +139,7 @@ class TableStructure<T> {
         } else {
             columnList.addAll(Arrays.asList(columns));
         }
-        for (String colName : columnList) {
+        for (String colName: columnList) {
             objects.put(colName, this.columns.get(colName).fetchFromObject(obj));
         }
         return objects;
@@ -150,7 +151,7 @@ class TableStructure<T> {
      */
     public T getObjectFromResultSet(ResultSet rs) throws ReflectiveOperationException, SQLException {
         T obj = tableClass.newInstance();
-        for (String colName : orderedColumnName) {
+        for (String colName: orderedColumnName) {
             Object colValue = rs.getObject(colName);
             this.columns.get(colName).saveToObject(obj, colValue);
         }

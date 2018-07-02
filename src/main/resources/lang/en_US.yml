@@ -5,7 +5,7 @@ internal:
     usage_prompt: "Usage: %s"
     dump:
       ing: "Dumping %s to %s, %d remaining."
-      finished: "Finished database dumping from %s."
+      finished: "Finished database dumping to %s."
   error:
     bad_subcommand: "Bad subcommand handler: %s"
     not_player: "Only players can do this"
