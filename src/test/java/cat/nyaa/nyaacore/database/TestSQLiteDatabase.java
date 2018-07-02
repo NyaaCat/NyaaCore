@@ -10,7 +10,7 @@ import java.sql.SQLException;
 public class TestSQLiteDatabase extends BaseDatabase {
     public final File dbFile = new File("./test.db");
     protected TestSQLiteDatabase() {
-        super();
+        super(true);
         connect();
     }
 
@@ -30,7 +30,7 @@ public class TestSQLiteDatabase extends BaseDatabase {
             //getPlugin().getLogger().info("Connecting database: " + connStr);
             dbConn = DriverManager.getConnection(connStr);
             dbConn.setAutoCommit(true);
-            createTables(true);
+            createTables();
         } catch (ClassNotFoundException | SQLException ex) {
             dbConn = null;
             throw new RuntimeException(ex);

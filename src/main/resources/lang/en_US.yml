@@ -4,7 +4,7 @@ internal:
     command_complete: "Command Executed!"
     usage_prompt: "Usage: %s"
     dump:
-      ing: "Dumping %s from %s, %d remaining."
+      ing: "Dumping %s to %s, %d remaining."
       finished: "Finished database dumping from %s."
   error:
     bad_subcommand: "Bad subcommand handler: %s"

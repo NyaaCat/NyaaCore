@@ -13,23 +13,24 @@ class TableStructure<T> {
     private static final Map<Class<?>, TableStructure<?>> structured_tables = new HashMap<>();
 
     @SuppressWarnings("unchecked")
-    public static <X> TableStructure<X> fromClass(Class<X> cls) {
+    public static <X> TableStructure<X> fromClass(Class<X> cls, boolean sqlite) {
         if (structured_tables.containsKey(cls)) return (TableStructure<X>) structured_tables.get(cls);
-        TableStructure<X> ts = new TableStructure<>(cls);
+        TableStructure<X> ts = new TableStructure<>(cls, sqlite);
         structured_tables.put(cls, ts);
         return ts;
     }
-
+    final boolean sqlite;
     final Class<T> tableClass;
     final String tableName;
     final Map<String, ColumnStructure> columns = new HashMap<>();
     final String primaryKey; // null if no primary key
     final List<String> orderedColumnName = new ArrayList<>();
 
-    private TableStructure(Class<T> tableClass) {
+    private TableStructure(Class<T> tableClass, boolean sqlite) {
         Table annoDT = tableClass.getDeclaredAnnotation(Table.class);
         if (annoDT == null)
             throw new IllegalArgumentException("Class missing table annotation: " + tableClass.getName());
+        this.sqlite = sqlite;
         this.tableName = annoDT.name();
         this.tableClass = tableClass;
         String primKeyName = null;
@@ -38,7 +39,7 @@ class TableStructure<T> {
         for (Field f : tableClass.getDeclaredFields()) {
             Column columnAnnotation = f.getAnnotation(Column.class);
             if (columnAnnotation == null) continue;
-            ColumnStructure structure = new ColumnStructure(this, f, columnAnnotation);
+            ColumnStructure structure = new ColumnStructure(this, f, columnAnnotation, sqlite);
             if (columns.containsKey(structure.getName()))
                 throw new RuntimeException("Duplicated column name: " + structure.getName());
             if (structure.isPrimary()) {
@@ -52,7 +53,7 @@ class TableStructure<T> {
         for (Method m : tableClass.getDeclaredMethods()) {
             Column columnAnnotation = m.getAnnotation(Column.class);
             if (columnAnnotation == null) continue;
-            ColumnStructure structure = new ColumnStructure(this, m, columnAnnotation);
+            ColumnStructure structure = new ColumnStructure(this, m, columnAnnotation, sqlite);
             if (columns.containsKey(structure.getName()))
                 throw new RuntimeException("Duplicated column name: " + structure.getName());
             if (structure.isPrimary()) {
@@ -104,10 +105,10 @@ class TableStructure<T> {
         return sb.toString();
     }
 
-    public String getCreateTableSQL(boolean sqlite) {
+    public String getCreateTableSQL() {
         StringJoiner colStr = new StringJoiner(",");
         for (String colName : orderedColumnName) {
-            colStr.add(columns.get(colName).getTableCreationScheme(sqlite));
+            colStr.add(columns.get(colName).getTableCreationScheme());
         }
         return String.format("CREATE TABLE IF NOT EXISTS %s(%s)", tableName, colStr.toString());
     }

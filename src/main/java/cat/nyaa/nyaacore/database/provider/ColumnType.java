@@ -8,7 +8,8 @@ import org.bukkit.inventory.ItemStack;
  */
 public enum ColumnType {
     MEDIUMTEXT,
-    INTEGER, // use long in java
+    BIGINT, // use long in java
+    INTEGER, // use int in java
     REAL; //use double in java
 
     /**
@@ -18,9 +19,10 @@ public enum ColumnType {
      *
      * @return determined database type
      */
-    public static ColumnType getType(ColumnAccessMethod accessMethod, Class<?> cls) {
+    public static ColumnType getType(ColumnAccessMethod accessMethod, Class<?> cls, Boolean sqlite) {
         if (accessMethod == ColumnAccessMethod.FIELD_PARSE) return MEDIUMTEXT;
-        if (cls == long.class || cls == Long.class) return INTEGER;
+        if (cls == long.class || cls == Long.class) return sqlite ? INTEGER : BIGINT;
+        if (cls == int.class || cls == Integer.class) return INTEGER;
         if (cls == boolean.class || cls == Boolean.class) return INTEGER;
         if (cls == double.class || cls == Double.class) return REAL;
         if (cls == String.class) return MEDIUMTEXT;
@@ -40,16 +42,18 @@ public enum ColumnType {
      */
     @Deprecated
     public Object toDatabaseType(Object raw) {
-        if(raw == null) return null;
+        if (raw == null) return null;
         Class<?> cls = raw.getClass();
         if (this == MEDIUMTEXT) {
             if (cls == String.class) return raw;
             if (cls.isEnum()) return ((Enum) raw).name();
             if (ItemStack.class.isAssignableFrom(cls)) return ItemStackUtils.itemToBase64((ItemStack) raw);
-        } else if (this == INTEGER) {
-            if (cls == Boolean.class) return (Boolean) raw ? 1L : 0L;
-            if (cls == Long.class || cls == Integer.class || cls == Short.class || cls == Byte.class)
+        } else if (this == BIGINT || this == INTEGER) {
+            if (cls == Long.class)
                 return ((Number) raw).longValue();
+            if (cls == Boolean.class) return (Boolean) raw ? 1L : 0L;
+            if (cls == Integer.class || cls == Short.class || cls == Byte.class)
+                return ((Number) raw).intValue();
         } else if (this == REAL) {
             if (cls == Double.class || cls == Float.class)
                 return ((Number) raw).doubleValue();
@@ -87,9 +91,10 @@ public enum ColumnType {
             if (javaTypeClass == String.class) return str;
             if (javaTypeClass.isEnum()) return Enum.valueOf(javaTypeClass, str);
             if (javaTypeClass == ItemStack.class) return ItemStackUtils.itemFromBase64(str);
-        } else if (this == INTEGER) {
-            Long num = ((Number) sqlObject).longValue();
-            if (javaTypeClass == Long.class || javaTypeClass == long.class) return num;
+        } else if (this == BIGINT || this == INTEGER) {
+            if (javaTypeClass == Long.class || javaTypeClass == long.class) return ((Number) sqlObject).longValue();
+            Integer num = ((Number) sqlObject).intValue();
+            if (javaTypeClass == Integer.class || javaTypeClass == int.class) return num;
             if (javaTypeClass == Boolean.class || javaTypeClass == Boolean.TYPE)
                 return num.equals(1L);
         } else if (this == REAL) {

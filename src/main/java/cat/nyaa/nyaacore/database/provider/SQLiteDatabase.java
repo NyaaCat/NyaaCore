@@ -23,7 +23,7 @@ public class SQLiteDatabase extends BaseDatabase implements Cloneable, Relationa
     private Class<?>[] classes;
 
     SQLiteDatabase(Plugin basePlugin, String fileName, Class<?>[] tableClasses) {
-        super(tableClasses);
+        super(tableClasses, true);
         file = fileName;
         plugin = basePlugin;
         classes = tableClasses;
@@ -40,7 +40,7 @@ public class SQLiteDatabase extends BaseDatabase implements Cloneable, Relationa
             plugin.getLogger().info("Connecting database: " + connStr);
             dbConn = DriverManager.getConnection(connStr);
             dbConn.setAutoCommit(true);
-            createTables(true);
+            createTables();
         } catch (ClassNotFoundException | SQLException ex) {
             dbConn = null;
             throw new RuntimeException(ex);
@@ -124,7 +124,7 @@ public class SQLiteDatabase extends BaseDatabase implements Cloneable, Relationa
 
     @Override
     public void createTable(Class<?> cls) {
-        createTable(cls, true);
+        createTable(cls);
     }
 
     @Override

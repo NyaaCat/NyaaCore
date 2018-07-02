@@ -17,6 +17,7 @@ public class ColumnStructure {
     final String name;
     final TableStructure table;
     final boolean isPrimary;
+    final boolean sqlite;
     final int length;
     final Field field;      // for FIELD or FIELD_PARSER
     final Class fieldType; // only used if accessMethod is not FIELD_PARSER, this is native java type
@@ -30,8 +31,9 @@ public class ColumnStructure {
     /**
      * Constructor for field based table columns
      */
-    public ColumnStructure(TableStructure table, Field dataField, Column anno) {
+    public ColumnStructure(TableStructure table, Field dataField, Column anno, boolean sqlite) {
         if (anno == null) throw new IllegalArgumentException();
+        this.sqlite = sqlite;
         this.table = table;
         String name = anno.name();
         if ("".equals(name)) name = dataField.getName();
@@ -46,10 +48,10 @@ public class ColumnStructure {
         fieldParser = getParserMethod(dataField.getType());
         if (fieldParser == null) {
             accessMethod = ColumnAccessMethod.FIELD;
-            columnType = ColumnType.getType(ColumnAccessMethod.FIELD, field.getType());
+            columnType = ColumnType.getType(ColumnAccessMethod.FIELD, field.getType(), sqlite);
         } else {
             accessMethod = ColumnAccessMethod.FIELD_PARSE;
-            columnType = ColumnType.getType(ColumnAccessMethod.FIELD_PARSE, field.getType());
+            columnType = ColumnType.getType(ColumnAccessMethod.FIELD_PARSE, field.getType(), sqlite);
         }
     }
 
@@ -76,8 +78,9 @@ public class ColumnStructure {
     /**
      * Constructor for method based table columns
      */
-    public ColumnStructure(TableStructure table, Method dataMethod, Column anno) {
+    public ColumnStructure(TableStructure table, Method dataMethod, Column anno, boolean sqlite) {
         if (anno == null) throw new IllegalArgumentException();
+        this.sqlite = sqlite;
         this.table = table;
         String methodName = dataMethod.getName();
         if (!methodName.startsWith("get") && !methodName.startsWith("set"))
@@ -117,7 +120,7 @@ public class ColumnStructure {
             ex.printStackTrace();
             throw new RuntimeException(ex);
         }
-        this.columnType = ColumnType.getType(ColumnAccessMethod.METHOD, methodType);
+        this.columnType = ColumnType.getType(ColumnAccessMethod.METHOD, methodType, sqlite);
         this.accessMethod = ColumnAccessMethod.METHOD;
         this.getter = getter;
         this.setter = setter;
@@ -147,7 +150,7 @@ public class ColumnStructure {
         return columnType;
     }
 
-    public String getTableCreationScheme(boolean sqlite) {
+    public String getTableCreationScheme() {
         String type = columnType.name();
         String ret = String.format("%s %s NOT NULL", name, type);
         if (isPrimary && (length == 0 || sqlite)) ret += " PRIMARY KEY";

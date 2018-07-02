@@ -10,6 +10,8 @@ import javax.persistence.NonUniqueResultException;
 
 public abstract class BaseDatabase implements Cloneable {
 
+    final boolean sqlite;
+
     /* TableName to TableStructure */
     protected final Map<String, TableStructure<?>> tables;
     /* TableClass to TableName */
@@ -29,42 +31,44 @@ public abstract class BaseDatabase implements Cloneable {
     /**
      * Scan & construct all table structures.
      */
-    protected BaseDatabase() {
+    protected BaseDatabase(boolean sqlite) {
+        this.sqlite = sqlite;
         tables = new HashMap<>();
         tableName = new HashMap<>();
         for (Class<?> tableClass : getTables()) {
-            TableStructure<?> tableStructure = TableStructure.fromClass(tableClass);
+            TableStructure<?> tableStructure = TableStructure.fromClass(tableClass, sqlite);
             if (tableStructure == null) throw new RuntimeException();
             tables.put(tableStructure.getTableName(), tableStructure);
             tableName.put(tableClass, tableStructure.getTableName());
         }
     }
 
-    protected BaseDatabase(Class<?>[] tableClasses) {
+    protected BaseDatabase(Class<?>[] tableClasses, boolean sqlite) {
+        this.sqlite = sqlite;
         tables = new HashMap<>();
         tableName = new HashMap<>();
         for (Class<?> tableClass : tableClasses) {
-            TableStructure<?> tableStructure = TableStructure.fromClass(tableClass);
+            TableStructure<?> tableStructure = TableStructure.fromClass(tableClass, sqlite);
             if (tableStructure == null) throw new RuntimeException();
             tables.put(tableStructure.getTableName(), tableStructure);
             tableName.put(tableClass, tableStructure.getTableName());
         }
     }
 
-    protected void createTables(boolean sqlite) {
+    protected void createTables() {
         for (TableStructure<?> c : tables.values()) {
-            createTable(c, sqlite);
+            createTable(c);
         }
     }
 
-    protected void createTable(String name, boolean sqlite) {
+    protected void createTable(String name) {
         Validate.notNull(name);
-        createTable(tables.get(name), sqlite);
+        createTable(tables.get(name));
     }
 
-    public void createTable(Class<?> cls, boolean sqlite) {
+    public void createTable(Class<?> cls) {
         Validate.notNull(cls);
-        createTable(tableName.get(cls), sqlite);
+        createTable(tableName.get(cls));
     }
 
     /**
@@ -73,9 +77,9 @@ public abstract class BaseDatabase implements Cloneable {
      *
      * @param struct The table definition
      */
-    protected void createTable(TableStructure<?> struct, boolean sqlite) {
+    protected void createTable(TableStructure<?> struct) {
         Validate.notNull(struct);
-        String sql = struct.getCreateTableSQL(sqlite);
+        String sql = struct.getCreateTableSQL();
         try {
             Statement smt = getConnection().createStatement();
             smt.executeUpdate(sql);
@@ -121,7 +125,7 @@ public abstract class BaseDatabase implements Cloneable {
     public <T> List<T> parseResultSet(ResultSet rs, Class<T> cls) {
         try {
             if (rs == null) return new ArrayList<>();
-            TableStructure<T> table = TableStructure.fromClass(cls);
+            TableStructure<T> table = TableStructure.fromClass(cls, sqlite);
             List<T> results = new ArrayList<T>();
             while (rs.next()) {
                 T obj = table.getObjectFromResultSet(rs);

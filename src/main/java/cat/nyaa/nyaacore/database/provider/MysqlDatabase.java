@@ -20,7 +20,7 @@ public class MysqlDatabase extends BaseDatabase implements RelationalDB {
     private Class<?>[] classes;
 
     public MysqlDatabase(Plugin basePlugin, String jdbcDriver, String dbUrl, String user, String password, Class<?>[] classes){
-        super(classes);
+        super(classes, false);
         this.plugin = basePlugin;
         this.jdbcDriver = jdbcDriver;
         this.dbUrl = dbUrl;
@@ -44,7 +44,7 @@ public class MysqlDatabase extends BaseDatabase implements RelationalDB {
         } catch (SQLException e) {
             throw new RuntimeException("connection failed", e);
         }
-        createTables(false);
+        createTables();
         return (T) this;
     }
 
@@ -70,7 +70,7 @@ public class MysqlDatabase extends BaseDatabase implements RelationalDB {
 
     @Override
     public void createTable(Class<?> cls) {
-        createTable(cls, false);
+        createTable(cls);
     }
 
     @Override
