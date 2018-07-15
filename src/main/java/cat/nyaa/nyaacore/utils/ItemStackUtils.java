@@ -73,7 +73,7 @@ public final class ItemStackUtils {
         Class<?> classNBTTagCompound = ReflectionUtils.getNMSClass("NBTTagCompound");
 
         Method load_nbtTagCompound = ReflectionUtils.getMethod(classNBTTagCompound, "load", DataInput.class, int.class, classNBTReadLimiter);
-        Constructor<?> constructNativeItemStackFromNBTTagCompound = classNativeItemStack.getConstructor(classNBTTagCompound);
+        //Constructor<?> constructNativeItemStackFromNBTTagCompound = classNativeItemStack.getConstructor(classNBTTagCompound);
         Method asBukkitCopy_CraftItemStack = ReflectionUtils.getMethod(classCraftItemStack, "asBukkitCopy", classNativeItemStack);
 
         ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(nbt, offset, len);
@@ -82,7 +82,7 @@ public final class ItemStackUtils {
         load_nbtTagCompound.invoke(reconstructedNBTTagCompound, dataInputStream, 0, unlimitedNBTReadLimiter);
         dataInputStream.close();
         byteArrayInputStream.close();
-        Object reconstructedNativeItemStack = constructNativeItemStackFromNBTTagCompound.newInstance(reconstructedNBTTagCompound);
+        Object reconstructedNativeItemStack = classNativeItemStack.getMethod("a", classNBTTagCompound).invoke(null, reconstructedNBTTagCompound);
         return (ItemStack) asBukkitCopy_CraftItemStack.invoke(null, reconstructedNativeItemStack);
     }
 
