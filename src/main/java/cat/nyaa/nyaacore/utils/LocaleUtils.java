@@ -31,12 +31,12 @@ public final class LocaleUtils {
         if (item.hasItemMeta() && item.getItemMeta().hasDisplayName())
             return new TextComponent(item.getItemMeta().getDisplayName());
         Material type = item.getType();
-        if (type == Material.SKULL_ITEM && item.getDurability() == 3) {
+        if (type == Material.PLAYER_HEAD) {
             SkullMeta meta = (SkullMeta) item.getItemMeta();
             if (meta.hasOwner()) {
-                return new TranslatableComponent("item.skull.player.name", meta.getOwner());
+                return new TranslatableComponent("block.minecraft.player_head.named", meta.getOwningPlayer().getName());
             } else {
-                return new TranslatableComponent("item.skull.char.name");
+                return new TranslatableComponent("block.minecraft.player_head");
             }
         } else {
             return new TranslatableComponent(getUnlocalizedName(item));

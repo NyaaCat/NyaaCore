@@ -6,3 +6,4 @@ depend: [Vault]
 softdepend: [Essentials, LangUtils]
 authors: [RecursiveG,Librazy,cyilin]
 website: "https://github.com/NyaaCat/NyaaCore"
+api-version: 1.13
