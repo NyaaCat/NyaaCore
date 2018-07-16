@@ -1,9 +1,8 @@
 name: NyaaCore
 main: cat.nyaa.nyaacore.NyaaCoreLoader
 description: "Code infrastructure for all NyaaCat plugins."
-version: 5.0-dev
-depend: [Vault]
-softdepend: [Essentials, LangUtils]
+version: 6.0-dev
+softdepend: [Vault, Essentials, LangUtils]
 authors: [RecursiveG,Librazy,cyilin]
 website: "https://github.com/NyaaCat/NyaaCore"
 api-version: 1.13
