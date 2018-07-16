@@ -23,15 +23,16 @@ public class RayTraceUtils {
         Class<?> vec3D = ReflectionUtils.getNMSClass("Vec3D");
         Class<?> nmsWorld = ReflectionUtils.getNMSClass("World");
         Class<?> mopClass = ReflectionUtils.getNMSClass("MovingObjectPosition");
+        Class<?> fcoClass = ReflectionUtils.getNMSClass("FluidCollisionOption");
         Method mop_getBlockPosMethod = ReflectionUtils.getMethod(mopClass, "a");
         Class<?> baseBlockPosition = ReflectionUtils.getNMSClass("BaseBlockPosition");
         Method bbp_getX = ReflectionUtils.getMethod(baseBlockPosition, "getX");
         Method bbp_getY = ReflectionUtils.getMethod(baseBlockPosition, "getY");
         Method bbp_getZ = ReflectionUtils.getMethod(baseBlockPosition, "getZ");
         Object worldServer = getHandleMethod.invoke(world);
-        Method rayTraceMethod = ReflectionUtils.getMethod(nmsWorld, "rayTrace", vec3D, vec3D, boolean.class, boolean.class, boolean.class);
+        Method rayTraceMethod = ReflectionUtils.getMethod(nmsWorld, "rayTrace", vec3D, vec3D, fcoClass, boolean.class, boolean.class);
         Object mop = rayTraceMethod.invoke(worldServer, toVec3D(start), toVec3D(end),
-                stopOnLiquid, ignoreBlockWithoutBoundingBox, returnLastUncollidableBlock);
+                stopOnLiquid?fcoClass.getEnumConstants()[2]:fcoClass.getEnumConstants()[0], ignoreBlockWithoutBoundingBox, returnLastUncollidableBlock);
         if (mop != null) {
             Object blockPos = mop_getBlockPosMethod.invoke(mop);
             return world.getBlockAt((int) bbp_getX.invoke(blockPos), (int) bbp_getY.invoke(blockPos), (int) bbp_getZ.invoke(blockPos));
