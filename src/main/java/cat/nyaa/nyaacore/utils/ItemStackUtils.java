@@ -4,8 +4,6 @@ import com.google.common.io.BaseEncoding;
 import com.google.common.io.ByteStreams;
 import org.bukkit.inventory.ItemStack;
 
-import java.io.*;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -75,14 +73,37 @@ public final class ItemStackUtils {
         Method load_nbtTagCompound = ReflectionUtils.getMethod(classNBTTagCompound, "load", DataInput.class, int.class, classNBTReadLimiter);
         //Constructor<?> constructNativeItemStackFromNBTTagCompound = classNativeItemStack.getConstructor(classNBTTagCompound);
         Method asBukkitCopy_CraftItemStack = ReflectionUtils.getMethod(classCraftItemStack, "asBukkitCopy", classNativeItemStack);
-
+        Method loadFromNBT_NativeItemStack = ReflectionUtils.getMethod(classNativeItemStack, "a", classNBTTagCompound);
+        Method isEmpty_NativeItemStack = ReflectionUtils.getMethod(classNativeItemStack, "isEmpty");
         ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(nbt, offset, len);
         DataInputStream dataInputStream = new DataInputStream(byteArrayInputStream);
         Object reconstructedNBTTagCompound = classNBTTagCompound.newInstance();
         load_nbtTagCompound.invoke(reconstructedNBTTagCompound, dataInputStream, 0, unlimitedNBTReadLimiter);
         dataInputStream.close();
         byteArrayInputStream.close();
-        Object reconstructedNativeItemStack = classNativeItemStack.getMethod("a", classNBTTagCompound).invoke(null, reconstructedNBTTagCompound);
+        Object reconstructedNativeItemStack = loadFromNBT_NativeItemStack.invoke(null, reconstructedNBTTagCompound);
+        try {
+            if ((Boolean) isEmpty_NativeItemStack.invoke(reconstructedNativeItemStack) == false) {
+                return (ItemStack) asBukkitCopy_CraftItemStack.invoke(null, reconstructedNativeItemStack);
+            }
+        } catch (Exception e) {
+
+        }
+        // 1.12 to 1.13
+        Object dataConverterTypes_ITEM_STACK = ReflectionUtils.getNMSClass("DataConverterTypes").getField("ITEM_STACK").get(null);
+        Object DynamicOpsNBT_instance = ReflectionUtils.getNMSClass("DynamicOpsNBT").getField("a").get(null);
+        Class<?> classDataConverterRegistry = ReflectionUtils.getNMSClass("DataConverterRegistry");
+        Class<?> classDataFixer = Class.forName("com.mojang.datafixers.DataFixer");
+        Object dataFixer_instance = classDataConverterRegistry.getMethod("a").invoke(null);
+        Object dataVersion = ReflectionUtils.getOBCClass("util.CraftMagicNumbers").getField("DATA_VERSION").get(null);
+        Class<?> classTypeReference = Class.forName("com.mojang.datafixers.DSL$TypeReference");
+        Class<?> classDynamic = Class.forName("com.mojang.datafixers.Dynamic");
+        Class<?> classDynamicOps = Class.forName("com.mojang.datafixers.types.DynamicOps");
+        Method update_DataFixer = classDataFixer.getMethod("update", classTypeReference, classDynamic, int.class, int.class);
+        Object dynamicInstance = classDynamic.getConstructor(classDynamicOps, Object.class).newInstance(DynamicOpsNBT_instance, reconstructedNBTTagCompound);
+        Object out = update_DataFixer.invoke(dataFixer_instance, dataConverterTypes_ITEM_STACK, dynamicInstance, -1, dataVersion);
+        Object newNBTBase = classDynamic.getMethod("getValue").invoke(out);
+        reconstructedNativeItemStack = loadFromNBT_NativeItemStack.invoke(null, newNBTBase);
         return (ItemStack) asBukkitCopy_CraftItemStack.invoke(null, reconstructedNativeItemStack);
     }
 
