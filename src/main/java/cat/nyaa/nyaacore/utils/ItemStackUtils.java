@@ -4,6 +4,7 @@ import com.google.common.io.BaseEncoding;
 import com.google.common.io.ByteStreams;
 import org.bukkit.inventory.ItemStack;
 
+import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -13,6 +14,21 @@ import java.util.zip.DeflaterInputStream;
 import java.util.zip.InflaterInputStream;
 
 public final class ItemStackUtils {
+    private static final String NYAACORE_ITEMSTACK_DATAVERSION_KEY = "nyaacore_itemstack_dataversion";
+    private static final int NYAACORE_ITEMSTACK_DEFAULT_DATAVERSION = 1139;
+    private static Object unlimitedNBTReadLimiter = null;
+    private static int currentDataVersion;
+
+    static {
+        try {
+            currentDataVersion = (int) ReflectionUtils.getOBCClass("util.CraftMagicNumbers").getField("DATA_VERSION").get(null);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        }
+    }
+
     /**
      * Get the binary representation of ItemStack
      * for fast ItemStack serialization
@@ -28,10 +44,12 @@ public final class ItemStackUtils {
         Method asNMSCopy_craftItemStack = ReflectionUtils.getMethod(classCraftItemStack, "asNMSCopy", ItemStack.class);
         Method save_nativeItemStack = ReflectionUtils.getMethod(classNativeItemStack, "save", classNBTTagCompound);
         Method write_nbtTagCompound = ReflectionUtils.getMethod(classNBTTagCompound, "write", DataOutput.class);
+        Method setInt_nbtTagCompound = ReflectionUtils.getMethod(classNBTTagCompound, "setInt", String.class, int.class);
 
         Object nativeItemStack = asNMSCopy_craftItemStack.invoke(null, itemStack);
         Object nbtTagCompound = classNBTTagCompound.newInstance();
         save_nativeItemStack.invoke(nativeItemStack, nbtTagCompound);
+        setInt_nbtTagCompound.invoke(nbtTagCompound, NYAACORE_ITEMSTACK_DATAVERSION_KEY, currentDataVersion);
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream dos = new DataOutputStream(baos);
@@ -41,8 +59,6 @@ public final class ItemStackUtils {
         baos.close();
         return outputByteArray;
     }
-
-    private static Object unlimitedNBTReadLimiter = null;
 
     /**
      * Get the ItemStack from its binary representation
@@ -71,39 +87,40 @@ public final class ItemStackUtils {
         Class<?> classNBTTagCompound = ReflectionUtils.getNMSClass("NBTTagCompound");
 
         Method load_nbtTagCompound = ReflectionUtils.getMethod(classNBTTagCompound, "load", DataInput.class, int.class, classNBTReadLimiter);
+        Method getInt_nbtTagCompound = ReflectionUtils.getMethod(classNBTTagCompound, "getInt", String.class);
+        Method remove_nbtTagCompound = ReflectionUtils.getMethod(classNBTTagCompound, "remove", String.class);
         //Constructor<?> constructNativeItemStackFromNBTTagCompound = classNativeItemStack.getConstructor(classNBTTagCompound);
         Method asBukkitCopy_CraftItemStack = ReflectionUtils.getMethod(classCraftItemStack, "asBukkitCopy", classNativeItemStack);
-        Method loadFromNBT_NativeItemStack = ReflectionUtils.getMethod(classNativeItemStack, "a", classNBTTagCompound);
-        Method isEmpty_NativeItemStack = ReflectionUtils.getMethod(classNativeItemStack, "isEmpty");
+        Method createFromNBT_NativeItemStack = ReflectionUtils.getMethod(classNativeItemStack, "a", classNBTTagCompound);
         ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(nbt, offset, len);
         DataInputStream dataInputStream = new DataInputStream(byteArrayInputStream);
         Object reconstructedNBTTagCompound = classNBTTagCompound.newInstance();
         load_nbtTagCompound.invoke(reconstructedNBTTagCompound, dataInputStream, 0, unlimitedNBTReadLimiter);
         dataInputStream.close();
         byteArrayInputStream.close();
-        Object reconstructedNativeItemStack = loadFromNBT_NativeItemStack.invoke(null, reconstructedNBTTagCompound);
-        try {
-            if ((Boolean) isEmpty_NativeItemStack.invoke(reconstructedNativeItemStack) == false) {
-                return (ItemStack) asBukkitCopy_CraftItemStack.invoke(null, reconstructedNativeItemStack);
-            }
-        } catch (Exception e) {
-
+        int dataVersion = (int) getInt_nbtTagCompound.invoke(reconstructedNBTTagCompound, NYAACORE_ITEMSTACK_DATAVERSION_KEY);
+        if (dataVersion > 0) {
+            remove_nbtTagCompound.invoke(reconstructedNBTTagCompound, NYAACORE_ITEMSTACK_DATAVERSION_KEY);
         }
-        // 1.12 to 1.13
-        Object dataConverterTypes_ITEM_STACK = ReflectionUtils.getNMSClass("DataConverterTypes").getField("ITEM_STACK").get(null);
-        Object DynamicOpsNBT_instance = ReflectionUtils.getNMSClass("DynamicOpsNBT").getField("a").get(null);
-        Class<?> classDataConverterRegistry = ReflectionUtils.getNMSClass("DataConverterRegistry");
-        Class<?> classDataFixer = Class.forName("com.mojang.datafixers.DataFixer");
-        Object dataFixer_instance = classDataConverterRegistry.getMethod("a").invoke(null);
-        Object dataVersion = ReflectionUtils.getOBCClass("util.CraftMagicNumbers").getField("DATA_VERSION").get(null);
-        Class<?> classTypeReference = Class.forName("com.mojang.datafixers.DSL$TypeReference");
-        Class<?> classDynamic = Class.forName("com.mojang.datafixers.Dynamic");
-        Class<?> classDynamicOps = Class.forName("com.mojang.datafixers.types.DynamicOps");
-        Method update_DataFixer = classDataFixer.getMethod("update", classTypeReference, classDynamic, int.class, int.class);
-        Object dynamicInstance = classDynamic.getConstructor(classDynamicOps, Object.class).newInstance(DynamicOpsNBT_instance, reconstructedNBTTagCompound);
-        Object out = update_DataFixer.invoke(dataFixer_instance, dataConverterTypes_ITEM_STACK, dynamicInstance, -1, dataVersion);
-        Object newNBTBase = classDynamic.getMethod("getValue").invoke(out);
-        reconstructedNativeItemStack = loadFromNBT_NativeItemStack.invoke(null, newNBTBase);
+        if (dataVersion < currentDataVersion) {
+            // 1.12 to 1.13
+            if (dataVersion <= 0) {
+                dataVersion = NYAACORE_ITEMSTACK_DEFAULT_DATAVERSION;
+            }
+            Object dataConverterTypes_ITEM_STACK = ReflectionUtils.getNMSClass("DataConverterTypes").getField("ITEM_STACK").get(null);
+            Object DynamicOpsNBT_instance = ReflectionUtils.getNMSClass("DynamicOpsNBT").getField("a").get(null);
+            Class<?> classDataConverterRegistry = ReflectionUtils.getNMSClass("DataConverterRegistry");
+            Class<?> classDataFixer = Class.forName("com.mojang.datafixers.DataFixer");
+            Object dataFixer_instance = classDataConverterRegistry.getMethod("a").invoke(null);
+            Class<?> classTypeReference = Class.forName("com.mojang.datafixers.DSL$TypeReference");
+            Class<?> classDynamic = Class.forName("com.mojang.datafixers.Dynamic");
+            Class<?> classDynamicOps = Class.forName("com.mojang.datafixers.types.DynamicOps");
+            Method update_DataFixer = classDataFixer.getMethod("update", classTypeReference, classDynamic, int.class, int.class);
+            Object dynamicInstance = classDynamic.getConstructor(classDynamicOps, Object.class).newInstance(DynamicOpsNBT_instance, reconstructedNBTTagCompound);
+            Object out = update_DataFixer.invoke(dataFixer_instance, dataConverterTypes_ITEM_STACK, dynamicInstance, dataVersion, currentDataVersion);
+            reconstructedNBTTagCompound = classDynamic.getMethod("getValue").invoke(out);
+        }
+        Object reconstructedNativeItemStack = createFromNBT_NativeItemStack.invoke(null, reconstructedNBTTagCompound);
         return (ItemStack) asBukkitCopy_CraftItemStack.invoke(null, reconstructedNativeItemStack);
     }
 
