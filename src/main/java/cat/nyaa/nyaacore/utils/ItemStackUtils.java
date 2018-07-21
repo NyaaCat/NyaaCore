@@ -1,5 +1,7 @@
 package cat.nyaa.nyaacore.utils;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.common.io.BaseEncoding;
 import com.google.common.io.ByteStreams;
 import org.bukkit.inventory.ItemStack;
@@ -10,6 +12,8 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.zip.DeflaterInputStream;
 import java.util.zip.InflaterInputStream;
 
@@ -18,6 +22,9 @@ public final class ItemStackUtils {
     private static final int NYAACORE_ITEMSTACK_DEFAULT_DATAVERSION = 1139;
     private static Object unlimitedNBTReadLimiter = null;
     private static int currentDataVersion;
+    private static Cache<String, List<ItemStack>> itemDeserializerCache = CacheBuilder.newBuilder()
+                                                                                .weigher((String k, List<ItemStack> v) -> k.getBytes().length)
+                                                                                .maximumWeight(100L * 1024 * 1024).build(); // Hard Coded 100M
 
     static {
         try {
@@ -159,7 +166,7 @@ public final class ItemStackUtils {
      * Convert a list of items into compressed base64 string
      */
     public static String itemsToBase64(List<ItemStack> items) {
-        if (items.size() <= 0) return "";
+        if (items.isEmpty()) return "";
         if (items.size() > 127) {
             throw new IllegalArgumentException("Too many items");
         }
@@ -191,24 +198,27 @@ public final class ItemStackUtils {
      * Convert base64 string back to a list of items
      */
     public static List<ItemStack> itemsFromBase64(String base64) {
+        List<ItemStack> stack = itemDeserializerCache.getIfPresent(base64);
+        if(stack != null) return stack.stream().map(ItemStack::clone).collect(Collectors.toList());
         if (base64.length() <= 0) return new ArrayList<>();
 
-        byte[] uncompressed_binary = decompress(BaseEncoding.base64().decode(base64));
+        byte[] uncompressedBinary = decompress(BaseEncoding.base64().decode(base64));
         List<ItemStack> ret = new ArrayList<>();
 
-        try (ByteArrayInputStream bis = new ByteArrayInputStream(uncompressed_binary);
+        try (ByteArrayInputStream bis = new ByteArrayInputStream(uncompressedBinary);
              DataInputStream dis = new DataInputStream(bis)) {
             int n = dis.readByte();
-            int[] nbt_length = new int[n];
-            for (int i = 0; i < n; i++) nbt_length[i] = dis.readInt();
+            int[] nbtLength = new int[n];
+            for (int i = 0; i < n; i++) nbtLength[i] = dis.readInt();
             for (int i = 0; i < n; i++) {
-                byte[] tmp = new byte[nbt_length[i]];
+                byte[] tmp = new byte[nbtLength[i]];
                 dis.readFully(tmp);
                 ret.add(itemFromBinary(tmp));
             }
         } catch (IOException | ReflectiveOperationException ex) {
             throw new RuntimeException(ex);
         }
+        itemDeserializerCache.put(base64, ret.stream().map(ItemStack::clone).collect(Collectors.toList()));
         return ret;
     }
 
@@ -220,7 +230,7 @@ public final class ItemStackUtils {
     public static ItemStack itemFromBase64(String base64) {
         if (base64 == null) throw new IllegalArgumentException();
         List<ItemStack> ret = itemsFromBase64(base64);
-        if (ret != null && ret.size() >= 1) return ret.get(0);
+        if (ret != null && !ret.isEmpty()) return ret.get(0);
         return null;
     }
 
