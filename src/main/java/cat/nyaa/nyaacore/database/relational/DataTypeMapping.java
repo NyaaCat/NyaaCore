@@ -1,4 +1,4 @@
-package cat.nyaa.nyaacore.database.provider;
+package cat.nyaa.nyaacore.database.relational;
 
 import cat.nyaa.nyaacore.utils.ItemStackUtils;
 import org.apache.commons.lang.NotImplementedException;
@@ -7,7 +7,7 @@ import org.bukkit.inventory.ItemStack;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
-import static cat.nyaa.nyaacore.database.provider.DataTypeMapping.Types.*;
+import static cat.nyaa.nyaacore.database.relational.DataTypeMapping.Types.*;
 
 /*
  * There are all accepted java types:

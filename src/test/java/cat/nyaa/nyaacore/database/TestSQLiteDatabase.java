@@ -1,6 +1,6 @@
 package cat.nyaa.nyaacore.database;
 
-import cat.nyaa.nyaacore.database.provider.BaseDatabase;
+import cat.nyaa.nyaacore.database.relational.BaseDatabase;
 
 import java.io.File;
 import java.sql.Connection;

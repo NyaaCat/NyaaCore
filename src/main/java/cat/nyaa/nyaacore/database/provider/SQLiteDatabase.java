@@ -1,8 +1,6 @@
 package cat.nyaa.nyaacore.database.provider;
 
-import cat.nyaa.nyaacore.database.Database;
-import cat.nyaa.nyaacore.database.RelationalDB;
-import cat.nyaa.nyaacore.database.TransactionalQuery;
+import cat.nyaa.nyaacore.database.relational.BaseDatabase;
 import org.apache.commons.lang.NotImplementedException;
 import org.bukkit.plugin.Plugin;
 
@@ -14,25 +12,19 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.*;
 
-public class SQLiteDatabase extends BaseDatabase implements Cloneable, RelationalDB {
+public class SQLiteDatabase extends BaseDatabase {
 
     private Plugin plugin;
-
     private String file;
 
-    private Class<?>[] classes;
-
-    SQLiteDatabase(Plugin basePlugin, String fileName, Class<?>[] tableClasses) {
-        super(tableClasses, true);
+    public SQLiteDatabase(Plugin basePlugin, String fileName) {
         file = fileName;
         plugin = basePlugin;
-        classes = tableClasses;
     }
 
     private Connection dbConn;
 
-    @SuppressWarnings("unchecked")
-    public <T extends Database> T connect() {
+    public Connection connect() {
         File dbFile = new File(plugin.getDataFolder(), file);
         try {
             Class.forName("org.sqlite.JDBC");
@@ -40,12 +32,11 @@ public class SQLiteDatabase extends BaseDatabase implements Cloneable, Relationa
             plugin.getLogger().info("Connecting database: " + connStr);
             dbConn = DriverManager.getConnection(connStr);
             dbConn.setAutoCommit(true);
-            createTables();
         } catch (ClassNotFoundException | SQLException ex) {
             dbConn = null;
             throw new RuntimeException(ex);
         }
-        return (T) this;
+        return dbConn;
     }
 
     @Override
@@ -59,13 +50,18 @@ public class SQLiteDatabase extends BaseDatabase implements Cloneable, Relationa
     }
 
     @Override
-    public Class<?>[] getTables() {
-        return classes;
+    final public Connection getConnection() {
+        return dbConn;
     }
 
     @Override
-    final protected Connection getConnection() {
-        return dbConn;
+    public Connection newConnection() {
+        return null;
+    }
+
+    @Override
+    public void recycleConnection(Connection conn) {
+
     }
 
     /**
@@ -120,49 +116,5 @@ public class SQLiteDatabase extends BaseDatabase implements Cloneable, Relationa
 
     public void queryBundled(String filename, Map<String, String> replacementMap, Object... parameters) {
         queryBundledAs(filename, replacementMap, null, parameters);
-    }
-
-    @Override
-    public void createTable(Class<?> cls) {
-        createTable(cls);
-    }
-
-    @Override
-    public void updateTable(Class<?> cls) {
-        throw new NotImplementedException();
-    }
-
-    @Override
-    public void deleteTable(Class<?> cls) {
-        throw new NotImplementedException();
-    }
-
-    @Override
-    public void commitTransaction() {
-        try {
-            dbConn.commit();
-            dbConn.setAutoCommit(true);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public void beginTransaction() {
-        try {
-            dbConn.setAutoCommit(false);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public void rollbackTransaction() {
-        try {
-            dbConn.rollback();
-            dbConn.setAutoCommit(true);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
     }
 }

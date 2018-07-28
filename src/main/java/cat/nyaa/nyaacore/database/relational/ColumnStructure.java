@@ -1,4 +1,4 @@
-package cat.nyaa.nyaacore.database.provider;
+package cat.nyaa.nyaacore.database.relational;
 
 import javax.persistence.Column;
 import javax.persistence.Id;
@@ -23,19 +23,19 @@ public class ColumnStructure {
         GETTER_SETTER  // use getter and setter
     }
 
-    final String name;
-    final TableStructure table;
-    final boolean nullable;
-    final boolean unique;
+    public final String name;
+    public final TableStructure table;
+    public final boolean nullable;
+    public final boolean unique;
 
-    final AccessMethod accessMethod;
-    final Field field;   // used if access method is DIRECT_FIELD
-    final Method setter; // used if access method is GETTER_SETTER
-    final Method getter; // used if access method is GETTER_SETTER
+    public final AccessMethod accessMethod;
+    public final Field field;   // used if access method is DIRECT_FIELD
+    public final Method setter; // used if access method is GETTER_SETTER
+    public final Method getter; // used if access method is GETTER_SETTER
 
-    final Class javaType;
-    final DataTypeMapping.Types sqlType;
-    final DataTypeMapping.IDataTypeConverter typeConverter;
+    public final Class javaType;
+    public final DataTypeMapping.Types sqlType;
+    public final DataTypeMapping.IDataTypeConverter typeConverter;
 
     /**
      * Constructor for field based table columns

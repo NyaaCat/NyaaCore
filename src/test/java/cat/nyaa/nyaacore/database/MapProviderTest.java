@@ -1,5 +1,6 @@
 package cat.nyaa.nyaacore.database;
 
+import cat.nyaa.nyaacore.database.keyvalue.KeyValueDB;
 import org.junit.Assert;
 import org.junit.Test;
 

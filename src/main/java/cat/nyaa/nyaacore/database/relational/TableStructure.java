@@ -1,4 +1,4 @@
-package cat.nyaa.nyaacore.database.provider;
+package cat.nyaa.nyaacore.database.relational;
 
 import javax.persistence.Column;
 import javax.persistence.Id;
@@ -9,7 +9,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 
-class TableStructure<T> {
+public class TableStructure<T> {
     /* class -> TableStructure cache */
     private static final Map<Class<?>, TableStructure<?>> structured_tables = new HashMap<>();
     public static <X> TableStructure<X> fromClass(Class<X> cls) {
@@ -19,12 +19,12 @@ class TableStructure<T> {
         return ts;
     }
 
-    final Class<T> tableClass;
-    final String tableName;
+    public final Class<T> tableClass;
+    public final String tableName;
 
-    final Map<String, ColumnStructure> columns = new HashMap<>();
-    final String primaryKey; // null if no primary key
-    final List<String> orderedColumnName = new ArrayList<>();
+    public final Map<String, ColumnStructure> columns = new HashMap<>();
+    public final String primaryKey; // null if no primary key
+    public final List<String> orderedColumnName = new ArrayList<>();
 
     private TableStructure(Class<T> tableClass) {
         Table annoDT = tableClass.getDeclaredAnnotation(Table.class);

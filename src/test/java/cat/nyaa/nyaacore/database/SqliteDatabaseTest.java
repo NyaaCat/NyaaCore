@@ -1,5 +1,6 @@
 package cat.nyaa.nyaacore.database;
 
+import cat.nyaa.nyaacore.database.relational.RelationalDB;
 import org.bukkit.plugin.Plugin;
 import org.junit.*;
 import org.sqlite.SQLiteException;

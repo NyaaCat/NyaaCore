@@ -1,8 +1,7 @@
 package cat.nyaa.nyaacore.database.provider;
 
-import cat.nyaa.nyaacore.database.Database;
 import cat.nyaa.nyaacore.database.DatabaseProvider;
-import cat.nyaa.nyaacore.database.KeyValueDB;
+import cat.nyaa.nyaacore.database.keyvalue.KeyValueDB;
 import org.bukkit.plugin.Plugin;
 
 import java.util.Collection;

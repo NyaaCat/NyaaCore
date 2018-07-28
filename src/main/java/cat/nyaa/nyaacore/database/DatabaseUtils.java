@@ -2,7 +2,9 @@ package cat.nyaa.nyaacore.database;
 
 import cat.nyaa.nyaacore.database.provider.MapProvider;
 import cat.nyaa.nyaacore.database.provider.MysqlProvider;
+import cat.nyaa.nyaacore.database.provider.SQLiteDatabase;
 import cat.nyaa.nyaacore.database.provider.SQLiteProvider;
+import cat.nyaa.nyaacore.database.relational.RelationalDB;
 import cat.nyaa.nyaacore.utils.ClassPathUtils;
 import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
@@ -22,6 +24,20 @@ import java.util.function.BiConsumer;
  * Database utils that provide database access according to plugin's configuration
  */
 public class DatabaseUtils {
+    public static <T> T getDatabae(Class<T> databaseType, JavaPlugin plugin, ConfigurationSection config) {
+        if (databaseType == RelationalDB.class) {
+            String type = config.getString("provider");
+            if (type == null) throw new IllegalArgumentException("unknown relational db provider: null");
+            if ("sqlite".equalsIgnoreCase(type)) {
+                return (T)new SQLiteDatabase(plugin, config.getString("file"));
+            } else {
+                throw new IllegalArgumentException("unknown relational db provider: " + type);
+            }
+        } else {
+            throw new IllegalArgumentException("unexpected database type: " + databaseType.getName());
+        }
+    }
+
     private static Map<String, DatabaseProvider> providerRegistry = new HashMap<>();
 
     /**

@@ -1,7 +1,7 @@
 package cat.nyaa.nyaacore.database.provider;
 
-import cat.nyaa.nyaacore.database.Database;
-import cat.nyaa.nyaacore.database.RelationalDB;
+import cat.nyaa.nyaacore.database.relational.RelationalDB;
+import cat.nyaa.nyaacore.database.relational.BaseDatabase;
 import org.apache.commons.lang.NotImplementedException;
 import org.bukkit.plugin.Plugin;
 
@@ -9,7 +9,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-public class MysqlDatabase extends BaseDatabase implements RelationalDB {
+public class MysqlDatabase extends BaseDatabase {
 
     private final Plugin plugin;
     private String jdbcDriver;
@@ -20,7 +20,6 @@ public class MysqlDatabase extends BaseDatabase implements RelationalDB {
     private Class<?>[] classes;
 
     public MysqlDatabase(Plugin basePlugin, String jdbcDriver, String dbUrl, String user, String password, Class<?>[] classes){
-        super(classes, false);
         this.plugin = basePlugin;
         this.jdbcDriver = jdbcDriver;
         this.dbUrl = dbUrl;
