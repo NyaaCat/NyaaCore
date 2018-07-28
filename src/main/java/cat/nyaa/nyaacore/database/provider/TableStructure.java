@@ -1,6 +1,7 @@
 package cat.nyaa.nyaacore.database.provider;
 
 import javax.persistence.Column;
+import javax.persistence.Id;
 import javax.persistence.Table;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -11,48 +12,42 @@ import java.util.*;
 class TableStructure<T> {
     /* class -> TableStructure cache */
     private static final Map<Class<?>, TableStructure<?>> structured_tables = new HashMap<>();
-    private static final Map<Class<?>, TableStructure<?>> sqlite_structured_tables = new HashMap<>();
-
-    @SuppressWarnings("unchecked")
-    public static <X> TableStructure<X> fromClass(Class<X> cls, boolean sqlite) {
-        if (sqlite) {
-            if (sqlite_structured_tables.containsKey(cls)) return (TableStructure<X>) sqlite_structured_tables.get(cls);
-            TableStructure<X> ts = new TableStructure<>(cls, true);
-            sqlite_structured_tables.put(cls, ts);
-            return ts;
-        } else {
-            if (structured_tables.containsKey(cls)) return (TableStructure<X>) structured_tables.get(cls);
-            TableStructure<X> ts = new TableStructure<>(cls, false);
-            structured_tables.put(cls, ts);
-            return ts;
-        }
-
+    public static <X> TableStructure<X> fromClass(Class<X> cls) {
+        if (structured_tables.containsKey(cls)) return (TableStructure<X>) structured_tables.get(cls);
+        TableStructure<X> ts = new TableStructure<>(cls);
+        structured_tables.put(cls, ts);
+        return ts;
     }
 
-    final boolean sqlite;
     final Class<T> tableClass;
     final String tableName;
+
     final Map<String, ColumnStructure> columns = new HashMap<>();
     final String primaryKey; // null if no primary key
     final List<String> orderedColumnName = new ArrayList<>();
 
-    private TableStructure(Class<T> tableClass, boolean sqlite) {
+    private TableStructure(Class<T> tableClass) {
         Table annoDT = tableClass.getDeclaredAnnotation(Table.class);
         if (annoDT == null)
             throw new IllegalArgumentException("Class missing table annotation: " + tableClass.getName());
-        this.sqlite = sqlite;
-        this.tableName = annoDT.name();
+
         this.tableClass = tableClass;
+        if (annoDT.name().isEmpty()) {
+            this.tableName = tableClass.getSimpleName();
+        } else {
+            this.tableName = annoDT.name();
+        }
+
         String primKeyName = null;
 
         // load all the fields
         for (Field f: tableClass.getDeclaredFields()) {
             Column columnAnnotation = f.getAnnotation(Column.class);
             if (columnAnnotation == null) continue;
-            ColumnStructure structure = new ColumnStructure(this, f, columnAnnotation, sqlite);
+            ColumnStructure structure = new ColumnStructure(this, f, columnAnnotation);
             if (columns.containsKey(structure.getName()))
                 throw new RuntimeException("Duplicated column name: " + structure.getName());
-            if (structure.isPrimary()) {
+            if (f.getDeclaredAnnotation(Id.class) != null) {
                 if (primKeyName != null) throw new RuntimeException("Duplicated primary key at: " + f.getName());
                 primKeyName = structure.getName();
             }
@@ -63,10 +58,10 @@ class TableStructure<T> {
         for (Method m: tableClass.getDeclaredMethods()) {
             Column columnAnnotation = m.getAnnotation(Column.class);
             if (columnAnnotation == null) continue;
-            ColumnStructure structure = new ColumnStructure(this, m, columnAnnotation, sqlite);
+            ColumnStructure structure = new ColumnStructure(this, m, columnAnnotation);
             if (columns.containsKey(structure.getName()))
                 throw new RuntimeException("Duplicated column name: " + structure.getName());
-            if (structure.isPrimary()) {
+            if (m.getDeclaredAnnotation(Id.class) != null) {
                 if (primKeyName != null) throw new RuntimeException("Duplicated primary key at: " + m.getName());
                 primKeyName = structure.getName();
             }
@@ -120,6 +115,9 @@ class TableStructure<T> {
         for (String colName: orderedColumnName) {
             colStr.add(columns.get(colName).getTableCreationScheme());
         }
+        if (primaryKey != null) {
+            colStr.add(String.format("CONSTRAINT PRIMARY KEY (%s)",primaryKey));
+        }
         return String.format("CREATE TABLE IF NOT EXISTS %s(%s)", tableName, colStr.toString());
     }
 
@@ -140,7 +138,7 @@ class TableStructure<T> {
             columnList.addAll(Arrays.asList(columns));
         }
         for (String colName: columnList) {
-            objects.put(colName, this.columns.get(colName).fetchFromObject(obj));
+            objects.put(colName, this.columns.get(colName).getSqlObject(obj));
         }
         return objects;
     }
@@ -153,7 +151,7 @@ class TableStructure<T> {
         T obj = tableClass.newInstance();
         for (String colName: orderedColumnName) {
             Object colValue = rs.getObject(colName);
-            this.columns.get(colName).saveToObject(obj, colValue);
+            this.columns.get(colName).setSqlObject(obj, colValue);
         }
         return obj;
     }

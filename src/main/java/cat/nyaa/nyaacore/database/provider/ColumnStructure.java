@@ -14,17 +14,7 @@ import java.lang.reflect.Modifier;
  *   1. directly get/set to a class field, the type is the field's type
  *   2. get/set through a pair of getter/setter with matching return/parameter type, the type is the return/parameter type.
  * There are several accepted java types:
- *   1. bool/Boolean  => BOOLEAN  [???]
- *   2. int/Integer   => INTEGER  [no conversion]
- *   3. long/Long     => BIGINT   [no conversion]
- *   4. float/Float   => FLOAT    [no conversion]
- *   5. double/Double => DOUBLE   [no conversion]
- *   6. String        => TEXT     [no conversion]
- *   6. Enum          => TEXT     [name() and valueOf()]
- *   7. ItemStack     => TEXT     [nbt(de)serializebase64()]
- *   8. Any type can be serialized/deserialized using toString() and fromString()/parse() (e.g. ZonedDateTime)
- *                    => TEXT     [toString() and fromString()/parse()]
- *   9. byte[]        => BLOB     [no conversion]
+ *   {@see DataTypeMapping}
  */
 @SuppressWarnings("rawtypes")
 public class ColumnStructure {
@@ -143,32 +133,32 @@ public class ColumnStructure {
         return ret;
     }
 
-    public Object getJavaObject(Object obj) {
+    public Object getJavaObject(Object entityObj) {
         try {
             if (accessMethod == AccessMethod.DIRECT_FIELD) {
-                return field.get(obj);
+                return field.get(entityObj);
             } else {
-                return getter.invoke(obj);
+                return getter.invoke(entityObj);
             }
         } catch (ReflectiveOperationException ex) {
             throw new RuntimeException(ex);
         }
     }
 
-    public void setJavaObject(Object obj, Object member) {
+    public void setJavaObject(Object entityObj, Object obj) {
         try {
             if (accessMethod == AccessMethod.DIRECT_FIELD) {
-                field.set(obj, member);
+                field.set(entityObj, obj);
             } else {
-                setter.invoke(obj, member);
+                setter.invoke(entityObj, obj);
             }
         } catch (ReflectiveOperationException ex) {
             throw new RuntimeException(ex);
         }
     }
 
-    public Object getSqlObject(Object obj) {
-        Object javaObj = getJavaObject(obj);
+    public Object getSqlObject(Object entityObj) {
+        Object javaObj = getJavaObject(entityObj);
         if (javaObj == null) {
             return null;
         } else {
@@ -176,11 +166,11 @@ public class ColumnStructure {
         }
     }
 
-    public void SetSqlObject(Object obj, Object memberInSqlForm) {
-        if (memberInSqlForm == null) {
-            setJavaObject(obj, null);
+    public void setSqlObject(Object entityObj, Object obj) {
+        if (obj == null) {
+            setJavaObject(entityObj, null);
         } else {
-            setJavaObject(obj, typeConverter.toJavaType(memberInSqlForm));
+            setJavaObject(entityObj, typeConverter.toJavaType(obj));
         }
     }
 }

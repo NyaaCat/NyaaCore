@@ -9,9 +9,6 @@ import java.util.*;
 import javax.persistence.NonUniqueResultException;
 
 public abstract class BaseDatabase implements Cloneable {
-
-    final boolean sqlite;
-
     /* TableName to TableStructure */
     protected final Map<String, TableStructure<?>> tables;
     /* TableClass to TableName */
@@ -31,12 +28,11 @@ public abstract class BaseDatabase implements Cloneable {
     /**
      * Scan & construct all table structures.
      */
-    protected BaseDatabase(boolean sqlite) {
-        this.sqlite = sqlite;
+    protected BaseDatabase() {
         tables = new HashMap<>();
         tableName = new HashMap<>();
         for (Class<?> tableClass : getTables()) {
-            TableStructure<?> tableStructure = TableStructure.fromClass(tableClass, sqlite);
+            TableStructure<?> tableStructure = TableStructure.fromClass(tableClass);
             if (tableStructure == null) throw new RuntimeException();
             tables.put(tableStructure.getTableName(), tableStructure);
             tableName.put(tableClass, tableStructure.getTableName());
@@ -44,11 +40,10 @@ public abstract class BaseDatabase implements Cloneable {
     }
 
     protected BaseDatabase(Class<?>[] tableClasses, boolean sqlite) {
-        this.sqlite = sqlite;
         tables = new HashMap<>();
         tableName = new HashMap<>();
         for (Class<?> tableClass : tableClasses) {
-            TableStructure<?> tableStructure = TableStructure.fromClass(tableClass, sqlite);
+            TableStructure<?> tableStructure = TableStructure.fromClass(tableClass);
             if (tableStructure == null) throw new RuntimeException();
             tables.put(tableStructure.getTableName(), tableStructure);
             tableName.put(tableClass, tableStructure.getTableName());
@@ -125,7 +120,7 @@ public abstract class BaseDatabase implements Cloneable {
     public <T> List<T> parseResultSet(ResultSet rs, Class<T> cls) {
         try {
             if (rs == null) return new ArrayList<>();
-            TableStructure<T> table = TableStructure.fromClass(cls, sqlite);
+            TableStructure<T> table = TableStructure.fromClass(cls);
             List<T> results = new ArrayList<T>();
             while (rs.next()) {
                 T obj = table.getObjectFromResultSet(rs);
@@ -204,7 +199,7 @@ public abstract class BaseDatabase implements Cloneable {
         @Override
         public TransactionalQuery<T> where(String columnName, String comparator, Object obj) {
             if (!table.hasColumn(columnName)) throw new IllegalArgumentException("Unknown DataColumn Name");
-            obj = table.getColumn(columnName).toDatabaseType(obj);
+            obj = table.getColumn(columnName).typeConverter.toSqlType(obj);
             whereClause.put(columnName + comparator + "?", obj);
             return this;
         }

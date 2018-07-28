@@ -23,7 +23,7 @@ import static cat.nyaa.nyaacore.database.provider.DataTypeMapping.Types.*;
  *                    => MEDIUMTEXT     [toString() and fromString()/parse()]
  *   10. byte[]        => LONGBLOB     [no conversion]
  */
-public final class DataTypeMapping {
+public class DataTypeMapping {
     public enum Types {
         INTEGER,
         BIGINT,
