@@ -27,6 +27,7 @@ public class ColumnStructure {
     public final TableStructure table;
     public final boolean nullable;
     public final boolean unique;
+    public final boolean primary;
 
     public final AccessMethod accessMethod;
     public final Field field;   // used if access method is DIRECT_FIELD
@@ -49,6 +50,7 @@ public class ColumnStructure {
         }
         this.nullable = anno.nullable();
         this.unique = anno.unique();
+        this.primary = dataField.getDeclaredAnnotation(Id.class) != null;
         this.table = table;
         accessMethod = AccessMethod.DIRECT_FIELD;
         field = dataField;
@@ -68,6 +70,7 @@ public class ColumnStructure {
         this.table = table;
         this.nullable = anno.nullable();
         this.unique = anno.unique();
+        this.primary = dataMethod.getDeclaredAnnotation(Id.class) != null;
 
         String methodName = dataMethod.getName();
         if (!methodName.startsWith("get") && !methodName.startsWith("set"))

@@ -6,7 +6,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.function.Function;
 
-public interface KeyValueDB<K, V> {
+public interface KeyValueDB<K, V> extends AutoCloseable {
 
     int size();
 

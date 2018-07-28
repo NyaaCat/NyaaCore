@@ -1,42 +1,41 @@
 package cat.nyaa.nyaacore.database.provider;
 
 import cat.nyaa.nyaacore.database.relational.BaseDatabase;
+import cat.nyaa.nyaacore.database.relational.TableStructure;
 import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang.Validate;
 import org.bukkit.plugin.Plugin;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.*;
 
 public class SQLiteDatabase extends BaseDatabase {
 
     private Plugin plugin;
     private String file;
+    private Connection dbConn;
 
     public SQLiteDatabase(Plugin basePlugin, String fileName) {
         file = fileName;
         plugin = basePlugin;
+        dbConn = connect();
     }
 
-    private Connection dbConn;
-
     public Connection connect() {
+        Connection conn;
         File dbFile = new File(plugin.getDataFolder(), file);
         try {
             Class.forName("org.sqlite.JDBC");
             String connStr = "jdbc:sqlite:" + dbFile.getAbsolutePath();
             plugin.getLogger().info("Connecting database: " + connStr);
-            dbConn = DriverManager.getConnection(connStr);
-            dbConn.setAutoCommit(true);
+            conn = DriverManager.getConnection(connStr);
+            conn.setAutoCommit(true);
         } catch (ClassNotFoundException | SQLException ex) {
-            dbConn = null;
             throw new RuntimeException(ex);
         }
-        return dbConn;
+        return conn;
     }
 
     @Override
@@ -56,12 +55,16 @@ public class SQLiteDatabase extends BaseDatabase {
 
     @Override
     public Connection newConnection() {
-        return null;
+        return connect();
     }
 
     @Override
     public void recycleConnection(Connection conn) {
-
+        try {
+            conn.close();
+        } catch (SQLException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     /**
@@ -72,6 +75,22 @@ public class SQLiteDatabase extends BaseDatabase {
         Object obj = super.clone();
         ((SQLiteDatabase) obj).connect();
         return obj;
+    }
+
+    @Override
+    public void createTable(Class<?> cls) {
+        Validate.notNull(cls);
+        if (createdTableClasses.contains(cls)) return;
+        TableStructure ts = TableStructure.fromClass(cls);
+        String sql = ts.getCreateTableSQL("sqlite");
+        try {
+            Statement smt = getConnection().createStatement();
+            smt.executeUpdate(sql);
+            smt.close();
+            createdTableClasses.add(cls);
+        } catch (SQLException ex) {
+            throw new RuntimeException(sql, ex);
+        }
     }
 
     /**

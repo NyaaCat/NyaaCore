@@ -47,7 +47,7 @@ public class TableStructure<T> {
             ColumnStructure structure = new ColumnStructure(this, f, columnAnnotation);
             if (columns.containsKey(structure.getName()))
                 throw new RuntimeException("Duplicated column name: " + structure.getName());
-            if (f.getDeclaredAnnotation(Id.class) != null) {
+            if (structure.primary) {
                 if (primKeyName != null) throw new RuntimeException("Duplicated primary key at: " + f.getName());
                 primKeyName = structure.getName();
             }
@@ -61,7 +61,7 @@ public class TableStructure<T> {
             ColumnStructure structure = new ColumnStructure(this, m, columnAnnotation);
             if (columns.containsKey(structure.getName()))
                 throw new RuntimeException("Duplicated column name: " + structure.getName());
-            if (m.getDeclaredAnnotation(Id.class) != null) {
+            if (structure.primary) {
                 if (primKeyName != null) throw new RuntimeException("Duplicated primary key at: " + m.getName());
                 primKeyName = structure.getName();
             }
@@ -116,9 +116,33 @@ public class TableStructure<T> {
             colStr.add(columns.get(colName).getTableCreationScheme());
         }
         if (primaryKey != null) {
-            colStr.add(String.format("CONSTRAINT PRIMARY KEY (%s)",primaryKey));
+            colStr.add(String.format("CONSTRAINT constraint_PK PRIMARY KEY (%s)",primaryKey));
         }
         return String.format("CREATE TABLE IF NOT EXISTS %s(%s)", tableName, colStr.toString());
+    }
+
+    @Deprecated
+    public String getCreateTableSQL(String dialect) {
+        if (dialect.equalsIgnoreCase("sqlite")) {
+            StringJoiner colStr = new StringJoiner(",");
+            for (String colName: orderedColumnName) {
+                ColumnStructure ct = columns.get(colName);
+                if (ct.primary) {
+                    if (ct.sqlType == DataTypeMapping.Types.INTEGER || ct.sqlType == DataTypeMapping.Types.BIGINT) {
+                        colStr.add(ct.getName() + " INTEGER PRIMARY KEY");
+                    } else {
+                        colStr.add(ct.getTableCreationScheme() + " PRIMARY KEY");
+                    }
+                } else {
+                    colStr.add(columns.get(colName).getTableCreationScheme());
+                }
+            }
+            return String.format("CREATE TABLE IF NOT EXISTS %s(%s)", tableName, colStr.toString());
+        } else if (dialect.equalsIgnoreCase("mysql")) {
+            return getCreateTableSQL();
+        } else {
+            throw new IllegalArgumentException("unknown dialect");
+        }
     }
 
     /**

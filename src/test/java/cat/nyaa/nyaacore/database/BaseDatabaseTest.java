@@ -1,19 +1,31 @@
 package cat.nyaa.nyaacore.database;
 
+import cat.nyaa.nyaacore.database.provider.SQLiteDatabase;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockito.Mockito;
+
+import java.io.File;
 import java.util.UUID;
+import java.util.logging.Logger;
+
 import static org.junit.Assert.*;
 
 public class BaseDatabaseTest {
-    TestSQLiteDatabase db;
+    SQLiteDatabase db;
     TestTable record;
 
     @Before
     public void prepareDatabase() {
-        db = new TestSQLiteDatabase();
+        Plugin p = Mockito.mock(Plugin.class);
+        Mockito.when(p.getDataFolder()).thenReturn(new File("."));
+        Mockito.when(p.getLogger()).thenReturn(Logger.getLogger("BaseDatabaseTest"));
+
+        db = new SQLiteDatabase(p, "test.db");
         record = new TestTable();
         record.id = null;
         record.string = "test";
@@ -27,7 +39,7 @@ public class BaseDatabaseTest {
     @After
     public void closeDatabase() {
         db.close();
-        db.dbFile.delete();
+        new File("./test.db").delete();
     }
 
     @Test

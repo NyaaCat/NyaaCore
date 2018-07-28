@@ -24,8 +24,4 @@ public interface RelationalDB extends Cloneable, AutoCloseable{
     default void deleteTable(Class<?> cls) {
         throw new NotImplementedException();
     }
-
-    default Class<?>[] getTables(){
-        throw new NotImplementedException();
-    }
 }

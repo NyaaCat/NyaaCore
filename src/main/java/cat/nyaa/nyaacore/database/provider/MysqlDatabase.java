@@ -17,20 +17,18 @@ public class MysqlDatabase extends BaseDatabase {
     private String user;
     private String password;
     private Connection connection;
-    private Class<?>[] classes;
 
-    public MysqlDatabase(Plugin basePlugin, String jdbcDriver, String dbUrl, String user, String password, Class<?>[] classes){
+    public MysqlDatabase(Plugin basePlugin, String jdbcDriver, String dbUrl, String user, String password){
         this.plugin = basePlugin;
         this.jdbcDriver = jdbcDriver;
         this.dbUrl = dbUrl;
         this.user = user;
         this.password = password;
-        this.classes = classes;
+        this.connection = connect();
     }
 
-    @Override
-    @SuppressWarnings("unchecked")
-    public <T extends Database> T connect() {
+    public Connection connect() {
+        Connection conn;
         try {
             Class.forName(jdbcDriver);
         } catch (ClassNotFoundException e) {
@@ -38,23 +36,30 @@ public class MysqlDatabase extends BaseDatabase {
         }
         try {
             plugin.getLogger().info("Connecting database " + dbUrl + " as " + user);
-            connection = DriverManager.getConnection(dbUrl, user, password);
-            connection.setAutoCommit(true);
+            conn = DriverManager.getConnection(dbUrl, user, password);
+            conn.setAutoCommit(true);
         } catch (SQLException e) {
             throw new RuntimeException("connection failed", e);
         }
-        createTables();
-        return (T) this;
+        return conn;
     }
 
-    @Override
-    public Class<?>[] getTables() {
-        return classes;
-    }
-
-    @Override
-    protected Connection getConnection() {
+    public Connection getConnection() {
         return connection;
+    }
+
+    @Override
+    public Connection newConnection() {
+        return connect();
+    }
+
+    @Override
+    public void recycleConnection(Connection conn) {
+        try {
+            conn.close();
+        } catch (SQLException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     @Override
@@ -65,49 +70,5 @@ public class MysqlDatabase extends BaseDatabase {
             e.printStackTrace();
         }
         connection = null;
-    }
-
-    @Override
-    public void createTable(Class<?> cls) {
-        createTable(cls);
-    }
-
-    @Override
-    public void updateTable(Class<?> cls) {
-        throw new NotImplementedException();
-    }
-
-    @Override
-    public void deleteTable(Class<?> cls) {
-        throw new NotImplementedException();
-    }
-
-    @Override
-    public void commitTransaction() {
-        try {
-            connection.commit();
-            connection.setAutoCommit(true);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public void beginTransaction() {
-        try {
-            connection.setAutoCommit(false);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public void rollbackTransaction() {
-        try {
-            connection.rollback();
-            connection.setAutoCommit(true);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
     }
 }
