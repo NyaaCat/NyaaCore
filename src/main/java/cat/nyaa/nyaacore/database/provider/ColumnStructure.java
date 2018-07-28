@@ -7,81 +7,78 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
 /**
- * A database column can be:
- * 1. A field of acceptable type: long/double/bool/Enum/String/ItemStack
- * 2. A field can be serialized/deserialized using toString() and fromString()/parse() (e.g. ZonedDateTime)
- * 3. A pair of getter/setter returning/accepting type listed in (1)
+ * A java field is converted to a database column in two steps:
+ *   1. determine the access method
+ *   2. determine the SQL type decl and convertion rule by the object type
+ * There are two access methods:
+ *   1. directly get/set to a class field, the type is the field's type
+ *   2. get/set through a pair of getter/setter with matching return/parameter type, the type is the return/parameter type.
+ * There are several accepted java types:
+ *   1. bool/Boolean  => BOOLEAN  [???]
+ *   2. int/Integer   => INTEGER  [no conversion]
+ *   3. long/Long     => BIGINT   [no conversion]
+ *   4. float/Float   => FLOAT    [no conversion]
+ *   5. double/Double => DOUBLE   [no conversion]
+ *   6. String        => TEXT     [no conversion]
+ *   6. Enum          => TEXT     [name() and valueOf()]
+ *   7. ItemStack     => TEXT     [nbt(de)serializebase64()]
+ *   8. Any type can be serialized/deserialized using toString() and fromString()/parse() (e.g. ZonedDateTime)
+ *                    => TEXT     [toString() and fromString()/parse()]
+ *   9. byte[]        => BLOB     [no conversion]
  */
 @SuppressWarnings("rawtypes")
 public class ColumnStructure {
+    public enum AccessMethod {
+        DIRECT_FIELD,  // directly get from field
+        GETTER_SETTER  // use getter and setter
+    }
+
     final String name;
     final TableStructure table;
-    final boolean isPrimary;
-    final boolean sqlite;
-    final int length;
-    final Field field;      // for FIELD or FIELD_PARSER
-    final Class fieldType; // only used if accessMethod is not FIELD_PARSER, this is native java type
-    final Method fieldParser; // for FIELD_PARSER
-    final Method setter; // for METHOD
-    final Method getter; // for METHOD
+    final boolean nullable;
+    final boolean unique;
 
-    final ColumnAccessMethod accessMethod;
-    final ColumnType columnType; // corresponding SQL type
+    final AccessMethod accessMethod;
+    final Field field;   // used if access method is DIRECT_FIELD
+    final Method setter; // used if access method is GETTER_SETTER
+    final Method getter; // used if access method is GETTER_SETTER
+
+    final Class javaType;
+    final DataTypeMapping.Types sqlType;
+    final DataTypeMapping.IDataTypeConverter typeConverter;
 
     /**
      * Constructor for field based table columns
      */
-    public ColumnStructure(TableStructure table, Field dataField, Column anno, boolean sqlite) {
+    public ColumnStructure(TableStructure table, Field dataField, Column anno) {
         if (anno == null) throw new IllegalArgumentException();
-        this.sqlite = sqlite;
+        if (anno.name().isEmpty()) {
+            name = dataField.getName();
+        } else {
+            name = anno.name();
+        }
+        this.nullable = anno.nullable();
+        this.unique = anno.unique();
         this.table = table;
-        String name = anno.name();
-        if ("".equals(name)) name = dataField.getName();
-        this.name = name;
-        this.isPrimary = dataField.getDeclaredAnnotation(Id.class) != null;
-        length = anno.length();
-        dataField.setAccessible(true);
+        accessMethod = AccessMethod.DIRECT_FIELD;
         field = dataField;
-        fieldType = field.getType();
         setter = null;
         getter = null;
-        fieldParser = getParserMethod(dataField.getType());
-        if (fieldParser == null) {
-            accessMethod = ColumnAccessMethod.FIELD;
-            columnType = ColumnType.getType(ColumnAccessMethod.FIELD, field.getType(), sqlite);
-        } else {
-            accessMethod = ColumnAccessMethod.FIELD_PARSE;
-            columnType = ColumnType.getType(ColumnAccessMethod.FIELD_PARSE, field.getType(), sqlite);
-        }
-    }
 
-    /**
-     * Check if given type has valid `parse` static method
-     */
-    private Method getParserMethod(Class<?> cls) {
-        for (Method m : cls.getMethods()) {
-            if (Modifier.isStatic(m.getModifiers())) {
-                if ("parse".equals(m.getName()) || "fromString".equals(m.getName())) {
-                    if (m.getReturnType() == cls) {
-                        if (m.getParameterCount() == 1) {
-                            if (m.getParameterTypes()[0].isAssignableFrom(String.class)) {
-                                return m;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return null;
+        javaType = field.getType();
+        typeConverter = DataTypeMapping.getDataTypeConverter(javaType);
+        sqlType = typeConverter.getSqlType();
     }
 
     /**
      * Constructor for method based table columns
      */
-    public ColumnStructure(TableStructure table, Method dataMethod, Column anno, boolean sqlite) {
+    public ColumnStructure(TableStructure table, Method dataMethod, Column anno) {
         if (anno == null) throw new IllegalArgumentException();
-        this.sqlite = sqlite;
         this.table = table;
+        this.nullable = anno.nullable();
+        this.unique = anno.unique();
+
         String methodName = dataMethod.getName();
         if (!methodName.startsWith("get") && !methodName.startsWith("set"))
             throw new IllegalArgumentException("Method is neither a setter nor a getter: " + dataMethod.toString());
@@ -114,20 +111,21 @@ public class ColumnStructure {
             }
             getter.setAccessible(true);
             setter.setAccessible(true);
-            this.isPrimary = primary != null;
-            length = anno.length();
         } catch (ReflectiveOperationException ex) {
             ex.printStackTrace();
             throw new RuntimeException(ex);
         }
-        this.columnType = ColumnType.getType(ColumnAccessMethod.METHOD, methodType, sqlite);
-        this.accessMethod = ColumnAccessMethod.METHOD;
+
+        this.name = name;
+
+        this.accessMethod = AccessMethod.GETTER_SETTER;
+        this.field = null;
         this.getter = getter;
         this.setter = setter;
-        this.field = null;
-        this.fieldParser = null;
-        this.fieldType = methodType;
-        this.name = name;
+
+        this.javaType = methodType;
+        this.typeConverter = DataTypeMapping.getDataTypeConverter(this.javaType);
+        this.sqlType = this.typeConverter.getSqlType();
     }
 
     public String getName() {
@@ -138,108 +136,51 @@ public class ColumnStructure {
         return table;
     }
 
-    public boolean isPrimary() {
-        return isPrimary;
-    }
-
-    public ColumnAccessMethod getAccessMethod() {
-        return accessMethod;
-    }
-
-    public ColumnType getColumnType() {
-        return columnType;
-    }
-
     public String getTableCreationScheme() {
-        String type = columnType.name();
-        String ret = String.format("%s %s NOT NULL", name, type);
-        if (isPrimary && (length == 0 || sqlite)) ret += " PRIMARY KEY";
-        else if(isPrimary && columnType == ColumnType.MEDIUMTEXT) ret += String.format(", CONSTRAINT PRIMARY KEY (%s(%d))", name, length);
-        else if(isPrimary) ret += String.format(", CONSTRAINT PRIMARY KEY (%s)", name);
+        String ret = name + " " + sqlType.name();
+        if (!nullable) ret += " NOT NULL";
+        if (unique) ret += "UNIQUE";
         return ret;
     }
 
-    /**
-     * Fetch the from the field/getter and return a SQL-typed object
-     * Return type must be one of Long/Double/String
-     */
-    @SuppressWarnings("deprecation")
-    public Object fetchFromObject(Object javaObject) {
-        Object raw;
+    public Object getJavaObject(Object obj) {
         try {
-            switch (accessMethod) {
-                case FIELD:
-                case FIELD_PARSE:
-                    raw = field.get(javaObject);
-                    break;
-                case METHOD:
-                    raw = getter.invoke(javaObject);
-                    break;
-                default:
-                    throw new RuntimeException("Invalid accessMethod");
-            }
-        } catch (ReflectiveOperationException ex) {
-            throw new RuntimeException(ex);
-        }
-
-        if (raw == null) {
-            if (!isPrimary)
-                throw new IllegalArgumentException(String.format("NULL is not allowed for column: %s#%s ", table.tableName, name));
-            return null;
-        }
-        if (accessMethod == ColumnAccessMethod.FIELD_PARSE) return raw.toString();
-        return columnType.toDatabaseType(raw);
-    }
-
-    @SuppressWarnings("deprecation")
-    public void saveToObject(Object javaObject, Object sqlValueObject) {
-        try {
-            Object raw;
-            if (accessMethod == ColumnAccessMethod.FIELD_PARSE) {
-                raw = fieldParser.invoke(null, (String) sqlValueObject);
-                // TODO assert raw != null
+            if (accessMethod == AccessMethod.DIRECT_FIELD) {
+                return field.get(obj);
             } else {
-                raw = columnType.toJavaType(sqlValueObject, fieldType);
-            }
-            switch (accessMethod) {
-                case FIELD:
-                case FIELD_PARSE:
-                    field.set(javaObject, raw);
-                    break;
-                case METHOD:
-                    setter.invoke(javaObject, raw);
-                    break;
-                default:
-                    throw new RuntimeException("Invalid accessMethod");
+                return getter.invoke(obj);
             }
         } catch (ReflectiveOperationException ex) {
             throw new RuntimeException(ex);
         }
     }
 
-    /**
-     * ColumnType class does not handle FIELD_PARSE info.
-     */
-    @SuppressWarnings("deprecation")
-    public Object toDatabaseType(Object raw) {
-        if (raw == null) {
-            if (!isPrimary)
-                throw new IllegalArgumentException(String.format("NULL is not allowed for column: %s#%s ", table.tableName, name));
-            return null;
-        }
-        if (accessMethod == ColumnAccessMethod.FIELD_PARSE) raw = raw.toString();
-        return columnType.toDatabaseType(raw);
-    }
-
-    @SuppressWarnings("deprecation")
-    public Object toJavaType(Object sqlObject) {
-        if (sqlObject == null) return null;
+    public void setJavaObject(Object obj, Object member) {
         try {
-            if (accessMethod == ColumnAccessMethod.FIELD_PARSE) return fieldParser.invoke(null, (String) sqlObject);
-            // TODO assert return != null
+            if (accessMethod == AccessMethod.DIRECT_FIELD) {
+                field.set(obj, member);
+            } else {
+                setter.invoke(obj, member);
+            }
         } catch (ReflectiveOperationException ex) {
             throw new RuntimeException(ex);
         }
-        return columnType.toJavaType(sqlObject, fieldType);
+    }
+
+    public Object getSqlObject(Object obj) {
+        Object javaObj = getJavaObject(obj);
+        if (javaObj == null) {
+            return null;
+        } else {
+            return typeConverter.toSqlType(javaObj);
+        }
+    }
+
+    public void SetSqlObject(Object obj, Object memberInSqlForm) {
+        if (memberInSqlForm == null) {
+            setJavaObject(obj, null);
+        } else {
+            setJavaObject(obj, typeConverter.toJavaType(memberInSqlForm));
+        }
     }
 }
