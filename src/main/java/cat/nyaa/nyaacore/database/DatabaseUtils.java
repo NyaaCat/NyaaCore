@@ -1,5 +1,6 @@
 package cat.nyaa.nyaacore.database;
 
+import cat.nyaa.nyaacore.database.keyvalue.KeyValueDB;
 import cat.nyaa.nyaacore.database.provider.MapProvider;
 import cat.nyaa.nyaacore.database.provider.MysqlProvider;
 import cat.nyaa.nyaacore.database.provider.SQLiteDatabase;
@@ -12,6 +13,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
+import sun.reflect.Reflection;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,18 +26,9 @@ import java.util.function.BiConsumer;
  * Database utils that provide database access according to plugin's configuration
  */
 public class DatabaseUtils {
-    public static <T> T getDatabae(Class<T> databaseType, JavaPlugin plugin, ConfigurationSection config) {
-        if (databaseType == RelationalDB.class) {
-            String type = config.getString("provider");
-            if (type == null) throw new IllegalArgumentException("unknown relational db provider: null");
-            if ("sqlite".equalsIgnoreCase(type)) {
-                return (T)new SQLiteDatabase(plugin, config.getString("file"));
-            } else {
-                throw new IllegalArgumentException("unknown relational db provider: " + type);
-            }
-        } else {
-            throw new IllegalArgumentException("unexpected database type: " + databaseType.getName());
-        }
+
+    private DatabaseUtils(){
+        throw new UnsupportedOperationException();
     }
 
     private static Map<String, DatabaseProvider> providerRegistry = new HashMap<>();
@@ -67,75 +60,65 @@ public class DatabaseUtils {
     /**
      * Get database instance from provider and configuration specified
      *
-     * @param <T>           generic type for return different subtype of {@link Database}}
+     * @param <T>           generic type for return different subtype of {@link RelationalDB} or {@link KeyValueDB}
      * @param plugin        plugin requesting. may be null if provider
      * @param provider      provider name
      * @param configuration configuration
      * @return database instance
      */
     @SuppressWarnings("unchecked")
-    public static <T extends Database> T get(String provider, Plugin plugin, Map<String, Object> configuration){
+    public static <T> T get(String provider, Plugin plugin, Map<String, Object> configuration, Class<T> databaseType){
         DatabaseProvider p = providerRegistry.get(provider);
         Validate.notNull(p, "Provider '" + provider + "' not found");
-        Database db = p.get(plugin, configuration);
+        T db = p.get(plugin, configuration, databaseType);
         Validate.notNull(db, "Provider '" + provider + "' returned null");
-        return (T) db;
-    }
-
-    @Deprecated
-    public static <T extends Database> T get(String provider, JavaPlugin plugin, Map<String, Object> configuration) {
-        return get(provider, (Plugin)plugin, configuration);
+        return db;
     }
 
     /**
      * Get database instance from plugin's configuration section specified
      *
-     * @param <T>           generic type for return different subtype of {@link Database}}
+     * @param <T>           generic type for return different subtype of {@link RelationalDB} or {@link KeyValueDB}
      * @param plugin        plugin requesting. not null
      * @param sectionName   configuration section in plugin's config
      * @return database instance
      */
-    public static <T extends Database> T get(Plugin plugin, String sectionName){
+    public static <T> T get(Plugin plugin, String sectionName, Class<T> databaseType){
         ConfigurationSection section = plugin.getConfig().getConfigurationSection(sectionName);
         Validate.notNull(section, "Please add a '" + sectionName + "' section containing a 'provider' value and (if provider requires) a 'connection' section to your " + plugin.getName() + "'s config file");
         ConfigurationSection conn = section.getConfigurationSection("connection");
         String provider = section.getString("provider");
         Validate.notNull(provider, "Please add a 'provider' value in 'database' section. Available: " + providerRegistry.keySet().stream().reduce("", (s, s2) -> s + ", " + s2));
-        return get(provider, plugin, conn == null ? null : conn.getValues(false));
+        return get(provider, plugin, conn == null ? null : conn.getValues(false), databaseType);
     }
 
     @Deprecated
-    public static <T extends Database> T get(JavaPlugin plugin, String sectionName) {
-        return get((Plugin)plugin, sectionName);
+    public static <T> T get(JavaPlugin plugin, String sectionName, Class<T> databaseType) {
+        Objects.requireNonNull(databaseType);
+        return get((Plugin)plugin, sectionName, databaseType);
     }
 
     /**
      * Get database instance from plugin's configuration section specified. Inferring plugin from callstack.
      *
-     * @param <T>           generic type for return different subtype of {@link Database}}
+     * @param <T>           generic type for return different subtype of {@link RelationalDB} or {@link KeyValueDB}
      * @param sectionName   configuration section in plugin's config
      * @return database instance
      */
-    public static <T extends Database> T get(String sectionName){
-        try {
-            return get((Plugin) JavaPlugin.getProvidingPlugin(Class.forName(Thread.currentThread().getStackTrace()[2].getClassName())), sectionName);
-        } catch (ClassNotFoundException e) {
-            throw new IllegalStateException();
-        }
+    public static <T> T get(String sectionName, Class<T> databaseType){
+        Objects.requireNonNull(databaseType);
+        return get((Plugin) JavaPlugin.getProvidingPlugin(Reflection.getCallerClass()), sectionName, databaseType);
     }
 
     /**
      * Get database instance from plugin's configuration section 'database'. Inferring plugin from callstack.
      *
-     * @param <T>           generic type for return different subtype of {@link Database}}
+     * @param <T>           generic type for return different subtype of {@link RelationalDB} or {@link KeyValueDB}
      * @return database instance
      */
-    public static <T extends Database> T get(){
-        try {
-            return get((Plugin) JavaPlugin.getProvidingPlugin(Class.forName(Thread.currentThread().getStackTrace()[2].getClassName())), "database");
-        } catch (ClassNotFoundException e) {
-            throw new IllegalStateException();
-        }
+    public static <T> T get(Class<T> databaseType){
+        Objects.requireNonNull(databaseType);
+        return get((Plugin) JavaPlugin.getProvidingPlugin(Reflection.getCallerClass()), "database", databaseType);
     }
 
     @SuppressWarnings("unchecked")

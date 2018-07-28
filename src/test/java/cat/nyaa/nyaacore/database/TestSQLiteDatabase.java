@@ -9,9 +9,24 @@ import java.sql.SQLException;
 
 public class TestSQLiteDatabase extends BaseDatabase {
     public final File dbFile = new File("./test.db");
+
     protected TestSQLiteDatabase() {
-        super(true);
         connect();
+    }
+
+    @Override
+    public void beginTransaction() {
+
+    }
+
+    @Override
+    public void rollbackTransaction() {
+
+    }
+
+    @Override
+    public void commitTransaction() {
+
     }
 
     @Override
@@ -21,7 +36,7 @@ public class TestSQLiteDatabase extends BaseDatabase {
 
     protected Connection dbConn;
 
-    protected void connect() {
+    public TestSQLiteDatabase connect() {
         dbFile.delete();
         System.out.print("dbPath: " + dbFile.getAbsolutePath() + "\n");
         try {
@@ -30,11 +45,11 @@ public class TestSQLiteDatabase extends BaseDatabase {
             //getPlugin().getLogger().info("Connecting database: " + connStr);
             dbConn = DriverManager.getConnection(connStr);
             dbConn.setAutoCommit(true);
-            createTables();
         } catch (ClassNotFoundException | SQLException ex) {
             dbConn = null;
             throw new RuntimeException(ex);
         }
+        return this;
     }
 
     public void close() {
@@ -47,7 +62,21 @@ public class TestSQLiteDatabase extends BaseDatabase {
     }
 
     @Override
-    final protected Connection getConnection() {
+    public final Connection getConnection() {
         return dbConn;
+    }
+
+    @Override
+    protected Connection newConnection() {
+        return null;
+    }
+
+    @Override
+    protected void recycleConnection(Connection conn) {
+        try {
+            conn.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 }

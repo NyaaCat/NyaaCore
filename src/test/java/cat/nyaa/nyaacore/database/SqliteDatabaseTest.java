@@ -1,6 +1,7 @@
 package cat.nyaa.nyaacore.database;
 
 import cat.nyaa.nyaacore.database.relational.RelationalDB;
+import cat.nyaa.nyaacore.database.relational.SynchronizedQuery;
 import org.bukkit.plugin.Plugin;
 import org.junit.*;
 import org.sqlite.SQLiteException;
@@ -30,8 +31,8 @@ public class SqliteDatabaseTest {
         Plugin mockPlugin = mock(Plugin.class);
         when(mockPlugin.getDataFolder()).thenReturn(new File("./"));
         when(mockPlugin.getLogger()).thenReturn(Logger.getGlobal());
-        db = DatabaseUtils.get("sqlite", mockPlugin, conf).connect();
-        db2 = DatabaseUtils.get("sqlite", mockPlugin, conf).connect();
+        db = ((RelationalDB)DatabaseUtils.get("sqlite", mockPlugin, conf, RelationalDB.class)).connect();
+        db2 = DatabaseUtils.get("sqlite", mockPlugin, conf, RelationalDB.class).connect();
     }
 
     @Test
@@ -48,7 +49,7 @@ public class SqliteDatabaseTest {
 
     @Test
     public void testTransInsert(){
-        try(TransactionalQuery<TestTable> query = db.transaction(TestTable.class)){
+        try(SynchronizedQuery<TestTable> query = db.queryTransactional(TestTable.class)){
             query.insert(new TestTable(1L, "test", UUID.randomUUID(), UUID.randomUUID()));
             query.insert(new TestTable(2L, "test", UUID.randomUUID(), UUID.randomUUID()));
         }
@@ -57,10 +58,10 @@ public class SqliteDatabaseTest {
 
     @Test
     public void testTransInsertRollbackedByNonSqlEx(){
-        try(TransactionalQuery<TestTable> query = db.transaction(TestTable.class, true)){
+        try(SynchronizedQuery<TestTable> query = db.queryTransactional(TestTable.class, true)){
             query.insert(new TestTable(1L, "test", UUID.randomUUID(), UUID.randomUUID()));
             query.insert(new TestTable(2L, "test", UUID.randomUUID(), UUID.randomUUID()));
-            db.auto(TestTable.class).insert(new TestTable(3L, "test", UUID.randomUUID(), UUID.randomUUID()));
+            db.query(TestTable.class).insert(new TestTable(3L, "test", UUID.randomUUID(), UUID.randomUUID()));
             db.query(TestTable.class).insert(new TestTable(4L, "test", UUID.randomUUID(), UUID.randomUUID()));
             throwException();
             query.commit();
@@ -75,11 +76,11 @@ public class SqliteDatabaseTest {
 
     @Test
     public void testTransInsertRollbackedBySqlEx(){
-        try(TransactionalQuery<TestTable> query = db.transaction(TestTable.class)){
+        try(SynchronizedQuery<TestTable> query = db.queryTransactional(TestTable.class)){
             query.insert(new TestTable(1L, "test", UUID.randomUUID(), UUID.randomUUID()));
             query.insert(new TestTable(2L, "test", UUID.randomUUID(), UUID.randomUUID()));
-            db.auto(TestTable.class).insert(new TestTable(3L, "test", UUID.randomUUID(), UUID.randomUUID()));
-            db.auto(TestTable.class).insert(new TestTable(4L, "test", UUID.randomUUID(), UUID.randomUUID()));
+            db.query(TestTable.class).insert(new TestTable(3L, "test", UUID.randomUUID(), UUID.randomUUID()));
+            db.query(TestTable.class).insert(new TestTable(4L, "test", UUID.randomUUID(), UUID.randomUUID()));
             //Throws SQLiteException because of comparator
             query.where("string", " throw ", "test").count();
         } catch (Exception e){
@@ -90,37 +91,37 @@ public class SqliteDatabaseTest {
 
     @Test
     public void testTransInsertNotVisibleBeforeCommit(){
-        try(TransactionalQuery<TestTable> query = db.transaction(TestTable.class)){
+        try(SynchronizedQuery<TestTable> query = db.queryTransactional(TestTable.class)){
             query.insert(new TestTable(1L, "test", UUID.randomUUID(), UUID.randomUUID()));
             query.insert(new TestTable(2L, "test", UUID.randomUUID(), UUID.randomUUID()));
-            assertEquals(0, db2.auto(TestTable.class).count());
-            assertEquals(2, db.auto(TestTable.class).count());
+            assertEquals(0, db2.query(TestTable.class).count());
+            assertEquals(2, db.query(TestTable.class).count());
             assertEquals(2, query.count());
         }
-        try(TransactionalQuery<TestTable> query2 = db2.transaction(TestTable.class)){
+        try(SynchronizedQuery<TestTable> query2 = db2.queryTransactional(TestTable.class)){
             query2.insert(new TestTable(3L, "test2", UUID.randomUUID(), UUID.randomUUID()));
             query2.insert(new TestTable(4L, "test2", UUID.randomUUID(), UUID.randomUUID()));
-            assertEquals(4, db2.auto(TestTable.class).count());
-            assertEquals(2, db.auto(TestTable.class).count());
+            assertEquals(4, db2.query(TestTable.class).count());
+            assertEquals(2, db.query(TestTable.class).count());
             assertEquals(4, query2.count());
         }
-        try(TransactionalQuery<TestTable> query3 = db2.transaction(TestTable.class, true)){
+        try(SynchronizedQuery<TestTable> query3 = db2.queryTransactional(TestTable.class, true)){
             query3.insert(new TestTable(5L, "test3", UUID.randomUUID(), UUID.randomUUID()));
             query3.insert(new TestTable(6L, "test3", UUID.randomUUID(), UUID.randomUUID()));
             assertEquals(2, query3.where("string", "=", "test3").count());
-            assertEquals(0, db.auto(TestTable.class).where("string", "=", "test3").count());
-            assertEquals(6, db2.auto(TestTable.class).count());
-            assertEquals(4, db.auto(TestTable.class).count());
+            assertEquals(0, db.query(TestTable.class).where("string", "=", "test3").count());
+            assertEquals(6, db2.query(TestTable.class).count());
+            assertEquals(4, db.query(TestTable.class).count());
             assertEquals(6, query3.reset().count());
             throwException();
             query3.commit();
         } catch (Exception ignored){}
-        assertEquals(4, db.auto(TestTable.class).count());
-        assertEquals(4, db2.auto(TestTable.class).count());
+        assertEquals(4, db.query(TestTable.class).count());
+        assertEquals(4, db2.query(TestTable.class).count());
     }
 
     @After
-    public void closeDatabase() {
+    public void closeDatabase() throws Exception {
         db.close();
         db2.close();
         if(!new File("./testdb.db").delete()){

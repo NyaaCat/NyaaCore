@@ -5,5 +5,5 @@ import org.bukkit.plugin.Plugin;
 import java.util.Map;
 
 public interface DatabaseProvider {
-    Database get(Plugin plugin, Map<String, Object> configuration);
+    <T> T get(Plugin plugin, Map<String, Object> configuration, Class<T> databaseType);
 }

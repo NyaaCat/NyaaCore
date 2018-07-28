@@ -8,9 +8,14 @@ import javax.persistence.Table;
 import java.util.Map;
 
 public class SQLiteProvider implements DatabaseProvider {
+
     @Override
-    public SQLiteDatabase get(Plugin plugin, Map<String, Object> configuration) {
+    @SuppressWarnings("unchecked")
+    public <T> T get(Plugin plugin, Map<String, Object> configuration, Class<T> databaseType) {
+        if (!databaseType.isAssignableFrom(SQLiteDatabase.class)) {
+            throw new IllegalArgumentException();
+        }
         Class<?>[] classes = DatabaseUtils.scanClasses(plugin, configuration, Table.class);
-        return new SQLiteDatabase(plugin, (String)configuration.get("file"), classes);
+        return (T) new SQLiteDatabase(plugin, (String) configuration.get("file"), classes);
     }
 }

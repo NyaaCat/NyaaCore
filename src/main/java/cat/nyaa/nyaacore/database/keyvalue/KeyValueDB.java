@@ -6,7 +6,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.function.Function;
 
-public interface KeyValueDB<K, V> {
+public interface KeyValueDB<K, V> extends AutoCloseable {
 
     int size();
 
@@ -47,6 +47,11 @@ public interface KeyValueDB<K, V> {
     default CompletableFuture<Void> clearAsync() {
         return CompletableFuture.supplyAsync(() -> {clear();return null;});
     }
+
+    @SuppressWarnings("unchecked")
+    <T> T connect();
+
+    void close();
 
     default boolean containsKey(K key){
         return get(key) != null;

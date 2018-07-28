@@ -2,17 +2,13 @@ package cat.nyaa.nyaacore.database.relational;
 
 import org.apache.commons.lang.NotImplementedException;
 
-import java.sql.Connection;
+public interface RelationalDB extends Cloneable, AutoCloseable {
 
-public interface RelationalDB extends Cloneable, AutoCloseable{
-    /**
-     * get the "default" connection
-     */
-    Connection getConnection();
-    Connection newConnection();
-    void recycleConnection(Connection conn);
+    @SuppressWarnings("unchecked")
+    <T> T connect();
 
     <T> SynchronizedQuery<T> query(Class<T> tableClass);
+
     <T> SynchronizedQuery<T> queryTransactional(Class<T> tableClass);
 
     void createTable(Class<?> cls);
@@ -25,7 +21,15 @@ public interface RelationalDB extends Cloneable, AutoCloseable{
         throw new NotImplementedException();
     }
 
-    default Class<?>[] getTables(){
+    void beginTransaction();
+
+    void rollbackTransaction();
+
+    void commitTransaction();
+
+    default Class<?>[] getTables() {
         throw new NotImplementedException();
     }
+
+    <T> SynchronizedQuery<T> queryTransactional(Class<T> tableClass, boolean commitOnClose);
 }

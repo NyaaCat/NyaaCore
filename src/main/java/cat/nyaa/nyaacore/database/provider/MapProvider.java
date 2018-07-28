@@ -12,8 +12,12 @@ import java.util.function.Function;
 
 public class MapProvider implements DatabaseProvider {
     @Override
-    public Database get(Plugin plugin, Map<String, Object> configuration) {
-         return new MapDB<>();
+    @SuppressWarnings("unchecked")
+    public <T> T get(Plugin plugin, Map<String, Object> configuration, Class<T> databaseType) {
+        if(!databaseType.isAssignableFrom(KeyValueDB.class)){
+            throw new IllegalArgumentException();
+        }
+         return (T)new MapDB<>();
     }
 
     public static class MapDB<K, V> implements KeyValueDB<K, V> {
@@ -61,7 +65,7 @@ public class MapProvider implements DatabaseProvider {
 
         @Override
         @SuppressWarnings("unchecked")
-        public <T extends Database> T connect(){
+        public <T> T connect(){
             map = new HashMap<>();
             return (T) this;
         }

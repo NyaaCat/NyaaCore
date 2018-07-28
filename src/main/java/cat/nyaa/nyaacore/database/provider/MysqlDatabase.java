@@ -30,7 +30,7 @@ public class MysqlDatabase extends BaseDatabase {
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T extends Database> T connect() {
+    public <T> T connect() {
         try {
             Class.forName(jdbcDriver);
         } catch (ClassNotFoundException e) {
@@ -43,7 +43,9 @@ public class MysqlDatabase extends BaseDatabase {
         } catch (SQLException e) {
             throw new RuntimeException("connection failed", e);
         }
-        createTables();
+        for (Class<?> c : classes) {
+            createTable(c);
+        }
         return (T) this;
     }
 
@@ -53,8 +55,26 @@ public class MysqlDatabase extends BaseDatabase {
     }
 
     @Override
-    protected Connection getConnection() {
+    public Connection getConnection() {
         return connection;
+    }
+
+    @Override
+    protected Connection newConnection() {
+        try {
+            return DriverManager.getConnection(dbUrl, user, password);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    protected void recycleConnection(Connection conn) {
+        try {
+            conn.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

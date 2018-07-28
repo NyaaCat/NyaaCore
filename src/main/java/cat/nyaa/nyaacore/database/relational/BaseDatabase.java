@@ -14,15 +14,19 @@ public abstract class BaseDatabase implements RelationalDB {
         if (createdTableClasses.contains(cls)) return;
         TableStructure ts = TableStructure.fromClass(cls);
         String sql = ts.getCreateTableSQL();
-        try {
-            Statement smt = getConnection().createStatement();
+        try (Statement smt = getConnection().createStatement()) {
             smt.executeUpdate(sql);
-            smt.close();
             createdTableClasses.add(cls);
         } catch (SQLException ex) {
             throw new RuntimeException(sql, ex);
         }
     }
+
+    public abstract Connection getConnection();
+
+    protected abstract Connection newConnection();
+
+    protected abstract void recycleConnection(Connection conn);
 
     /**
      * build a statement using provided parameters
@@ -38,8 +42,7 @@ public abstract class BaseDatabase implements RelationalDB {
                 sql = sql.replace("{{" + key + "}}", replacementMap.get(key));
             }
         }
-        try {
-            PreparedStatement stmt = getConnection().prepareStatement(sql);
+        try (PreparedStatement stmt = getConnection().prepareStatement(sql)) {
             for (int i = 0; i < parameters.length; i++) {
                 stmt.setObject(i + 1, parameters[i]);
             }
@@ -85,6 +88,11 @@ public abstract class BaseDatabase implements RelationalDB {
 
     @Override
     public <T> SynchronizedQuery<T> queryTransactional(Class<T> tableClass) {
+        return queryTransactional(tableClass, true);
+    }
+
+    @Override
+    public <T> SynchronizedQuery<T> queryTransactional(Class<T> tableClass, boolean commitOnClose) {
         createTable(tableClass);
         Connection conn = newConnection();
         try {
@@ -92,10 +100,14 @@ public abstract class BaseDatabase implements RelationalDB {
         } catch (SQLException ex) {
             throw new RuntimeException(ex);
         }
-        return new SynchronizedQuery<T>(tableClass, conn) {
+        return new SynchronizedQuery<T>(tableClass, conn, commitOnClose) {
             @Override
-            public void close() throws Exception {
-                conn.commit();
+            public void close() {
+                if (commitOnClose) {
+                    commit();
+                } else {
+                    rollback();
+                }
                 recycleConnection(conn);
             }
         };

@@ -1,7 +1,6 @@
 package cat.nyaa.nyaacore.database.provider;
 
 import cat.nyaa.nyaacore.database.relational.BaseDatabase;
-import org.apache.commons.lang.NotImplementedException;
 import org.bukkit.plugin.Plugin;
 
 import java.io.*;
@@ -10,25 +9,36 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public class SQLiteDatabase extends BaseDatabase {
 
+    private Class<?>[] tableClasses = new Class<?>[]{};
     private Plugin plugin;
     private String file;
+    private String connStr;
 
     public SQLiteDatabase(Plugin basePlugin, String fileName) {
         file = fileName;
         plugin = basePlugin;
     }
 
+    public SQLiteDatabase(Plugin basePlugin, String fileName, Class<?>[] tableClasses) {
+        this(basePlugin, fileName);
+        this.tableClasses = tableClasses;
+    }
+
     private Connection dbConn;
 
-    public Connection connect() {
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T> T connect() {
         File dbFile = new File(plugin.getDataFolder(), file);
         try {
             Class.forName("org.sqlite.JDBC");
-            String connStr = "jdbc:sqlite:" + dbFile.getAbsolutePath();
+            connStr = "jdbc:sqlite:" + dbFile.getAbsolutePath();
             plugin.getLogger().info("Connecting database: " + connStr);
             dbConn = DriverManager.getConnection(connStr);
             dbConn.setAutoCommit(true);
@@ -36,7 +46,10 @@ public class SQLiteDatabase extends BaseDatabase {
             dbConn = null;
             throw new RuntimeException(ex);
         }
-        return dbConn;
+        for (Class<?> c : tableClasses) {
+            createTable(c);
+        }
+        return (T) this;
     }
 
     @Override
@@ -50,18 +63,26 @@ public class SQLiteDatabase extends BaseDatabase {
     }
 
     @Override
-    final public Connection getConnection() {
+    public Connection getConnection() {
         return dbConn;
     }
 
     @Override
-    public Connection newConnection() {
-        return null;
+    protected Connection newConnection() {
+        try {
+            return DriverManager.getConnection(connStr);
+        } catch (SQLException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     @Override
-    public void recycleConnection(Connection conn) {
-
+    protected void recycleConnection(Connection conn) {
+        try {
+            conn.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -116,5 +137,34 @@ public class SQLiteDatabase extends BaseDatabase {
 
     public void queryBundled(String filename, Map<String, String> replacementMap, Object... parameters) {
         queryBundledAs(filename, replacementMap, null, parameters);
+    }
+
+    @Override
+    public void commitTransaction() {
+        try {
+            dbConn.commit();
+            dbConn.setAutoCommit(true);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void beginTransaction() {
+        try {
+            dbConn.setAutoCommit(false);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void rollbackTransaction() {
+        try {
+            dbConn.rollback();
+            dbConn.setAutoCommit(true);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

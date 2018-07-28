@@ -1,5 +1,7 @@
 package cat.nyaa.nyaacore.database.relational;
 
+import com.google.common.base.Strings;
+
 import javax.persistence.Column;
 import javax.persistence.Id;
 import java.lang.reflect.Field;
@@ -8,16 +10,17 @@ import java.lang.reflect.Modifier;
 
 /**
  * A java field is converted to a database column in two steps:
- *   1. determine the access method
- *   2. determine the SQL type decl and convertion rule by the object type
+ * 1. determine the access method
+ * 2. determine the SQL type decl and convertion rule by the object type
  * There are two access methods:
- *   1. directly get/set to a class field, the type is the field's type
- *   2. get/set through a pair of getter/setter with matching return/parameter type, the type is the return/parameter type.
+ * 1. directly get/set to a class field, the type is the field's type
+ * 2. get/set through a pair of getter/setter with matching return/parameter type, the type is the return/parameter type.
  * There are several accepted java types:
- *   {@see DataTypeMapping}
+ * {@see DataTypeMapping}
  */
 @SuppressWarnings("rawtypes")
 public class ColumnStructure {
+
     public enum AccessMethod {
         DIRECT_FIELD,  // directly get from field
         GETTER_SETTER  // use getter and setter
@@ -27,6 +30,7 @@ public class ColumnStructure {
     public final TableStructure table;
     public final boolean nullable;
     public final boolean unique;
+    private final Column anno;
 
     public final AccessMethod accessMethod;
     public final Field field;   // used if access method is DIRECT_FIELD
@@ -42,6 +46,7 @@ public class ColumnStructure {
      */
     public ColumnStructure(TableStructure table, Field dataField, Column anno) {
         if (anno == null) throw new IllegalArgumentException();
+        this.anno = anno;
         if (anno.name().isEmpty()) {
             name = dataField.getName();
         } else {
@@ -57,7 +62,7 @@ public class ColumnStructure {
 
         javaType = field.getType();
         typeConverter = DataTypeMapping.getDataTypeConverter(javaType);
-        sqlType = typeConverter.getSqlType();
+        sqlType = anno.columnDefinition().equals("") ? typeConverter.getSqlType() : null;
     }
 
     /**
@@ -65,6 +70,7 @@ public class ColumnStructure {
      */
     public ColumnStructure(TableStructure table, Method dataMethod, Column anno) {
         if (anno == null) throw new IllegalArgumentException();
+        this.anno = anno;
         this.table = table;
         this.nullable = anno.nullable();
         this.unique = anno.unique();
@@ -92,11 +98,11 @@ public class ColumnStructure {
             if (getter.getParameterCount() != 0 || getter.getReturnType() != methodType || Modifier.isStatic(getter.getModifiers()))
                 throw new RuntimeException("getter signature mismatch");
             if (setter.getParameterCount() != 1 || setter.getParameterTypes()[0] != methodType ||
-                    (setter.getReturnType() != Void.class && setter.getReturnType() != Void.TYPE) ||
-                    Modifier.isStatic(setter.getModifiers()))
+                        (setter.getReturnType() != Void.class && setter.getReturnType() != Void.TYPE) ||
+                        Modifier.isStatic(setter.getModifiers()))
                 throw new RuntimeException("setter signature mismatch");
             Id primary = getter.getDeclaredAnnotation(Id.class);
-            if(primary == null){
+            if (primary == null) {
                 primary = setter.getDeclaredAnnotation(Id.class);
             }
             getter.setAccessible(true);
@@ -115,7 +121,8 @@ public class ColumnStructure {
 
         this.javaType = methodType;
         this.typeConverter = DataTypeMapping.getDataTypeConverter(this.javaType);
-        this.sqlType = this.typeConverter.getSqlType();
+        //sqlType = typeConverter.getSqlType();
+        sqlType = Strings.isNullOrEmpty(anno.columnDefinition()) ? typeConverter.getSqlType() : null;
     }
 
     public String getName() {
@@ -127,7 +134,8 @@ public class ColumnStructure {
     }
 
     public String getTableCreationScheme() {
-        String ret = name + " " + sqlType.name();
+        //String ret = name + " " + sqlType.name();
+        String ret = name + " " + (sqlType != null ? sqlType.name() : anno.columnDefinition());
         if (!nullable) ret += " NOT NULL";
         if (unique) ret += "UNIQUE";
         return ret;
