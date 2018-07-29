@@ -16,8 +16,7 @@ public class MysqlProvider implements DatabaseProvider {
         if (!databaseType.isAssignableFrom(SQLiteDatabase.class)) {
             throw new IllegalArgumentException();
         }
-        Class<?>[] classes = DatabaseUtils.scanClasses(plugin, configuration, Table.class);
         String jdbc = (String) configuration.get("jdbc");
-        return (T) new MysqlDatabase(plugin, jdbc == null ? "com.mysql.jdbc.Driver" : jdbc, (String) configuration.get("url"), (String) configuration.get("username"), (String) configuration.get("password"), classes);
+        return (T) new MysqlDatabase(plugin, jdbc == null ? "com.mysql.jdbc.Driver" : jdbc, (String) configuration.get("url"), (String) configuration.get("username"), (String) configuration.get("password"));
     }
 }

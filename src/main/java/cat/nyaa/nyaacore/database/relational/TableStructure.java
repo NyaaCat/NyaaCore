@@ -121,6 +121,9 @@ public class TableStructure<T> {
         return String.format("CREATE TABLE IF NOT EXISTS %s(%s)", tableName, colStr.toString());
     }
 
+    /**
+     * @deprecated magic string
+     */
     @Deprecated
     public String getCreateTableSQL(String dialect) {
         if (dialect.equalsIgnoreCase("sqlite")) {

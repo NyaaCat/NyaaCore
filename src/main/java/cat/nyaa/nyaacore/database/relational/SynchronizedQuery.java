@@ -1,5 +1,6 @@
 package cat.nyaa.nyaacore.database.relational;
 
+import javax.naming.OperationNotSupportedException;
 import javax.persistence.NonUniqueResultException;
 import java.sql.*;
 import java.util.*;
@@ -8,12 +9,12 @@ import java.util.*;
  * Synchronously working on the given connection
  * @param <T> the table type
  */
-public class SynchronizedQuery<T> implements Query<T> {
-    private TableStructure<T> table;
-    private Connection conn;
+public abstract class SynchronizedQuery<T> implements Query<T> {
+    protected TableStructure<T> table;
+    protected Connection conn;
 
     /* NOTE: the values in the map must be SQL-type objects */
-    private Map<String, Object> whereClause = new HashMap<>();
+    protected Map<String, Object> whereClause = new HashMap<>();
 
     public SynchronizedQuery(Class<T> tableClass, Connection conn) {
         this.conn = conn;
@@ -276,25 +277,62 @@ public class SynchronizedQuery<T> implements Query<T> {
     }
 
     @Override
-    public void rollback() {
-        try {
-            conn.rollback();
-        } catch (SQLException ex) {
-            ex.printStackTrace();
+    public Connection getConnection() {
+        return conn;
+    }
+
+    public abstract static class NonTransactionalQuery<T> extends SynchronizedQuery<T> {
+        public NonTransactionalQuery(Class<T> tableClass, Connection conn) {
+            super(tableClass, conn);
+            try {
+                conn.setAutoCommit(true);
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+
+        @Override
+        public void commit() throws SQLException {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void rollback() throws SQLException {
+            throw new UnsupportedOperationException();
         }
     }
 
-    @Override
-    public void commit() {
-        try {
+    /**
+     * All transactions will automatically rollback on close.
+     * If no commit or rollback executed.
+     */
+    public abstract static class TransactionalQuery<T> extends SynchronizedQuery<T> {
+        protected boolean rollbackOnClose = true;
+
+        public TransactionalQuery(Class<T> tableClass, Connection conn) {
+            super(tableClass, conn);
+            try {
+                conn.setAutoCommit(false);
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+
+        @Override
+        public void commit() throws SQLException {
+            rollbackOnClose = false;
             conn.commit();
-        } catch (SQLException ex) {
-            ex.printStackTrace();
         }
-    }
 
-    @Override
-    public void close() throws Exception {
+        @Override
+        public void rollback() throws SQLException {
+            rollbackOnClose = false;
+            conn.rollback();
+        }
 
+        @Override
+        public void close() throws Exception {
+            if (rollbackOnClose) conn.rollback();
+        }
     }
 }

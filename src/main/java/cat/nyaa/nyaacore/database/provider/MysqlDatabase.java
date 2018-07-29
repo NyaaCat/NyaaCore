@@ -24,12 +24,16 @@ public class MysqlDatabase extends BaseDatabase {
         this.dbUrl = dbUrl;
         this.user = user;
         this.password = password;
-        this.connection = connect();
+        this.connection = newConnection();
+    }
+
+    public Connection getConnection() {
+        return connection;
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public <T> T connect() {
+    public Connection newConnection() {
+        Connection conn;
         try {
             Class.forName(jdbcDriver);
         } catch (ClassNotFoundException e) {
@@ -45,31 +49,8 @@ public class MysqlDatabase extends BaseDatabase {
         return conn;
     }
 
-    public Connection getConnection() {
-        return connection;
-    }
-
     @Override
-    public Class<?>[] getTables() {
-        return classes;
-    }
-
-    @Override
-    public Connection getConnection() {
-        return connection;
-    }
-
-    @Override
-    protected Connection newConnection() {
-        try {
-            return DriverManager.getConnection(dbUrl, user, password);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    protected void recycleConnection(Connection conn) {
+    public void recycleConnection(Connection conn) {
         try {
             conn.close();
         } catch (SQLException e) {
@@ -85,5 +66,12 @@ public class MysqlDatabase extends BaseDatabase {
             e.printStackTrace();
         }
         connection = null;
+    }
+
+    @Override
+    protected Object clone() throws CloneNotSupportedException {
+        MysqlDatabase db = (MysqlDatabase) super.clone();
+        db.connection = db.newConnection();
+        return db;
     }
 }

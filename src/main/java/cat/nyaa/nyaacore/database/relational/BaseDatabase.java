@@ -78,13 +78,18 @@ public abstract class BaseDatabase implements RelationalDB {
      * @return SynchronizedQuery object
      */
     @Override
-    public <T> SynchronizedQuery<T> query(Class<T> tableClass) {
+    public <T> SynchronizedQuery.NonTransactionalQuery<T> query(Class<T> tableClass) {
         createTable(tableClass);
-        return new SynchronizedQuery<>(tableClass, this.getConnection());
+        return new SynchronizedQuery.NonTransactionalQuery<T>(tableClass, this.getConnection()) {
+            @Override
+            public void close() throws Exception {
+
+            }
+        };
     }
 
     @Override
-    public <T> SynchronizedQuery<T> queryTransactional(Class<T> tableClass) {
+    public <T> SynchronizedQuery.TransactionalQuery<T> queryTransactional(Class<T> tableClass) {
         createTable(tableClass);
         Connection conn = newConnection();
         try {
@@ -92,10 +97,10 @@ public abstract class BaseDatabase implements RelationalDB {
         } catch (SQLException ex) {
             throw new RuntimeException(ex);
         }
-        return new SynchronizedQuery<T>(tableClass, conn) {
+        return new SynchronizedQuery.TransactionalQuery<T>(tableClass, conn) {
             @Override
             public void close() throws Exception {
-                conn.commit();
+                super.close();
                 recycleConnection(conn);
             }
         };

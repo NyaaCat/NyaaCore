@@ -154,31 +154,6 @@ public class DatabaseUtils {
         return classes;
     }
 
-    public static BukkitTask dumpDatabaseAsync(Plugin plugin, RelationalDB from, RelationalDB to, BiConsumer<Class<?>, Integer> progressCallback){
-        List<Class<?>> fromTables = Arrays.asList(from.getTables());
-        List<Class<?>> toTables = Arrays.asList(to.getTables());
-        if(!toTables.containsAll(fromTables)){
-            throw new IllegalArgumentException("Destination database do not contains all tables to be dumped");
-        }
-        return Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-            try {
-                from.beginTransaction();
-                to.beginTransaction();
-
-                for(Class<?> table : fromTables){
-                    dumpTable(from, to, progressCallback, table);
-                }
-
-                from.commitTransaction();
-                to.commitTransaction();
-                progressCallback.accept(null, 0);
-            } catch (Exception e){
-                progressCallback.accept(null, -1);
-                throw e;
-            }
-        });
-    }
-
     private static <T> void dumpTable(RelationalDB from, RelationalDB to, BiConsumer<Class<?>, Integer> progressCallback, Class<T> table) {
         List<T> rows = from.query(table).select();
         int r = rows.size();

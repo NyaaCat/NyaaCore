@@ -20,22 +20,7 @@ public class SQLiteDatabase extends BaseDatabase {
     public SQLiteDatabase(Plugin basePlugin, String fileName) {
         file = fileName;
         plugin = basePlugin;
-        dbConn = connect();
-    }
-
-    public Connection connect() {
-        Connection conn;
-        File dbFile = new File(plugin.getDataFolder(), file);
-        try {
-            Class.forName("org.sqlite.JDBC");
-            String connStr = "jdbc:sqlite:" + dbFile.getAbsolutePath();
-            plugin.getLogger().info("Connecting database: " + connStr);
-            conn = DriverManager.getConnection(connStr);
-            conn.setAutoCommit(true);
-        } catch (ClassNotFoundException | SQLException ex) {
-            throw new RuntimeException(ex);
-        }
-        return conn;
+        dbConn = newConnection();
     }
 
     @Override
@@ -55,7 +40,18 @@ public class SQLiteDatabase extends BaseDatabase {
 
     @Override
     public Connection newConnection() {
-        return connect();
+        Connection conn;
+        File dbFile = new File(plugin.getDataFolder(), file);
+        try {
+            Class.forName("org.sqlite.JDBC");
+            String connStr = "jdbc:sqlite:" + dbFile.getAbsolutePath();
+            plugin.getLogger().info("Connecting database: " + connStr);
+            conn = DriverManager.getConnection(connStr);
+            conn.setAutoCommit(true);
+        } catch (ClassNotFoundException | SQLException ex) {
+            throw new RuntimeException(ex);
+        }
+        return conn;
     }
 
     @Override
@@ -72,9 +68,9 @@ public class SQLiteDatabase extends BaseDatabase {
      */
     @Override
     protected Object clone() throws CloneNotSupportedException {
-        Object obj = super.clone();
-        ((SQLiteDatabase) obj).connect();
-        return obj;
+        SQLiteDatabase db = (SQLiteDatabase) super.clone();
+        db.dbConn = db.newConnection();
+        return db;
     }
 
     @Override
