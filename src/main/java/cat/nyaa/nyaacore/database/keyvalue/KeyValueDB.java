@@ -48,6 +48,11 @@ public interface KeyValueDB<K, V> extends AutoCloseable {
         return CompletableFuture.supplyAsync(() -> {clear();return null;});
     }
 
+    @SuppressWarnings("unchecked")
+    <T> T connect();
+
+    void close();
+
     default boolean containsKey(K key){
         return get(key) != null;
     }
