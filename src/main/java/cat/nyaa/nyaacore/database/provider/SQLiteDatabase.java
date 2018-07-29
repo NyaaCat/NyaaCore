@@ -2,14 +2,14 @@ package cat.nyaa.nyaacore.database.provider;
 
 import cat.nyaa.nyaacore.database.relational.BaseDatabase;
 import cat.nyaa.nyaacore.database.relational.TableStructure;
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang.Validate;
 import org.bukkit.plugin.Plugin;
 
-import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.sql.*;
-import java.util.*;
+import java.io.File;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 public class SQLiteDatabase extends BaseDatabase {
 
@@ -87,49 +87,5 @@ public class SQLiteDatabase extends BaseDatabase {
         } catch (SQLException ex) {
             throw new RuntimeException(sql, ex);
         }
-    }
-
-    /**
-     * Execute a SQL file bundled with the plugin
-     *
-     * @param filename       full file name, including extension, in resources/sql folder
-     * @param replacementMap {{key}} in the file will be replaced by value. Ignored if null. NOTE: sql injection will happen
-     * @param cls            class of desired object
-     * @param parameters     JDBC's positional parametrized query.
-     * @return the result set, null if cls is null.
-     */
-    public <T> List<T> queryBundledAs(String filename, Map<String, String> replacementMap, Class<T> cls, Object... parameters) {
-        String sql;
-        try (
-                InputStream inputStream = plugin.getResource("sql/" + filename);
-                BufferedInputStream bis = new BufferedInputStream(inputStream);
-                ByteArrayOutputStream buf = new ByteArrayOutputStream()
-        ) {
-            int result = bis.read();
-            while (result != -1) {
-                buf.write((byte) result);
-                result = bis.read();
-            }
-            sql = buf.toString(StandardCharsets.UTF_8.name());
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
-        }
-
-        try (PreparedStatement stat = buildStatement(sql, replacementMap, parameters)) {
-            boolean hasResult = stat.execute();
-            if (cls == null) {
-                return null;
-            } else if (hasResult) {
-                return parseResultSet(stat.getResultSet(), cls);
-            } else {
-                return new ArrayList<>();
-            }
-        } catch (SQLException ex) {
-            throw new RuntimeException(ex);
-        }
-    }
-
-    public void queryBundled(String filename, Map<String, String> replacementMap, Object... parameters) {
-        queryBundledAs(filename, replacementMap, null, parameters);
     }
 }

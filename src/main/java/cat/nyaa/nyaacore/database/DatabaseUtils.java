@@ -1,18 +1,16 @@
 package cat.nyaa.nyaacore.database;
 
 import cat.nyaa.nyaacore.database.keyvalue.KeyValueDB;
+import cat.nyaa.nyaacore.database.provider.DatabaseProvider;
 import cat.nyaa.nyaacore.database.provider.MapProvider;
 import cat.nyaa.nyaacore.database.provider.MysqlProvider;
-import cat.nyaa.nyaacore.database.provider.SQLiteDatabase;
 import cat.nyaa.nyaacore.database.provider.SQLiteProvider;
 import cat.nyaa.nyaacore.database.relational.RelationalDB;
 import cat.nyaa.nyaacore.utils.ClassPathUtils;
 import org.apache.commons.lang.Validate;
-import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitTask;
 import sun.reflect.Reflection;
 
 import java.io.File;
