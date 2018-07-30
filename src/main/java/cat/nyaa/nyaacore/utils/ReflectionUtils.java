@@ -147,6 +147,10 @@ public final class ReflectionUtils {
         }
     }
 
+    /**
+     * @deprecated use Material.isItem();
+     */
+    @Deprecated
     public static boolean isValidItem(ItemStack item) {
         Class<?> craftItemStackClazz = ReflectionUtils.getOBCClass("inventory.CraftItemStack");
         Method asNMSCopyMethod = ReflectionUtils.getMethod(craftItemStackClazz, "asNMSCopy", ItemStack.class);
