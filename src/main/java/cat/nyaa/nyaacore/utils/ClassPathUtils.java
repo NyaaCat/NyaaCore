@@ -21,9 +21,11 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 import com.google.common.collect.*;
 import com.google.common.reflect.Reflection;
+import org.bukkit.plugin.Plugin;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -43,6 +45,21 @@ import static com.google.common.base.StandardSystemProperty.PATH_SEPARATOR;
 import static java.util.logging.Level.WARNING;
 
 public final class ClassPathUtils {
+
+    @SuppressWarnings("unchecked")
+    public static Class<?>[] scanClassesWithAnnotations(Plugin plugin, String pack, Class<? extends Annotation> annotation) {
+        try {
+            Set<ClassPathUtils.ClassInfo> classInfos = ClassPathUtils.from(new File(plugin.getClass().getProtectionDomain().getCodeSource().getLocation().toURI()), plugin.getClass().getClassLoader()).getAllClasses();
+            return classInfos
+                           .stream()
+                           .filter(c -> pack == null || c.getPackageName().startsWith(pack))
+                           .map(ClassPathUtils.ClassInfo::load)
+                           .filter(c -> c != null && c.getAnnotation(annotation) != null)
+                           .toArray(Class<?>[]::new);
+        } catch (IOException | URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     /**
      * Separator for the Class-Path manifest attribute value in jar files.
