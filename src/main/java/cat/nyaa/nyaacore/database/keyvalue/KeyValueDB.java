@@ -22,6 +22,7 @@ public interface KeyValueDB<K, V> extends AutoCloseable {
 
     void clear();
 
+    @Override
     void close();
 
     default boolean containsKey(K key) {
