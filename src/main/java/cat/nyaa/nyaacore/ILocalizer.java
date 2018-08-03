@@ -1,6 +1,6 @@
 package cat.nyaa.nyaacore;
 
-import org.librazy.nyaautils_lang_checker.LangKey;
+import org.librazy.nclangchecker.LangKey;
 
 public interface ILocalizer {
     /**

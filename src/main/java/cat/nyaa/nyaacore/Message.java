@@ -18,7 +18,7 @@ import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.permissions.Permission;
-import org.librazy.nyaautils_lang_checker.LangKey;
+import org.librazy.nclangchecker.LangKey;
 
 import java.util.ArrayList;
 import java.util.HashMap;

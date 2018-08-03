@@ -4,7 +4,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.librazy.nyaautils_lang_checker.LangKey;
+import org.librazy.nclangchecker.LangKey;
 
 import java.io.File;
 import java.io.IOException;

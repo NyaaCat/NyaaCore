@@ -9,8 +9,8 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.librazy.nyaautils_lang_checker.LangKey;
-import org.librazy.nyaautils_lang_checker.LangKeyType;
+import org.librazy.nclangchecker.LangKey;
+import org.librazy.nclangchecker.LangKeyType;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
