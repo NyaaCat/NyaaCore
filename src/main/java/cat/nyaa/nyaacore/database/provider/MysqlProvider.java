@@ -10,7 +10,7 @@ public class MysqlProvider implements DatabaseProvider {
     @Override
     @SuppressWarnings("unchecked")
     public <T> T get(Plugin plugin, Map<String, Object> configuration, Class<T> databaseType) {
-        if (!databaseType.isAssignableFrom(SQLiteDatabase.class)) {
+        if (!databaseType.isAssignableFrom(MysqlDatabase.class)) {
             throw new IllegalArgumentException();
         }
         String jdbc = (String) configuration.get("jdbc");

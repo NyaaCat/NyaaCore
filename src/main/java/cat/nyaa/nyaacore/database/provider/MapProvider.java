@@ -20,7 +20,8 @@ public class MapProvider implements DatabaseProvider {
     }
 
     public static class MapDB<K, V> implements KeyValueDB<K, V> {
-        private Map<K, V> map;
+
+        private Map<K, V> map = new HashMap<>();
 
         @Override
         public int size() {
@@ -60,13 +61,6 @@ public class MapProvider implements DatabaseProvider {
         @Override
         public void clear() {
             map.clear();
-        }
-
-        @Override
-        @SuppressWarnings("unchecked")
-        public MapDB<K, V> connect(){
-            map = new HashMap<>();
-            return this;
         }
 
         @Override

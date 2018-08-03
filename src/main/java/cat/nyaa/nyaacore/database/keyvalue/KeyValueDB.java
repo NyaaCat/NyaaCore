@@ -22,9 +22,6 @@ public interface KeyValueDB<K, V> extends AutoCloseable {
 
     void clear();
 
-    @SuppressWarnings("unchecked")
-    KeyValueDB<K, V> connect();
-
     void close();
 
     default boolean containsKey(K key) {

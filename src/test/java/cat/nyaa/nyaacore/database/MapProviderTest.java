@@ -8,7 +8,7 @@ import org.junit.Test;
 public class MapProviderTest {
     @Test
     public void test1() {
-        try ( KeyValueDB<Integer, String> db = new MapProvider.MapDB<>().connect()) {
+        try ( KeyValueDB<Integer, String> db = new MapProvider.MapDB<>()) {
             Assert.assertNull(db.get(1));
         } catch (Exception ex) {
             throw new RuntimeException(ex);
@@ -17,7 +17,7 @@ public class MapProviderTest {
 
     @Test
     public void test2() {
-        try ( KeyValueDB<String, String> db = new MapProvider.MapDB<>().connect()) {
+        try ( KeyValueDB<String, String> db = new MapProvider.MapDB<>()) {
             db.put("s", "t");
             db.put("k", "v");
             Assert.assertEquals("v", db.get("k"));
@@ -28,7 +28,7 @@ public class MapProviderTest {
 
     @Test
     public void test3() {
-        try ( KeyValueDB<String, String> db = new MapProvider.MapDB<>().connect()) {
+        try ( KeyValueDB<String, String> db = new MapProvider.MapDB<>()) {
             db.put("k", "v");
             db.asMap().clear();
             Assert.assertNull(db.get("k"));
