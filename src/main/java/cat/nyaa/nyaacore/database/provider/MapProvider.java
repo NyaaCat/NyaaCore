@@ -64,9 +64,9 @@ public class MapProvider implements DatabaseProvider {
 
         @Override
         @SuppressWarnings("unchecked")
-        public <T> T connect(){
+        public MapDB<K, V> connect(){
             map = new HashMap<>();
-            return (T) this;
+            return this;
         }
 
         @Override

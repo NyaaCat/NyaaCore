@@ -1,7 +1,6 @@
 package cat.nyaa.nyaacore.database.relational;
 
 import javax.persistence.Column;
-import javax.persistence.Id;
 import javax.persistence.Table;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -12,6 +11,8 @@ import java.util.*;
 public class TableStructure<T> {
     /* class -> TableStructure cache */
     private static final Map<Class<?>, TableStructure<?>> structured_tables = new HashMap<>();
+
+    @SuppressWarnings("unchecked")
     public static <X> TableStructure<X> fromClass(Class<X> cls) {
         if (structured_tables.containsKey(cls)) return (TableStructure<X>) structured_tables.get(cls);
         TableStructure<X> ts = new TableStructure<>(cls);
@@ -41,7 +42,7 @@ public class TableStructure<T> {
         String primKeyName = null;
 
         // load all the fields
-        for (Field f: tableClass.getDeclaredFields()) {
+        for (Field f : tableClass.getDeclaredFields()) {
             Column columnAnnotation = f.getAnnotation(Column.class);
             if (columnAnnotation == null) continue;
             ColumnStructure structure = new ColumnStructure(this, f, columnAnnotation);
@@ -55,7 +56,7 @@ public class TableStructure<T> {
         }
 
         // load all the getter/setter
-        for (Method m: tableClass.getDeclaredMethods()) {
+        for (Method m : tableClass.getDeclaredMethods()) {
             Column columnAnnotation = m.getAnnotation(Column.class);
             if (columnAnnotation == null) continue;
             ColumnStructure structure = new ColumnStructure(this, m, columnAnnotation);
@@ -112,11 +113,11 @@ public class TableStructure<T> {
 
     public String getCreateTableSQL() {
         StringJoiner colStr = new StringJoiner(",");
-        for (String colName: orderedColumnName) {
+        for (String colName : orderedColumnName) {
             colStr.add(columns.get(colName).getTableCreationScheme());
         }
         if (primaryKey != null) {
-            colStr.add(String.format("CONSTRAINT constraint_PK PRIMARY KEY (%s)",primaryKey));
+            colStr.add(String.format("CONSTRAINT constraint_PK PRIMARY KEY (%s)", primaryKey));
         }
         return String.format("CREATE TABLE IF NOT EXISTS %s(%s)", tableName, colStr.toString());
     }
@@ -128,7 +129,7 @@ public class TableStructure<T> {
     public String getCreateTableSQL(String dialect) {
         if (dialect.equalsIgnoreCase("sqlite")) {
             StringJoiner colStr = new StringJoiner(",");
-            for (String colName: orderedColumnName) {
+            for (String colName : orderedColumnName) {
                 ColumnStructure ct = columns.get(colName);
                 if (ct.primary) {
                     if (ct.sqlType == DataTypeMapping.Types.INTEGER || ct.sqlType == DataTypeMapping.Types.BIGINT) {
@@ -164,7 +165,7 @@ public class TableStructure<T> {
         } else {
             columnList.addAll(Arrays.asList(columns));
         }
-        for (String colName: columnList) {
+        for (String colName : columnList) {
             objects.put(colName, this.columns.get(colName).getSqlObject(obj));
         }
         return objects;
@@ -176,7 +177,7 @@ public class TableStructure<T> {
      */
     public T getObjectFromResultSet(ResultSet rs) throws ReflectiveOperationException, SQLException {
         T obj = tableClass.newInstance();
-        for (String colName: orderedColumnName) {
+        for (String colName : orderedColumnName) {
             Object colValue = rs.getObject(colName);
             this.columns.get(colName).setSqlObject(obj, colValue);
         }

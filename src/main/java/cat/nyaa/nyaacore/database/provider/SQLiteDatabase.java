@@ -74,15 +74,14 @@ public class SQLiteDatabase extends BaseDatabase {
     }
 
     @Override
+    @SuppressWarnings("rawtypes")
     public void createTable(Class<?> cls) {
         Validate.notNull(cls);
         if (createdTableClasses.contains(cls)) return;
         TableStructure ts = TableStructure.fromClass(cls);
         String sql = ts.getCreateTableSQL("sqlite");
-        try {
-            Statement smt = getConnection().createStatement();
+        try (Statement smt = getConnection().createStatement()){
             smt.executeUpdate(sql);
-            smt.close();
             createdTableClasses.add(cls);
         } catch (SQLException ex) {
             throw new RuntimeException(sql, ex);

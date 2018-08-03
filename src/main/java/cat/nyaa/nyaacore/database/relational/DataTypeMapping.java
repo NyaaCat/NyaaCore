@@ -227,6 +227,7 @@ public class DataTypeMapping {
             return obj.toString();
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         public T toJavaType(Object obj) {
             if (obj instanceof String) {
@@ -247,6 +248,7 @@ public class DataTypeMapping {
     }
 
 
+    @SuppressWarnings("rawtypes")
     public static boolean isStaticParsingType(Class cls) {
         for (Method m : cls.getMethods()) {
             if (Modifier.isStatic(m.getModifiers())) {
@@ -264,6 +266,7 @@ public class DataTypeMapping {
         return false;
     }
 
+    @SuppressWarnings({"rawtypes", "unchecked"})
     public static IDataTypeConverter getDataTypeConverter(Class cls) {
         if (cls == boolean.class || cls == Boolean.class) return BooleanConverter.INSTANCE;
         if (cls == int.class || cls == Integer.class) return IntegerConverter.INSTANCE;

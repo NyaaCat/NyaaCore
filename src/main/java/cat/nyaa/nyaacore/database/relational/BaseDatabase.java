@@ -8,6 +8,7 @@ import java.sql.Statement;
 import java.util.HashSet;
 import java.util.Set;
 
+@SuppressWarnings("rawtypes")
 public abstract class BaseDatabase implements RelationalDB {
     protected Set<Class> createdTableClasses = new HashSet<>();
 
@@ -17,10 +18,8 @@ public abstract class BaseDatabase implements RelationalDB {
         if (createdTableClasses.contains(cls)) return;
         TableStructure ts = TableStructure.fromClass(cls);
         String sql = ts.getCreateTableSQL();
-        try {
-            Statement smt = getConnection().createStatement();
+        try(Statement smt = getConnection().createStatement()) {
             smt.executeUpdate(sql);
-            smt.close();
             createdTableClasses.add(cls);
         } catch (SQLException ex) {
             throw new RuntimeException(sql, ex);
@@ -37,7 +36,7 @@ public abstract class BaseDatabase implements RelationalDB {
         createTable(tableClass);
         return new SynchronizedQuery.NonTransactionalQuery<T>(tableClass, this.getConnection()) {
             @Override
-            public void close() throws Exception {
+            public void close() {
 
             }
         };

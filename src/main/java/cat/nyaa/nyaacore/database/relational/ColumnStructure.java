@@ -160,6 +160,7 @@ public class ColumnStructure {
         }
     }
 
+    @SuppressWarnings("unchecked")
     public Object getSqlObject(Object entityObj) {
         Object javaObj = getJavaObject(entityObj);
         if (javaObj == null) {

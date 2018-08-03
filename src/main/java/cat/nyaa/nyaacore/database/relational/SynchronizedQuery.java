@@ -41,6 +41,7 @@ public abstract class SynchronizedQuery<T> implements Query<T> {
      * comparator can be any SQL comparator.
      * e.g. =, >, <
      */
+    @SuppressWarnings("unchecked")
     @Override
     public SynchronizedQuery<T> where(String columnName, String comparator, Object obj) {
         if (!table.hasColumn(columnName)) throw new IllegalArgumentException("Unknown DataColumn Name");
