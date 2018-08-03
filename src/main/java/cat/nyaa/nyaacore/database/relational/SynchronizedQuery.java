@@ -1,12 +1,12 @@
 package cat.nyaa.nyaacore.database.relational;
 
-import javax.naming.OperationNotSupportedException;
 import javax.persistence.NonUniqueResultException;
 import java.sql.*;
 import java.util.*;
 
 /**
  * Synchronously working on the given connection
+ *
  * @param <T> the table type
  */
 public abstract class SynchronizedQuery<T> implements Query<T> {
@@ -58,15 +58,13 @@ public abstract class SynchronizedQuery<T> implements Query<T> {
         String sql = "DELETE FROM " + table.getTableName();
         List<Object> objects = new ArrayList<>();
         sql = buildWhereClause(sql, objects);
-        try {
-            PreparedStatement stmt = conn.prepareStatement(sql);
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             int x = 1;
             for (Object obj : objects) {
                 stmt.setObject(x, obj);
                 x++;
             }
             stmt.execute();
-            stmt.close();
         } catch (SQLException ex) {
             throw new RuntimeException(sql, ex);
         }
@@ -83,8 +81,7 @@ public abstract class SynchronizedQuery<T> implements Query<T> {
         for (int i = 1; i < table.columns.size(); i++) sql += ",?";
         sql += ")";
         Map<String, Object> objMap = table.getColumnObjectMap(object);
-        try {
-            PreparedStatement stmt = conn.prepareStatement(sql);
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             for (int i = 1; i <= table.orderedColumnName.size(); i++) {
                 String colName = table.orderedColumnName.get(i - 1);
                 if (!objMap.containsKey(colName) || objMap.get(colName) == null) {
@@ -94,7 +91,6 @@ public abstract class SynchronizedQuery<T> implements Query<T> {
                 }
             }
             stmt.execute();
-            stmt.close();
         } catch (SQLException ex) {
             throw new RuntimeException(sql + "\n" + objMap.toString(), ex);
         }
@@ -110,20 +106,19 @@ public abstract class SynchronizedQuery<T> implements Query<T> {
         String sql = "SELECT " + table.getColumnNamesString() + " FROM " + table.tableName;
         List<Object> objects = new ArrayList<>();
         sql = buildWhereClause(sql, objects);
-        try {
-            PreparedStatement stmt = conn.prepareStatement(sql);
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             int x = 1;
             for (Object obj : objects) {
                 stmt.setObject(x, obj);
                 x++;
             }
             List<T> results = new ArrayList<T>();
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                T obj = table.getObjectFromResultSet(rs);
-                results.add(obj);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    T obj = table.getObjectFromResultSet(rs);
+                    results.add(obj);
+                }
             }
-            stmt.close();
             return results;
         } catch (SQLException | ReflectiveOperationException ex) {
             throw new RuntimeException(sql, ex);
@@ -166,20 +161,19 @@ public abstract class SynchronizedQuery<T> implements Query<T> {
         String sql = "SELECT " + table.getColumnNamesString() + " FROM " + table.tableName;
         List<Object> objects = new ArrayList<>();
         sql = buildWhereClause(sql, objects);
-        try {
-            PreparedStatement stmt = conn.prepareStatement(sql);
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             int x = 1;
             for (Object obj : objects) {
                 stmt.setObject(x, obj);
                 x++;
             }
             T result = null;
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                result = table.getObjectFromResultSet(rs);
-                if (rs.next()) result = null;
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    result = table.getObjectFromResultSet(rs);
+                    if (rs.next()) result = null;
+                }
             }
-            stmt.close();
             return result;
         } catch (SQLException | ReflectiveOperationException ex) {
             throw new RuntimeException(sql, ex);
@@ -196,22 +190,19 @@ public abstract class SynchronizedQuery<T> implements Query<T> {
         String sql = "SELECT COUNT(*) AS C FROM " + table.tableName;
         List<Object> objects = new ArrayList<>();
         sql = buildWhereClause(sql, objects);
-        try {
-            PreparedStatement stmt = conn.prepareStatement(sql);
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             int x = 1;
             for (Object obj : objects) {
                 stmt.setObject(x, obj);
                 x++;
             }
-            List<T> results = new ArrayList<T>();
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                int count = rs.getInt("C");
-                stmt.close();
-                return count;
-            } else {
-                stmt.close();
-                throw new RuntimeException("COUNT() returns empty result");
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    int count = rs.getInt("C");
+                    return count;
+                } else {
+                    throw new RuntimeException("COUNT() returns empty result");
+                }
             }
         } catch (SQLException ex) {
             throw new RuntimeException(sql, ex);
@@ -226,41 +217,38 @@ public abstract class SynchronizedQuery<T> implements Query<T> {
      */
     @Override
     public void update(T obj, String... columns) {
-        String sql = "";
-        try {
-            List<String> updatedColumns = new ArrayList<>();
-            Map<String, Object> newValues = table.getColumnObjectMap(obj, columns);
-            if (columns == null || columns.length <= 0) {
-                updatedColumns.addAll(table.orderedColumnName);
-            } else {
-                for (String col : columns) {
-                    if (!table.columns.containsKey(col)) {
-                        throw new IllegalArgumentException("Unknown Column Name: " + col);
-                    }
-                }
-                updatedColumns.addAll(Arrays.asList(columns));
-            }
-
-            List<Object> parameters = new ArrayList<>();
-            sql = "UPDATE " + table.tableName + " SET ";
-            for (int i = 0; i < updatedColumns.size(); i++) {
-                if (i > 0) sql += ",";
-                sql += updatedColumns.get(i) + "=?";
-                parameters.add(newValues.get(updatedColumns.get(i)));
-            }
-
-            boolean firstClause = true;
-            if (whereClause.size() > 0) {
-                sql += " WHERE";
-                for (Map.Entry<?, ?> e : whereClause.entrySet()) {
-                    if (!firstClause) sql += " AND";
-                    firstClause = false;
-                    sql += " " + e.getKey();
-                    parameters.add(e.getValue());
+        List<String> updatedColumns = new ArrayList<>();
+        Map<String, Object> newValues = table.getColumnObjectMap(obj, columns);
+        if (columns == null || columns.length <= 0) {
+            updatedColumns.addAll(table.orderedColumnName);
+        } else {
+            for (String col : columns) {
+                if (!table.columns.containsKey(col)) {
+                    throw new IllegalArgumentException("Unknown Column Name: " + col);
                 }
             }
+            updatedColumns.addAll(Arrays.asList(columns));
+        }
 
-            PreparedStatement stmt = conn.prepareStatement(sql);
+        List<Object> parameters = new ArrayList<>();
+        String sql = "UPDATE " + table.tableName + " SET ";
+        for (int i = 0; i < updatedColumns.size(); i++) {
+            if (i > 0) sql += ",";
+            sql += updatedColumns.get(i) + "=?";
+            parameters.add(newValues.get(updatedColumns.get(i)));
+        }
+
+        boolean firstClause = true;
+        if (whereClause.size() > 0) {
+            sql += " WHERE";
+            for (Map.Entry<?, ?> e : whereClause.entrySet()) {
+                if (!firstClause) sql += " AND";
+                firstClause = false;
+                sql += " " + e.getKey();
+                parameters.add(e.getValue());
+            }
+        }
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             int idx = 1;
             for (Object o : parameters) {
                 if (o == null) {
@@ -271,7 +259,6 @@ public abstract class SynchronizedQuery<T> implements Query<T> {
                 idx++;
             }
             stmt.execute();
-            stmt.close();
         } catch (SQLException ex) {
             throw new RuntimeException(sql, ex);
         }
@@ -293,12 +280,12 @@ public abstract class SynchronizedQuery<T> implements Query<T> {
         }
 
         @Override
-        public void commit() throws SQLException {
+        public void commit() {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public void rollback() throws SQLException {
+        public void rollback() {
             throw new UnsupportedOperationException();
         }
     }
@@ -332,8 +319,14 @@ public abstract class SynchronizedQuery<T> implements Query<T> {
         }
 
         @Override
-        public void close() throws Exception {
-            if (rollbackOnClose) conn.rollback();
+        public void close() {
+            if (rollbackOnClose) {
+                try {
+                    conn.rollback();
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
+            }
         }
     }
 }

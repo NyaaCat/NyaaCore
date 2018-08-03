@@ -53,7 +53,7 @@ public abstract class BaseDatabase implements RelationalDB {
         }
         return new SynchronizedQuery.TransactionalQuery<T>(tableClass, conn) {
             @Override
-            public void close() throws Exception {
+            public void close() {
                 super.close();
                 recycleConnection(conn);
             }

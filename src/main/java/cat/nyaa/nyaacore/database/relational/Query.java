@@ -35,4 +35,7 @@ public interface Query<T> extends AutoCloseable {
     void rollback() throws SQLException;
 
     Connection getConnection();
+
+    @Override
+    void close();
 }
