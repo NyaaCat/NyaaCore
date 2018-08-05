@@ -30,9 +30,9 @@ public interface Query<T> extends AutoCloseable {
 
     void update(T obj, String... columns);
 
-    void commit() throws SQLException;
+    void commit();
 
-    void rollback() throws SQLException;
+    void rollback();
 
     Connection getConnection();
 

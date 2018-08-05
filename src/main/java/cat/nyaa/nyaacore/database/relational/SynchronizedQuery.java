@@ -307,15 +307,23 @@ public abstract class SynchronizedQuery<T> implements Query<T> {
         }
 
         @Override
-        public void commit() throws SQLException {
+        public void commit() {
             rollbackOnClose = false;
-            conn.commit();
+            try {
+                conn.commit();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         @Override
-        public void rollback() throws SQLException {
+        public void rollback() {
             rollbackOnClose = false;
-            conn.rollback();
+            try {
+                conn.rollback();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         @Override
