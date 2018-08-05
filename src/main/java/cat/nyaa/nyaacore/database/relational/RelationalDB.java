@@ -9,7 +9,7 @@ import java.sql.SQLException;
  * Every relational database has a default connection
  * which will be connected and closed automatically
  */
-public interface RelationalDB extends Cloneable, AutoCloseable{
+public interface RelationalDB extends Cloneable, AutoCloseable {
     /**
      * get the "default" connection
      */
@@ -18,12 +18,14 @@ public interface RelationalDB extends Cloneable, AutoCloseable{
     /**
      * Create a new connection, or get one from the pool
      * depending the implementation
+     *
      * @return the new connection
      */
     Connection newConnection();
 
     /**
      * Close the connection or put it back into pool.
+     *
      * @param conn the connection
      */
     void recycleConnection(Connection conn);
@@ -33,13 +35,12 @@ public interface RelationalDB extends Cloneable, AutoCloseable{
      * New table may be created using the default connection.
      *
      * @param tableClass the table class type
-     * @param <T> the table to be worked on
+     * @param <T>        the table to be worked on
      * @return the query
      */
     <T> SynchronizedQuery.NonTransactionalQuery<T> query(Class<T> tableClass);
 
     /**
-     *
      * @param tableClass
      * @param <T>
      * @return
@@ -69,4 +70,25 @@ public interface RelationalDB extends Cloneable, AutoCloseable{
 
     @Override
     void close();
+
+    /**
+     * Begin a transation on default connection
+     */
+    default void beginTransation() {
+        throw new NotImplementedException();
+    }
+
+    /**
+     * Rollback current transation on default connection
+     */
+    default void rollbackTransation() {
+        throw new NotImplementedException();
+    }
+
+    /**
+     * Commit current transation on default connection
+     */
+    default void commitTransation() {
+        throw new NotImplementedException();
+    }
 }

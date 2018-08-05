@@ -18,11 +18,40 @@ public abstract class BaseDatabase implements RelationalDB {
         if (createdTableClasses.contains(cls)) return;
         TableStructure ts = TableStructure.fromClass(cls);
         String sql = ts.getCreateTableSQL();
-        try(Statement smt = getConnection().createStatement()) {
+        try (Statement smt = getConnection().createStatement()) {
             smt.executeUpdate(sql);
             createdTableClasses.add(cls);
         } catch (SQLException ex) {
             throw new RuntimeException(sql, ex);
+        }
+    }
+
+    @Override
+    public void beginTransation() {
+        try {
+            getConnection().setAutoCommit(false);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void rollbackTransation() {
+        try {
+            getConnection().rollback();
+            getConnection().setAutoCommit(true);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void commitTransation() {
+        try {
+            getConnection().commit();
+            getConnection().setAutoCommit(true);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
     }
 
