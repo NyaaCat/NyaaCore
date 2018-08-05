@@ -27,7 +27,7 @@ public abstract class BaseDatabase implements RelationalDB {
     }
 
     @Override
-    public void beginTransation() {
+    public void beginTransaction() {
         try {
             getConnection().setAutoCommit(false);
         } catch (SQLException e) {
@@ -36,7 +36,7 @@ public abstract class BaseDatabase implements RelationalDB {
     }
 
     @Override
-    public void rollbackTransation() {
+    public void rollbackTransaction() {
         try {
             getConnection().rollback();
             getConnection().setAutoCommit(true);
@@ -46,7 +46,7 @@ public abstract class BaseDatabase implements RelationalDB {
     }
 
     @Override
-    public void commitTransation() {
+    public void commitTransaction() {
         try {
             getConnection().commit();
             getConnection().setAutoCommit(true);

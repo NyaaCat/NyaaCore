@@ -38,14 +38,16 @@ public interface RelationalDB extends Cloneable, AutoCloseable {
      * @param <T>        the table to be worked on
      * @return the query
      */
-    <T> SynchronizedQuery.NonTransactionalQuery<T> query(Class<T> tableClass);
+    <T> Query<T> query(Class<T> tableClass);
 
     /**
-     * @param tableClass
-     * @param <T>
-     * @return
+     * Create a transactional query, possibly on a new connection
+     *
+     * @param tableClass the table class type
+     * @param <T>        the table to be worked on
+     * @return the query
      */
-    <T> SynchronizedQuery.TransactionalQuery<T> queryTransactional(Class<T> tableClass);
+    <T> Query<T> queryTransactional(Class<T> tableClass);
 
     /**
      * forcefully create a table in the database
@@ -72,23 +74,23 @@ public interface RelationalDB extends Cloneable, AutoCloseable {
     void close();
 
     /**
-     * Begin a transation on default connection
+     * Begin a transaction on default connection
      */
-    default void beginTransation() {
+    default void beginTransaction() {
         throw new NotImplementedException();
     }
 
     /**
-     * Rollback current transation on default connection
+     * Rollback current transaction on default connection
      */
-    default void rollbackTransation() {
+    default void rollbackTransaction() {
         throw new NotImplementedException();
     }
 
     /**
-     * Commit current transation on default connection
+     * Commit current transaction on default connection
      */
-    default void commitTransation() {
+    default void commitTransaction() {
         throw new NotImplementedException();
     }
 }
