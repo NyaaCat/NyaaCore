@@ -48,10 +48,10 @@ import static java.util.logging.Level.WARNING;
 public final class ClassPathUtils {
 
     @SuppressWarnings("unchecked")
-    public static Class<?>[] scanSubclasses(Plugin plugin, String pack, Class<?> clazz) {
+    public static <T> Class<? extends T>[] scanSubclasses(Plugin plugin, String pack, Class<T> clazz) {
         try {
             Set<ClassPathUtils.ClassInfo> classInfos = from(new File(plugin.getClass().getProtectionDomain().getCodeSource().getLocation().toURI()), plugin.getClass().getClassLoader()).getAllClasses();
-            return loadClassesInPackage(pack, classInfos)
+            return (Class<? extends T>[])loadClassesInPackage(pack, classInfos)
                            .filter(c -> c != null && clazz.isAssignableFrom(c))
                            .toArray(Class<?>[]::new);
         } catch (IOException | URISyntaxException e) {
