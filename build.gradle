@@ -62,7 +62,9 @@ dependencies {
     annotationProcessor 'org.librazy:NyaaUtilsLangChecker:2.0-SNAPSHOT'
     annotationProcessor "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT"
     compileOnly 'org.librazy:NyaaUtilsLangChecker:2.0-SNAPSHOT'
-    compileOnly 'net.milkbowl.vault:VaultAPI:1.6'
+    compileOnly('net.milkbowl.vault:VaultAPI:1.6') {
+        transitive = false
+    }
     compileOnly('net.ess3:Essentials:2.13-SNAPSHOT') {
         transitive = false
     }
