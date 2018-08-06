@@ -18,8 +18,8 @@ before_script:
 script: ./gradlew build
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
-  - rm -f  $HOME/.gradle/caches/3.5/fileHashes/fileHashes.bin
-  - rm -f  $HOME/.gradle/caches/3.5/fileHashes/fileHashes.lock
+  - rm -f  $HOME/.gradle/caches/*/fileHashes/fileHashes.bin
+  - rm -f  $HOME/.gradle/caches/*/fileHashes/fileHashes.lock
   - rm -f  $HOME/.gradle/caches/transforms-1/transforms-1.lock
   - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
 cache:
