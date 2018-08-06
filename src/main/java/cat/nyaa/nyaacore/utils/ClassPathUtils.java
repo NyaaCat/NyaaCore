@@ -37,6 +37,7 @@ import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -47,18 +48,34 @@ import static java.util.logging.Level.WARNING;
 public final class ClassPathUtils {
 
     @SuppressWarnings("unchecked")
+    public static Class<?>[] scanSubclasses(Plugin plugin, String pack, Class<?> clazz) {
+        try {
+            Set<ClassPathUtils.ClassInfo> classInfos = from(new File(plugin.getClass().getProtectionDomain().getCodeSource().getLocation().toURI()), plugin.getClass().getClassLoader()).getAllClasses();
+            return loadClassesInPackage(pack, classInfos)
+                           .filter(c -> c != null && clazz.isAssignableFrom(c))
+                           .toArray(Class<?>[]::new);
+        } catch (IOException | URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
     public static Class<?>[] scanClassesWithAnnotations(Plugin plugin, String pack, Class<? extends Annotation> annotation) {
         try {
-            Set<ClassPathUtils.ClassInfo> classInfos = ClassPathUtils.from(new File(plugin.getClass().getProtectionDomain().getCodeSource().getLocation().toURI()), plugin.getClass().getClassLoader()).getAllClasses();
-            return classInfos
-                           .stream()
-                           .filter(c -> pack == null || c.getPackageName().startsWith(pack))
-                           .map(ClassPathUtils.ClassInfo::load)
+            Set<ClassPathUtils.ClassInfo> classInfos = from(new File(plugin.getClass().getProtectionDomain().getCodeSource().getLocation().toURI()), plugin.getClass().getClassLoader()).getAllClasses();
+            return loadClassesInPackage(pack, classInfos)
                            .filter(c -> c != null && c.getAnnotation(annotation) != null)
                            .toArray(Class<?>[]::new);
         } catch (IOException | URISyntaxException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static Stream<? extends Class<?>> loadClassesInPackage(String pack, Set<ClassInfo> classInfos) {
+        return classInfos
+                       .stream()
+                       .filter(c -> pack == null || c.getPackageName().startsWith(pack))
+                       .map(ClassInfo::load);
     }
 
     /**
