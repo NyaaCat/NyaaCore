@@ -32,10 +32,10 @@ after_success:
 - cp build/libs/NyaaCore-all.jar ./NyaaCore-v$VERSION_STRING.jar
 - export GIT_TAG=v$VERSION_STRING
 - git tag $GIT_TAG -a -m "Generated tag from TravisCI for build $TRAVIS_BUILD_NUMBER"
-- export GIT_ORIGIN_URL=`git config --get remote.origin.url`
 - ./gradlew publish
+- if [ $PUBLISH_MAVEN ]; then
 - cd ..
-- git clone -b maven-repo $GIT_ORIGIN_URL nyaacore-mvn
+- git clone -b maven-repo $MAVEN_REPO_URL nyaacore-mvn
 - cp -r NyaaCore/build/repo/cat nyaacore-mvn/
 - cd nyaacore-mvn
 - git config credential.helper "store --file=.git/credentials"
@@ -43,6 +43,7 @@ after_success:
 - git add .
 - git commit -m "auto generated maven repo"
 - git push --follow-tags
+- fi
 - cd ../NyaaCore
 deploy:
   skip_cleanup: true
