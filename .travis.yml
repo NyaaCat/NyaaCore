@@ -33,17 +33,18 @@ after_success:
 - export GIT_TAG=v$VERSION_STRING
 - git tag $GIT_TAG -a -m "Generated tag from TravisCI for build $TRAVIS_BUILD_NUMBER"
 - ./gradlew publish
-- if [ $PUBLISH_MAVEN ]; then
-- cd ..
-- git clone -b maven-repo $MAVEN_REPO_URL nyaacore-mvn
-- cp -r NyaaCore/build/repo/cat nyaacore-mvn/
-- cd nyaacore-mvn
-- git config credential.helper "store --file=.git/credentials"
-- echo "https://$GITHUB_OAUTH_TOKEN:@github.com" > .git/credentials
-- git add .
-- git commit -m "auto generated maven repo"
-- git push --follow-tags
-- fi
+- |
+  if [ $PUBLISH_MAVEN ]; then
+    cd ..;
+    git clone -b maven-repo $MAVEN_REPO_URL nyaacore-mvn;
+    cp -r NyaaCore/build/repo/cat nyaacore-mvn/;
+    cd nyaacore-mvn;
+    git config credential.helper "store --file=.git/credentials";
+    echo "https://$GITHUB_OAUTH_TOKEN:@github.com" > .git/credentials;
+    git add .;
+    git commit -m "auto generated maven repo";
+    git push --follow-tags;
+  fi
 - cd ../NyaaCore
 deploy:
   skip_cleanup: true
