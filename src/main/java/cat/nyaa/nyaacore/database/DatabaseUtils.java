@@ -10,7 +10,6 @@ import org.apache.commons.lang.Validate;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
-import sun.reflect.Reflection;
 
 import java.util.HashMap;
 import java.util.Map;

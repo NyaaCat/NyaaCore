@@ -2,6 +2,7 @@ package cat.nyaa.nyaacore.utils;
 
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
+
 import java.util.function.Consumer;
 import java.util.function.Function;
 

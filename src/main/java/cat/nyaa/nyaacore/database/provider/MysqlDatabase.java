@@ -1,8 +1,6 @@
 package cat.nyaa.nyaacore.database.provider;
 
-import cat.nyaa.nyaacore.database.relational.RelationalDB;
 import cat.nyaa.nyaacore.database.relational.BaseDatabase;
-import org.apache.commons.lang.NotImplementedException;
 import org.bukkit.plugin.Plugin;
 
 import java.sql.Connection;
