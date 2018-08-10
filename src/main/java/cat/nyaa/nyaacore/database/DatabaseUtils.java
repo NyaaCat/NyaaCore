@@ -95,7 +95,11 @@ public class DatabaseUtils {
      */
     public static <T> T get(String sectionName, Class<T> databaseType) {
         Objects.requireNonNull(databaseType);
-        return get(JavaPlugin.getProvidingPlugin(Reflection.getCallerClass()), sectionName, databaseType);
+        try {
+            return get(JavaPlugin.getProvidingPlugin(Class.forName(Thread.currentThread().getStackTrace()[2].getClassName())), sectionName, databaseType);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -106,6 +110,10 @@ public class DatabaseUtils {
      */
     public static <T> T get(Class<T> databaseType) {
         Objects.requireNonNull(databaseType);
-        return get(JavaPlugin.getProvidingPlugin(Reflection.getCallerClass()), "database", databaseType);
+        try {
+            return get(JavaPlugin.getProvidingPlugin(Class.forName(Thread.currentThread().getStackTrace()[2].getClassName())), "database", databaseType);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
