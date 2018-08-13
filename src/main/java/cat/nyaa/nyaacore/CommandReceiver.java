@@ -209,7 +209,7 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
                 else
                     throw new RuntimeException("Failed to invoke subcommand", ex);
             }
-            if (!subClassCommand) msg(sender, "internal.info.command_complete");
+            if (!subClassCommand && showCompleteMessage()) msg(sender, "internal.info.command_complete");
         } catch (NotPlayerException ex) {
             msg(sender, "internal.error.not_player");
         } catch (NoItemInHandException ex) {
@@ -300,6 +300,11 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
             tmp += "\n    " + cmd + ":  " + getHelpContent("usage", getHelpPrefix(), cmd);
         }
         sender.sendMessage(tmp);
+    }
+
+    // Whether show default command complete message
+    protected boolean showCompleteMessage() {
+        return true;
     }
 
     public static Player asPlayer(CommandSender target) {
