@@ -2,6 +2,7 @@ package cat.nyaa.nyaacore;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -510,6 +511,21 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
             Player p = Bukkit.getPlayer(name);
             if (p == null) throw new BadCommandException("internal.error.player_not_found", name);
             return p;
+        }
+
+        public OfflinePlayer nextOfflinePlayer() {
+            String name = next();
+            if (name == null || name.length() <= 0) throw new BadCommandException("internal.error.no_more_player");
+            OfflinePlayer player = null;
+            for (OfflinePlayer p : Bukkit.getOfflinePlayers()) {
+                if (name.equalsIgnoreCase(p.getName())) {
+                    if (player == null || player.getLastPlayed() < p.getLastPlayed()) {
+                        player = p;
+                    }
+                }
+            }
+            if (player == null) throw new BadCommandException("internal.error.player_not_found", name);
+            return player;
         }
 
         public Arguments nextAssert(String string) {
