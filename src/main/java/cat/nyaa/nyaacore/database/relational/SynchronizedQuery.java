@@ -39,7 +39,7 @@ public abstract class SynchronizedQuery<T> implements Query<T> {
 
     /**
      * comparator can be any SQL comparator.
-     * e.g. =, >, <
+     * e.g. =, &gt;, &lt;
      */
     @SuppressWarnings("unchecked")
     @Override

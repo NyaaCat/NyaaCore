@@ -14,7 +14,7 @@ import java.lang.reflect.Modifier;
  *   1. directly get/set to a class field, the type is the field's type
  *   2. get/set through a pair of getter/setter with matching return/parameter type, the type is the return/parameter type.
  * There are several accepted java types:
- *   {@see DataTypeMapping}
+ *   {@link DataTypeMapping}
  */
 @SuppressWarnings("rawtypes")
 public class ColumnStructure {

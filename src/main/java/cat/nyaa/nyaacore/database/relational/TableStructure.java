@@ -155,7 +155,7 @@ public class TableStructure<T> {
      *
      * @param obj     the java object
      * @param columns the column names, or null for all columns
-     * @return columnName -> columnData map
+     * @return columnName to columnData map
      */
     public Map<String, Object> getColumnObjectMap(T obj, String... columns) {
         List<String> columnList = new ArrayList<>();

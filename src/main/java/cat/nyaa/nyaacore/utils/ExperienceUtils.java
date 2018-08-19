@@ -6,7 +6,7 @@ import org.bukkit.entity.Player;
 public final class ExperienceUtils {
     /**
      * How much exp points at least needed to reach this level.
-     * i.e. getLevel() = level && getExp() == 0
+     * i.e. getLevel() = level &amp;&amp; getExp() == 0
      */
     public static int getExpForLevel(int level) {
         if (level < 0) throw new IllegalArgumentException();

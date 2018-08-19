@@ -40,7 +40,7 @@ import java.util.Map;
  */
 public abstract class LanguageRepository implements ILocalizer {
     /**
-     * Use English as default & fallback language
+     * Use English as default &amp; fallback language
      */
     public static final String DEFAULT_LANGUAGE = "en_US";
     public static final String[] AVAILABLE_INTERNAL_LANGUAGES = {"en_US", "zh_CN"};
@@ -66,7 +66,7 @@ public abstract class LanguageRepository implements ILocalizer {
     protected abstract JavaPlugin getPlugin();
 
     /**
-     * @return the language to be loaded into {@link this#map}
+     * @return the language to be loaded into {@link #map}
      */
     protected abstract String getLanguage();
 
@@ -120,7 +120,7 @@ public abstract class LanguageRepository implements ILocalizer {
 
     /**
      * Reset then load per-plugin language map
-     * Based on {@link this#getPlugin()} and {@link this#getLanguage()}
+     * Based on {@link #getPlugin()} and {@link #getLanguage()}
      */
     public void load() {
         String codeName = getLanguage();

@@ -27,10 +27,10 @@ public interface ISerializable {
     /**
      * Indicates a field can be serialized.
      * These four types are supported
-     * 1. Primitive types supported by ConfigurationSection (should put() & get() directly)
+     * 1. Primitive types supported by ConfigurationSection (should put() &amp; get() directly)
      * 2. ISerializable
-     * //3. List<Type1/2/3/4> (not implemented)
-     * 4. Map<String, Type1/2/3/4>
+     * //3. List&lt;Type1/2/3/4&gt; (not implemented)
+     * 4. Map&lt;String, Type1/2/3/4&gt;
      * NOTE:
      * ENUM without typehint is not supported (ENUM in Map or List) They will be deserialized as string
      */

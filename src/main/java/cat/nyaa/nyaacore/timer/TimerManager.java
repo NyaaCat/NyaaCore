@@ -57,12 +57,12 @@ public class TimerManager extends FileConfigure {
     }
 
     /**
-     * Timers are uniquely distinguished by plugin & timerName.
+     * Timers are uniquely distinguished by plugin &amp; timerName.
      * This method link the existing or newly created timer to the callback function.
      *
      * @param plugin    the plugin the timer belongs to
      * @param timerName the timer name, usually plugin specific
-     * @param timerData the timer data & parameters, only for newly created timers.
+     * @param timerData the timer data &amp; parameters, only for newly created timers.
      *                  for existing timers, you should leave it to null otherwise exception will be thrown
      * @param callback  the callback object for the timer.
      */

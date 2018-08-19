@@ -50,7 +50,7 @@ public final class ReflectionUtils {
     private static Map<Class<?>, Map<String, Method>> loadedMethods = new HashMap<>();
 
     /**
-     * Gets the version string for NMS & OBC class paths
+     * Gets the version string for NMS &amp; OBC class paths
      *
      * @return The version string of OBC and NMS packages
      */
