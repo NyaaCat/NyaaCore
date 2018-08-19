@@ -38,7 +38,6 @@ public class MysqlDatabase extends BaseDatabase {
             throw new RuntimeException("Jdbc Driver not available", e);
         }
         try {
-            plugin.getLogger().info("Connecting database " + dbUrl + " as " + user);
             conn = DriverManager.getConnection(dbUrl, user, password);
             conn.setAutoCommit(true);
         } catch (SQLException e) {

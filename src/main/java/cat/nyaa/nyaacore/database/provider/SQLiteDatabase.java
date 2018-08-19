@@ -45,7 +45,6 @@ public class SQLiteDatabase extends BaseDatabase {
         try {
             Class.forName("org.sqlite.JDBC");
             String connStr = "jdbc:sqlite:" + dbFile.getAbsolutePath();
-            plugin.getLogger().info("Connecting database: " + connStr);
             conn = DriverManager.getConnection(connStr);
             conn.setAutoCommit(true);
         } catch (ClassNotFoundException | SQLException ex) {
