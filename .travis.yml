@@ -60,7 +60,8 @@ jobs:
         ./gradlew javadoc;
         pushd ..;
         git clone -b gh-pages $MAVEN_REPO_URL pages;
-        mkdir -p pages/NyaaCore/
+        rm -rf pages/NyaaCore/;
+        mkdir -p pages/NyaaCore/;
         cp -r NyaaCore/build/docs/javadoc pages/NyaaCore/;
         cd pages;
         git config credential.helper "store --file=.git/credentials";
