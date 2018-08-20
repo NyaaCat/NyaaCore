@@ -98,7 +98,26 @@ publishing {
 javadoc {
     (options as StandardJavadocDocletOptions).with {
         links 'https://docs.oracle.com/javase/8/docs/api/'
-        links 'https://hub.spigotmc.org/javadocs/bukkit/'
+        links 'https://hub.spigotmc.org/javadocs/spigot/'
         links 'https://google.github.io/guava/releases/21.0/api/docs/'
+        links 'https://ci.md-5.net/job/BungeeCord/ws/chat/target/apidocs/'
+
+        locale 'en_US'
+        encoding 'UTF-8'
+        docEncoding 'UTF-8'
+        addBooleanOption('keywords', true)
+
+        def currentJavaVersion = JavaVersion.current()
+        if (currentJavaVersion > JavaVersion.VERSION_1_9) {
+            options.addBooleanOption('html5', true)
+        }
+
+        windowTitle = "NyaaCore Javadoc"
+        String fullVersion = System.getenv("FULL_VERSION_STRING");
+        if (fullVersion != null){
+            docTitle = "<b>NyaaCore</b> " + System.getenv("FULL_VERSION_STRING")
+        } else {
+            docTitle = "<b>NyaaCore</b>"
+        }
     }
 }
