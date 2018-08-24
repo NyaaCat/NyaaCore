@@ -12,6 +12,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.function.Predicate;
 
 public class RayTraceUtils {
@@ -72,17 +73,14 @@ public class RayTraceUtils {
         Method getBoundingBox = ReflectionUtils.getMethod(entity, "getBoundingBox");
         Class<?> axisAlignedBB = ReflectionUtils.getNMSClass("AxisAlignedBB");
         Method getHit = ReflectionUtils.getMethod(axisAlignedBB, "b", vec3D, vec3D);
-
-        Class<?> craftLivingEntity = ReflectionUtils.getOBCClass("entity.CraftLivingEntity");
-        Class<?> craftServer = ReflectionUtils.getOBCClass("CraftServer");
-
-        Constructor<?> craftLivingEntityConstructor = craftLivingEntity.getConstructor(craftServer, entityLiving);
+        Method getUniqueID = ReflectionUtils.getMethod(entity, "getUniqueID");
         List<LivingEntity> result = new ArrayList<>();
         for (Object e : entityLivings) {
             Object bb = getBoundingBox.invoke(e);
             Object hit = getHit.invoke(bb, toVec3D(start), toVec3D(end));
             if (hit != null) {
-                result.add((LivingEntity) craftLivingEntityConstructor.newInstance(Bukkit.getServer(), e));
+                UUID uuid = (UUID) getUniqueID.invoke(e);
+                result.add((LivingEntity) Bukkit.getServer().getEntity(uuid));
             }
         }
         return result;
