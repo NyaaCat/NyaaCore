@@ -79,9 +79,21 @@ compileJava {
     options.compilerArgs += ["-Xplugin:NyaaUtilsLangAnnotationProcessor", "-Xlint:deprecation,unchecked,rawtypes"]
 }
 
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.java.srcDirs
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
 publishing {
     publications {
         mavenJava(MavenPublication) {
+            artifact sourcesJar
+            artifact javadocJar
             groupId "cat.nyaa"
             artifactId "nyaacore"
             version "$majorVersion.$minorVersion-SNAPSHOT"
