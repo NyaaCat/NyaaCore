@@ -58,10 +58,10 @@ shadowJar {
 dependencies {
     api "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT"
     api 'javax.persistence:javax.persistence-api:2.2'
+    api 'io.netty:netty-all:4.1.25.Final'
     shadow 'javax.persistence:javax.persistence-api:2.2'
     annotationProcessor 'org.librazy:NyaaUtilsLangChecker:2.0-SNAPSHOT'
     annotationProcessor "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT"
-    compileOnly 'io.netty:netty-all:4.1.25.Final'
     compileOnly 'org.librazy:NyaaUtilsLangChecker:2.0-SNAPSHOT'
     compileOnly('net.milkbowl.vault:VaultAPI:1.6') {
         transitive = false

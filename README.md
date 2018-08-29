@@ -24,8 +24,6 @@ repositories {
 }
 
 dependencies {
-    compile('cat.nyaa:nyaacore:6.2-SNAPSHOT') {
-        transitive = false
-    }
+    compile('cat.nyaa:nyaacore:6.2-SNAPSHOT')
 }
 ```
