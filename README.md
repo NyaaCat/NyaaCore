@@ -9,35 +9,22 @@ Provides infrastructures to simplify plugin development.
 - Annotation based configuration serializer
 - Annotation based database serializer
 - JSON message builder
+- Database middleware
+- Http client
+- Http server based on [timboudreau/netty-http-client](https://github.com/timboudreau/netty-http-client)
 
 ## Use as dependency in Gradle
 
 ```
 repositories {
     maven {
-        name 'NyaaCore'
-        url 'https://raw.githubusercontent.com/NyaaCat/NyaaCore/maven-repo'
+        name 'NyaaCentral'
+        url 'https://raw.githubusercontent.com/NyaaCat/NyaaCentral/maven-repo'
     }
 }
 
 dependencies {
-    compile('cat.nyaa:nyaacore:4.0-SNAPSHOT') {
-        transitive = false
-    }
-}
-```
-
-If you need extra server side I18n/L10n stuff, consider using [LangUtils](https://github.com/MascusJeoraly/LanguageUtils):
-
-```
-repositories {
-    maven {
-        url 'https://raw.github.com/MascusJeoraly/LanguageUtils/mvn-repo/'
-    }
-}
-
-dependencies {
-    compile('com.meowj:LangUtils:1.9') {
+    compile('cat.nyaa:nyaacore:6.2-SNAPSHOT') {
         transitive = false
     }
 }

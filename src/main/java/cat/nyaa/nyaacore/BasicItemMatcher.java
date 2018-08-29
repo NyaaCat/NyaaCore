@@ -4,6 +4,8 @@ import cat.nyaa.nyaacore.configuration.ISerializable;
 import org.bukkit.ChatColor;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.Damageable;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.Repairable;
 
 import java.util.*;
@@ -37,14 +39,16 @@ public class BasicItemMatcher implements ISerializable {
         if (requireExact) return base.equals(given);
         if (!base.getType().equals(given.getType())) return false;
 
+        ItemMeta baseItemMeta = base.getItemMeta();
+        ItemMeta givenItemMeta = given.getItemMeta();
         if (repairCostMatch == MatchingMode.EXACT &&
-                base.getItemMeta() instanceof Repairable && given.getItemMeta() instanceof Repairable &&
-                !(((Repairable) given.getItemMeta()).getRepairCost() == ((Repairable) base.getItemMeta()).getRepairCost())) {
+                baseItemMeta instanceof Repairable && givenItemMeta instanceof Repairable &&
+                !(((Repairable) givenItemMeta).getRepairCost() == ((Repairable) baseItemMeta).getRepairCost())) {
             return false;
         }
 
-        int baseDamage = base.getDurability();
-        int givenDamage = given.getDurability();
+        int baseDamage = ((Damageable)baseItemMeta).getDamage();
+        int givenDamage = ((Damageable)givenItemMeta).getDamage();
         if (minDamageValue == -2 && givenDamage < baseDamage) return false;
         if (minDamageValue >= 0 && givenDamage < minDamageValue) return false;
         if (maxDamageValue == -2 && givenDamage > baseDamage) return false;

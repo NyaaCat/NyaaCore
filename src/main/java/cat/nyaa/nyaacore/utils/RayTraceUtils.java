@@ -50,6 +50,7 @@ public class RayTraceUtils {
         return rayTraceEntites(player, distance, notPlayer(player));
     }
 
+    @SuppressWarnings("rawtypes")
     public static List<LivingEntity> rayTraceEntites(Player player, float distance, Predicate predicate) throws ReflectiveOperationException {
         Vector start = player.getEyeLocation().toVector();
         Vector end = start.clone().add(player.getEyeLocation().getDirection().multiply(distance));
@@ -60,6 +61,7 @@ public class RayTraceUtils {
         return rayTraceEntites(world, start, end, o -> true);
     }
 
+    @SuppressWarnings({"rawtypes","unchecked"})
     public static List<LivingEntity> rayTraceEntites(World world, Vector start, Vector end, Predicate predicate) throws ReflectiveOperationException {
         Class<?> craftWorld = ReflectionUtils.getOBCClass("CraftWorld");
         Method getHandleMethod = ReflectionUtils.getMethod(craftWorld, "getHandle");
@@ -91,10 +93,12 @@ public class RayTraceUtils {
         return vec3d.newInstance(v.getX(), v.getY(), v.getZ());
     }
 
+    @SuppressWarnings("rawtypes")
     public static Predicate isAPlayer() {
         return (Object entity) -> entity.getClass().getSimpleName().equals("EntityPlayer");
     }
 
+    @SuppressWarnings("rawtypes")
     public static Predicate notPlayer(Player player) {
         return (Object entity) -> {
             Class<?> craftPlayer = ReflectionUtils.getOBCClass("entity.CraftPlayer");
