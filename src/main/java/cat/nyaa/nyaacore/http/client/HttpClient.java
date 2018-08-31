@@ -148,6 +148,25 @@ public final class HttpClient {
         return future;
     }
 
+    public static CompletableFuture<FullHttpResponse> postJson(String url, Map<String, String> headers, String json){
+        CompletableFuture<FullHttpResponse> future = new CompletableFuture<>();
+        postJson(url, headers, json, (ctx, response, throwable) -> {
+            if (response == null) {
+                future.completeExceptionally(throwable);
+                return;
+            }
+            if (response.status().equals(HttpResponseStatus.TEMPORARY_REDIRECT) ||
+                        response.status().equals(HttpResponseStatus.PERMANENT_REDIRECT)) {
+                String location = response.headers().get("Location");
+                CompletableFuture<FullHttpResponse> redirect = postJson(location, headers, json);
+                wrapFuture(future, redirect);
+            } else {
+                future.complete(response);
+            }
+        });
+        return future;
+    }
+
     private static void wrapFuture(CompletableFuture<FullHttpResponse> future, CompletableFuture<FullHttpResponse> redirect) {
         redirect.handle((resp, exec) -> {
             if (resp != null) {
