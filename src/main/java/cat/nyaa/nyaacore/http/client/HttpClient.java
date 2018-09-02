@@ -11,6 +11,7 @@ import io.netty.handler.codec.http.*;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.util.AsciiString;
+import io.netty.util.ReferenceCountUtil;
 
 import javax.net.ssl.SSLException;
 import java.io.IOException;
@@ -242,6 +243,7 @@ class ResponseHandler extends SimpleChannelInboundHandler<FullHttpResponse> {
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, FullHttpResponse msg) {
+        ReferenceCountUtil.retain(msg);
         if (ctx.channel().isActive()) {
             httpCallback.response(ctx, msg, null);
             ctx.close();
