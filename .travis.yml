@@ -5,6 +5,9 @@ jobs:
     jdk: oraclejdk8
     install: true
     before_script:
+    - 'curl --version'
+    - "php -r 'phpinfo();'"
+    - 'exit 1'
     - export MAJOR_VERSION=`sed -n 's/^ext\.majorVersion = \(.*\)$/\1/p' build.gradle`
     - export MINOR_VERSION=`sed -n 's/^ext\.minorVersion = \(.*\)$/\1/p' build.gradle`
     - export MC_VERSION=`sed -n 's/^ext\.minecraftVersion = "\(.*\)"$/\1/p' build.gradle`
