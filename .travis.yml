@@ -55,6 +55,7 @@ jobs:
     - export FULL_VERSION_STRING=$MAJOR_VERSION.$MINOR_VERSION.$TRAVIS_BUILD_NUMBER-mc$MC_VERSION
     - if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then exit 0; fi
     - if [ "$TRAVIS_BRANCH" != "master" ]; then exit 0; fi
+    - 'php update_spigot.php'
     - |
       if [ $PUBLISH_JAVADOC ]; then
         ./gradlew javadoc;
