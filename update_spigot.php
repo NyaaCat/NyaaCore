@@ -1,6 +1,6 @@
 <?php
 $user_agent = 'curl 7.35.0';
-$home = isset($_ENV['TRAVIS']) ? $_ENV['HOME'] : dirname(__FILE__);
+$home = isset($_ENV['HOME']) ? $_ENV['HOME'] : dirname(__FILE__);
 $cache_dir = "{$home}/cache";
 echo "cache dir: {$cache_dir}\n";
 preg_match('/lib\/(spigot-.*\.jar)/', file_get_contents(dirname(__FILE__) . '/build.gradle'), $matches);
