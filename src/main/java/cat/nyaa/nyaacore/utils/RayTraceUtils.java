@@ -1,19 +1,25 @@
 package cat.nyaa.nyaacore.utils;
 
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+import net.minecraft.server.v1_13_R2.*;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.craftbukkit.v1_13_R2.CraftWorld;
+import org.bukkit.craftbukkit.v1_13_R2.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_13_R2.entity.CraftLivingEntity;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
-import java.lang.reflect.Constructor;
+import javax.annotation.Nullable;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.function.Predicate;
 
 public class RayTraceUtils {
     public static Block rayTraceBlock(Player player) throws ReflectiveOperationException {
@@ -88,9 +94,8 @@ public class RayTraceUtils {
         return result;
     }
 
-    public static Object toVec3D(Vector v) throws ReflectiveOperationException {
-        Constructor<?> vec3d = ReflectionUtils.getNMSClass("Vec3D").getConstructor(double.class, double.class, double.class);
-        return vec3d.newInstance(v.getX(), v.getY(), v.getZ());
+    public static Object toVec3D(Vector v) {
+        return new Vec3D(v.getX(), v.getY(), v.getZ());
     }
 
     @SuppressWarnings("rawtypes")
@@ -111,5 +116,81 @@ public class RayTraceUtils {
                 return false;
             }
         };
+    }
+
+    public static Entity getTargetEntity(Player p) {
+        Vector start = p.getEyeLocation().toVector();
+        Vector end = start.clone().add(p.getEyeLocation().getDirection().multiply(p.getGameMode() == GameMode.CREATIVE ? 6.0F : 4.5F));
+        return getTargetEntity(p, getDistanceToBlock(p.getWorld(), start, end, false, false, true));
+    }
+
+    public static Entity getTargetEntity(LivingEntity p, float maxDistance, boolean ignoreBlocks) {
+        Vector start = p.getEyeLocation().toVector();
+        Vector end = start.clone().add(p.getEyeLocation().getDirection().multiply(maxDistance));
+        if (!ignoreBlocks) {
+            maxDistance = getDistanceToBlock(p.getWorld(), start, end, false, false, true);
+        }
+        return getTargetEntity(p, maxDistance);
+    }
+
+    public static float getDistanceToBlock(World world, Vector start, Vector end, boolean stopOnLiquid, boolean ignoreBlockWithoutBoundingBox, boolean returnLastUncollidableBlock) {
+        WorldServer worldServer = ((CraftWorld) world).getHandle();
+        MovingObjectPosition mop = worldServer.rayTrace((Vec3D) toVec3D(start), (Vec3D) toVec3D(end), stopOnLiquid ? FluidCollisionOption.ALWAYS : FluidCollisionOption.NEVER, ignoreBlockWithoutBoundingBox, returnLastUncollidableBlock);
+        if (mop != null && mop.type == MovingObjectPosition.EnumMovingObjectType.BLOCK) {
+            return (float) mop.pos.f((Vec3D) toVec3D(start));
+        }
+        return (float) start.distance(end);
+    }
+
+    public static Entity getTargetEntity(LivingEntity entity, float maxDistance) {
+        EntityLiving nmsEntityLiving = ((CraftLivingEntity) entity).getHandle();
+        net.minecraft.server.v1_13_R2.World world = nmsEntityLiving.world;
+        Vec3D eyePos = nmsEntityLiving.i(1.0f);//getPositionEyes
+        Vec3D start = nmsEntityLiving.f(1.0f);//getLook
+        Vec3D end = eyePos.add(start.x * maxDistance, start.y * maxDistance, start.z * maxDistance);
+        //getEntityBoundingBox().expand().expand()
+        List<net.minecraft.server.v1_13_R2.Entity> entities = world.getEntities(nmsEntityLiving, nmsEntityLiving.getBoundingBox().b(start.x * maxDistance, start.y * maxDistance, start.z * maxDistance).grow(1.0D, 1.0D, 1.0D), Predicates.and(new Predicate<net.minecraft.server.v1_13_R2.Entity>() {
+            @Override
+            public boolean apply(@Nullable net.minecraft.server.v1_13_R2.Entity input) {
+                if (input instanceof EntityPlayer && ((EntityPlayer) input).isSpectator()) {
+                    return false;
+                }
+                return input != null && input.isInteractable();//canBeCollidedWith
+            }
+        }));
+        net.minecraft.server.v1_13_R2.Entity targetEntity = null;
+        double d2 = maxDistance;
+        Vec3D hitVec = null;
+        for (net.minecraft.server.v1_13_R2.Entity entity1 : entities) {
+            //getEntityBoundingBox().grow((double)entity1.getCollisionBorderSize());
+            AxisAlignedBB axisAlignedBB = entity1.getBoundingBox().g((double) entity1.aM());
+            MovingObjectPosition rayTraceResult = axisAlignedBB.b(eyePos, end);//calculateIntercept
+            if (axisAlignedBB.b(eyePos)) {// contains
+                if (d2 >= 0.0) {
+                    targetEntity = entity1;
+                    hitVec = rayTraceResult == null ? eyePos : rayTraceResult.pos;
+                    d2 = 0.0;
+                }
+            } else if (rayTraceResult != null) {
+                double d3 = eyePos.f(rayTraceResult.pos);//distanceTo
+                if (d3 < d2 || d2 == 0.0D) {
+                    if (entity1.getRootVehicle() == ((CraftEntity) entity).getHandle().getRootVehicle()) {//getLowestRidingEntity
+                        if (d2 == 0.0D) {
+                            targetEntity = entity1;
+                            hitVec = rayTraceResult.pos;
+                        }
+                    } else {
+                        targetEntity = entity1;
+                        hitVec = rayTraceResult.pos;
+                        d2 = d3;
+                    }
+                }
+            }
+        }
+        //EntityLivingBase
+        if (targetEntity instanceof EntityLiving || targetEntity instanceof EntityItemFrame) {
+            return targetEntity.getBukkitEntity();
+        }
+        return null;
     }
 }
