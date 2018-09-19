@@ -47,16 +47,17 @@ jobs:
   - stage: javadoc
     language: java
     jdk: oraclejdk10
-    script:
+    before_script:
     - export MAJOR_VERSION=`sed -n 's/^ext\.majorVersion = \(.*\)$/\1/p' build.gradle`
     - export MINOR_VERSION=`sed -n 's/^ext\.minorVersion = \(.*\)$/\1/p' build.gradle`
     - export MC_VERSION=`sed -n 's/^ext\.minecraftVersion = "\(.*\)"$/\1/p' build.gradle`
     - export VERSION_STRING=$MAJOR_VERSION.$MINOR_VERSION-mc$MC_VERSION
     - export FULL_VERSION_STRING=$MAJOR_VERSION.$MINOR_VERSION.$TRAVIS_BUILD_NUMBER-mc$MC_VERSION
-    - if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then exit 0; fi
-    - if [ "$TRAVIS_BRANCH" != "master" ]; then exit 0; fi
     - 'php update_spigot.php'
+    script:
     - |
+      if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then exit 0; fi
+      if [ "$TRAVIS_BRANCH" != "master" ]; then exit 0; fi
       if [ $PUBLISH_JAVADOC ]; then
         ./gradlew javadoc;
         pushd ..;

@@ -12,6 +12,10 @@ public class SQLiteProvider implements DatabaseProvider {
         if (!databaseType.isAssignableFrom(SQLiteDatabase.class)) {
             throw new IllegalArgumentException();
         }
-        return (T) new SQLiteDatabase(plugin, (String) configuration.get("file"));
+        String file = (String) configuration.get("file");
+        if (file == null) {
+            file = plugin.getName() + ".db";
+        }
+        return (T) new SQLiteDatabase(plugin, file);
     }
 }

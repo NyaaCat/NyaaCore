@@ -96,7 +96,7 @@ public final class HttpClient {
         channelFuture.addListener(future -> {
             if (future.isSuccess()) {
                 ChannelPipeline pipeline = channel.pipeline();
-                if ("https".equals(scheme)) {
+                if ("https".equalsIgnoreCase(scheme)) {
                     pipeline.addFirst(sslCtx.newHandler(channel.alloc()));
                 }
                 pipeline.addLast(new ResponseHandler(httpCallback));
