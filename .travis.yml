@@ -17,7 +17,7 @@ jobs:
     after_success:
     - if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then exit 0; fi
     - if [ "$TRAVIS_BRANCH" != "master" ]; then exit 0; fi
-    - if [ "$TRAVIS_EVENT_TYPE" == "cron" ] then exit 0; fi
+    - if [ "$TRAVIS_EVENT_TYPE" == "cron" ]; then exit 0; fi
     - ./gradlew shadowJar
     - cp build/libs/NyaaCore-all.jar ./NyaaCore-v$VERSION_STRING.jar
     - export GIT_TAG=v$VERSION_STRING
@@ -48,9 +48,9 @@ jobs:
   - stage: javadoc
     language: java
     jdk: oraclejdk10
-    install:
-    - if [ "$TRAVIS_EVENT_TYPE" == "cron" ] then exit 0; fi
+    install: true
     before_script:
+    - if [ "$TRAVIS_EVENT_TYPE" == "cron" ]; then exit 0; fi
     - export MAJOR_VERSION=`sed -n 's/^ext\.majorVersion = \(.*\)$/\1/p' build.gradle`
     - export MINOR_VERSION=`sed -n 's/^ext\.minorVersion = \(.*\)$/\1/p' build.gradle`
     - export MC_VERSION=`sed -n 's/^ext\.minecraftVersion = "\(.*\)"$/\1/p' build.gradle`
