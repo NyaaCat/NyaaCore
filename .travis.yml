@@ -16,7 +16,7 @@ jobs:
     script: ./gradlew build
     after_success:
     - if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then exit 0; fi
-    - if [ "$TRAVIS_BRANCH" != "master" ]; then exit 0; fi
+    - if [ "$TRAVIS_BRANCH" != "$MC_VERSION" ]; then exit 0; fi
     - if [ "$TRAVIS_EVENT_TYPE" == "cron" ]; then exit 0; fi
     - ./gradlew shadowJar
     - cp build/libs/NyaaCore-all.jar ./NyaaCore-v$VERSION_STRING.jar
@@ -60,7 +60,7 @@ jobs:
     script:
     - |
       if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then exit 0; fi
-      if [ "$TRAVIS_BRANCH" != "master" ]; then exit 0; fi
+      if [ "$TRAVIS_BRANCH" != "$MC_VERSION" ]; then exit 0; fi
       if [ $PUBLISH_JAVADOC ]; then
         ./gradlew javadoc;
         pushd ..;
