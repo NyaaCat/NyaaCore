@@ -1,5 +1,9 @@
 package cat.nyaa.nyaacore.utils;
 
+import net.minecraft.server.v1_13_R2.Entity;
+import net.minecraft.server.v1_13_R2.EntityThrownTrident;
+import org.bukkit.craftbukkit.v1_13_R2.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_13_R2.inventory.CraftItemStack;
 import org.bukkit.entity.Trident;
 import org.bukkit.inventory.ItemStack;
 
@@ -8,38 +12,36 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 public final class TridentUtils {
+
+    private static Class<?> entityThrownTrident = ReflectionUtils.getNMSClass("EntityThrownTrident");
+
+    private static Field entityThrownTridentFieldAw;
+
+    static {
+        try {
+            entityThrownTridentFieldAw = entityThrownTrident.getDeclaredField("aw");
+            entityThrownTridentFieldAw.setAccessible(true);
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static ItemStack getTridentItemStack(Trident entity) {
         try {
-            Class<?> craftEntity = ReflectionUtils.getOBCClass("entity.CraftEntity");
-            Class<?> entityThrownTrident = ReflectionUtils.getNMSClass("EntityThrownTrident");
-            Field craftEntityFieldEntity = craftEntity.getDeclaredField("entity");
-            craftEntityFieldEntity.setAccessible(true);
-            Field entityThrownTridentFieldH = entityThrownTrident.getDeclaredField("aw");
-            entityThrownTridentFieldH.setAccessible(true);
-            Object thrownTrident = craftEntityFieldEntity.get(entity);
-            Object nmsItemStack = entityThrownTridentFieldH.get(thrownTrident);
-            Class<?> craftItemStack = ReflectionUtils.getOBCClass("inventory.CraftItemStack");
-            Method asBukkitCopy = craftItemStack.getMethod("asBukkitCopy", nmsItemStack.getClass());
-            return (ItemStack) asBukkitCopy.invoke(null, nmsItemStack);
-        } catch (IllegalAccessException | NoSuchFieldException | NoSuchMethodException | InvocationTargetException e) {
+            EntityThrownTrident thrownTrident = (EntityThrownTrident) ((CraftEntity) entity).getHandle();
+            net.minecraft.server.v1_13_R2.ItemStack nmsItemStack = (net.minecraft.server.v1_13_R2.ItemStack) entityThrownTridentFieldAw.get(thrownTrident);
+            return CraftItemStack.asBukkitCopy(nmsItemStack);
+        } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         }
     }
 
     public static void setTridentItemStack(Trident entity, ItemStack itemStack) {
         try {
-            Class<?> craftEntity = ReflectionUtils.getOBCClass("entity.CraftEntity");
-            Class<?> entityThrownTrident = ReflectionUtils.getNMSClass("EntityThrownTrident");
-            Field craftEntityFieldEntity = craftEntity.getDeclaredField("entity");
-            craftEntityFieldEntity.setAccessible(true);
-            Field entityThrownTridentFieldH = entityThrownTrident.getDeclaredField("aw");
-            entityThrownTridentFieldH.setAccessible(true);
-            Object thrownTrident = craftEntityFieldEntity.get(entity);
-            Class<?> craftItemStack = ReflectionUtils.getOBCClass("inventory.CraftItemStack");
-            Method asNMSCopy = craftItemStack.getMethod("asNMSCopy", ItemStack.class);
-            Object nmsFakeItem = asNMSCopy.invoke(null, itemStack);
-            entityThrownTridentFieldH.set(thrownTrident, nmsFakeItem);
-        } catch (IllegalAccessException | NoSuchFieldException | NoSuchMethodException | InvocationTargetException e) {
+            EntityThrownTrident thrownTrident = (EntityThrownTrident) ((CraftEntity) entity).getHandle();
+            net.minecraft.server.v1_13_R2.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
+            entityThrownTridentFieldAw.set(thrownTrident, nmsItemStack);
+        } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         }
     }

@@ -4,6 +4,12 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.io.BaseEncoding;
 import com.google.common.io.ByteStreams;
+import com.mojang.datafixers.DSL;
+import com.mojang.datafixers.DataFixer;
+import com.mojang.datafixers.Dynamic;
+import net.minecraft.server.v1_13_R2.*;
+import org.bukkit.craftbukkit.v1_13_R2.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_13_R2.util.CraftMagicNumbers;
 import org.bukkit.inventory.ItemStack;
 
 import java.io.*;
@@ -19,20 +25,14 @@ import java.util.zip.InflaterInputStream;
 public final class ItemStackUtils {
     private static final String NYAACORE_ITEMSTACK_DATAVERSION_KEY = "nyaacore_itemstack_dataversion";
     private static final int NYAACORE_ITEMSTACK_DEFAULT_DATAVERSION = 1139;
-    private static Object unlimitedNBTReadLimiter = null;
+    private static NBTReadLimiter unlimitedNBTReadLimiter = null;
     private static int currentDataVersion;
     private static Cache<String, List<ItemStack>> itemDeserializerCache = CacheBuilder.newBuilder()
-                                                                                .weigher((String k, List<ItemStack> v) -> k.getBytes().length)
-                                                                                .maximumWeight(100L * 1024 * 1024).build(); // Hard Coded 100M
+                                                                                      .weigher((String k, List<ItemStack> v) -> k.getBytes().length)
+                                                                                      .maximumWeight(100L * 1024 * 1024).build(); // Hard Coded 100M
 
     static {
-        try {
-            currentDataVersion = (int) ReflectionUtils.getOBCClass("util.CraftMagicNumbers").getField("DATA_VERSION").get(null);
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (NoSuchFieldException e) {
-            e.printStackTrace();
-        }
+        currentDataVersion = CraftMagicNumbers.DATA_VERSION;
     }
 
     /**
@@ -42,24 +42,15 @@ public final class ItemStackUtils {
      * @param itemStack the item to be serialized
      * @return binary NBT representation of the item stack
      */
-    public static byte[] itemToBinary(ItemStack itemStack) throws ReflectiveOperationException, IOException {
-        Class<?> classCraftItemStack = ReflectionUtils.getOBCClass("inventory.CraftItemStack");
-        Class<?> classNativeItemStack = ReflectionUtils.getNMSClass("ItemStack");
-        Class<?> classNBTTagCompound = ReflectionUtils.getNMSClass("NBTTagCompound");
-
-        Method asNMSCopy_craftItemStack = ReflectionUtils.getMethod(classCraftItemStack, "asNMSCopy", ItemStack.class);
-        Method save_nativeItemStack = ReflectionUtils.getMethod(classNativeItemStack, "save", classNBTTagCompound);
-        Method write_nbtTagCompound = ReflectionUtils.getMethod(classNBTTagCompound, "write", DataOutput.class);
-        Method setInt_nbtTagCompound = ReflectionUtils.getMethod(classNBTTagCompound, "setInt", String.class, int.class);
-
-        Object nativeItemStack = asNMSCopy_craftItemStack.invoke(null, itemStack);
-        Object nbtTagCompound = classNBTTagCompound.newInstance();
-        save_nativeItemStack.invoke(nativeItemStack, nbtTagCompound);
-        setInt_nbtTagCompound.invoke(nbtTagCompound, NYAACORE_ITEMSTACK_DATAVERSION_KEY, currentDataVersion);
+    public static byte[] itemToBinary(ItemStack itemStack) throws IOException {
+        net.minecraft.server.v1_13_R2.ItemStack nativeItemStack = CraftItemStack.asNMSCopy(itemStack);
+        NBTTagCompound nbtTagCompound = new NBTTagCompound();
+        nativeItemStack.save(nbtTagCompound);
+        nbtTagCompound.setInt(NYAACORE_ITEMSTACK_DATAVERSION_KEY, currentDataVersion);
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream dos = new DataOutputStream(baos);
-        write_nbtTagCompound.invoke(nbtTagCompound, dos);
+        nbtTagCompound.write(dos);
         byte[] outputByteArray = baos.toByteArray();
         dos.close();
         baos.close();
@@ -78,56 +69,35 @@ public final class ItemStackUtils {
     }
 
     public static ItemStack itemFromBinary(byte[] nbt, int offset, int len) throws ReflectiveOperationException, IOException {
-        Class<?> classNBTReadLimiter = ReflectionUtils.getNMSClass("NBTReadLimiter");
         if (unlimitedNBTReadLimiter == null) {
-            for (Field f : classNBTReadLimiter.getDeclaredFields()) {
-                if (f.getType().equals(classNBTReadLimiter)) {
-                    unlimitedNBTReadLimiter = f.get(null);
-                    break;
-                }
-            }
+            unlimitedNBTReadLimiter = NBTReadLimiter.a;
         }
 
-        Class<?> classCraftItemStack = ReflectionUtils.getOBCClass("inventory.CraftItemStack");
-        Class<?> classNativeItemStack = ReflectionUtils.getNMSClass("ItemStack");
-        Class<?> classNBTTagCompound = ReflectionUtils.getNMSClass("NBTTagCompound");
-
-        Method load_nbtTagCompound = ReflectionUtils.getMethod(classNBTTagCompound, "load", DataInput.class, int.class, classNBTReadLimiter);
-        Method getInt_nbtTagCompound = ReflectionUtils.getMethod(classNBTTagCompound, "getInt", String.class);
-        Method remove_nbtTagCompound = ReflectionUtils.getMethod(classNBTTagCompound, "remove", String.class);
         //Constructor<?> constructNativeItemStackFromNBTTagCompound = classNativeItemStack.getConstructor(classNBTTagCompound);
-        Method asBukkitCopy_CraftItemStack = ReflectionUtils.getMethod(classCraftItemStack, "asBukkitCopy", classNativeItemStack);
-        Method createFromNBT_NativeItemStack = ReflectionUtils.getMethod(classNativeItemStack, "a", classNBTTagCompound);
         ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(nbt, offset, len);
         DataInputStream dataInputStream = new DataInputStream(byteArrayInputStream);
-        Object reconstructedNBTTagCompound = classNBTTagCompound.newInstance();
-        load_nbtTagCompound.invoke(reconstructedNBTTagCompound, dataInputStream, 0, unlimitedNBTReadLimiter);
+        NBTTagCompound reconstructedNBTTagCompound = new NBTTagCompound();
+        reconstructedNBTTagCompound.load(dataInputStream, 0, unlimitedNBTReadLimiter);
         dataInputStream.close();
         byteArrayInputStream.close();
-        int dataVersion = (int) getInt_nbtTagCompound.invoke(reconstructedNBTTagCompound, NYAACORE_ITEMSTACK_DATAVERSION_KEY);
+        int dataVersion = reconstructedNBTTagCompound.getInt(NYAACORE_ITEMSTACK_DATAVERSION_KEY);
         if (dataVersion > 0) {
-            remove_nbtTagCompound.invoke(reconstructedNBTTagCompound, NYAACORE_ITEMSTACK_DATAVERSION_KEY);
+            reconstructedNBTTagCompound.remove(NYAACORE_ITEMSTACK_DATAVERSION_KEY);
         }
         if (dataVersion < currentDataVersion) {
             // 1.12 to 1.13
             if (dataVersion <= 0) {
                 dataVersion = NYAACORE_ITEMSTACK_DEFAULT_DATAVERSION;
             }
-            Object dataConverterTypes_ITEM_STACK = ReflectionUtils.getNMSClass("DataConverterTypes").getField("ITEM_STACK").get(null);
-            Object DynamicOpsNBT_instance = ReflectionUtils.getNMSClass("DynamicOpsNBT").getField("a").get(null);
-            Class<?> classDataConverterRegistry = ReflectionUtils.getNMSClass("DataConverterRegistry");
-            Class<?> classDataFixer = Class.forName("com.mojang.datafixers.DataFixer");
-            Object dataFixer_instance = classDataConverterRegistry.getMethod("a").invoke(null);
-            Class<?> classTypeReference = Class.forName("com.mojang.datafixers.DSL$TypeReference");
-            Class<?> classDynamic = Class.forName("com.mojang.datafixers.Dynamic");
-            Class<?> classDynamicOps = Class.forName("com.mojang.datafixers.types.DynamicOps");
-            Method update_DataFixer = classDataFixer.getMethod("update", classTypeReference, classDynamic, int.class, int.class);
-            Object dynamicInstance = classDynamic.getConstructor(classDynamicOps, Object.class).newInstance(DynamicOpsNBT_instance, reconstructedNBTTagCompound);
-            Object out = update_DataFixer.invoke(dataFixer_instance, dataConverterTypes_ITEM_STACK, dynamicInstance, dataVersion, currentDataVersion);
-            reconstructedNBTTagCompound = classDynamic.getMethod("getValue").invoke(out);
+            DSL.TypeReference dataConverterTypes_ITEM_STACK = DataConverterTypes.ITEM_STACK;
+            DynamicOpsNBT DynamicOpsNBT_instance = DynamicOpsNBT.a;
+            DataFixer dataFixer_instance = DataConverterRegistry.a();
+            Dynamic<NBTBase> dynamicInstance = new Dynamic<>(DynamicOpsNBT_instance, reconstructedNBTTagCompound);
+            Dynamic<NBTBase> out = dataFixer_instance.update(dataConverterTypes_ITEM_STACK, dynamicInstance, dataVersion, currentDataVersion);
+            reconstructedNBTTagCompound = (NBTTagCompound) out.getValue();
         }
-        Object reconstructedNativeItemStack = createFromNBT_NativeItemStack.invoke(null, reconstructedNBTTagCompound);
-        return (ItemStack) asBukkitCopy_CraftItemStack.invoke(null, reconstructedNativeItemStack);
+        net.minecraft.server.v1_13_R2.ItemStack reconstructedNativeItemStack = net.minecraft.server.v1_13_R2.ItemStack.a(reconstructedNBTTagCompound);
+        return CraftItemStack.asBukkitCopy(reconstructedNativeItemStack);
     }
 
     private static byte[] compress(byte[] data) {
@@ -198,7 +168,7 @@ public final class ItemStackUtils {
      */
     public static List<ItemStack> itemsFromBase64(String base64) {
         List<ItemStack> stack = itemDeserializerCache.getIfPresent(base64);
-        if(stack != null) return stack.stream().map(ItemStack::clone).collect(Collectors.toList());
+        if (stack != null) return stack.stream().map(ItemStack::clone).collect(Collectors.toList());
         if (base64.length() <= 0) return new ArrayList<>();
 
         byte[] uncompressedBinary = decompress(BaseEncoding.base64().decode(base64));
@@ -239,23 +209,14 @@ public final class ItemStackUtils {
      * NOTE: this method has no corresponding deserializer.
      */
     public static String itemToJson(ItemStack itemStack) throws RuntimeException {
-        // ItemStack methods to get a net.minecraft.server.ItemStack object for serialization
-        Class<?> craftItemStackClazz = ReflectionUtils.getOBCClass("inventory.CraftItemStack");
-        Method asNMSCopyMethod = ReflectionUtils.getMethod(craftItemStackClazz, "asNMSCopy", ItemStack.class);
-
-        // NMS Method to serialize a net.minecraft.server.ItemStack to a valid Json string
-        Class<?> nmsItemStackClazz = ReflectionUtils.getNMSClass("ItemStack");
-        Class<?> nbtTagCompoundClazz = ReflectionUtils.getNMSClass("NBTTagCompound");
-        Method saveNmsItemStackMethod = ReflectionUtils.getMethod(nmsItemStackClazz, "save", nbtTagCompoundClazz);
-
-        Object nmsNbtTagCompoundObj; // This will just be an empty NBTTagCompound instance to invoke the saveNms method
-        Object nmsItemStackObj; // This is the net.minecraft.server.ItemStack object received from the asNMSCopy method
-        Object itemAsJsonObject; // This is the net.minecraft.server.ItemStack after being put through saveNmsItem method
+        NBTTagCompound nmsNbtTagCompoundObj; // This will just be an empty NBTTagCompound instance to invoke the saveNms method
+        net.minecraft.server.v1_13_R2.ItemStack nmsItemStackObj; // This is the net.minecraft.server.ItemStack object received from the asNMSCopy method
+        NBTTagCompound itemAsJsonObject; // This is the net.minecraft.server.ItemStack after being put through saveNmsItem method
 
         try {
-            nmsNbtTagCompoundObj = nbtTagCompoundClazz.newInstance();
-            nmsItemStackObj = asNMSCopyMethod.invoke(null, itemStack);
-            itemAsJsonObject = saveNmsItemStackMethod.invoke(nmsItemStackObj, nmsNbtTagCompoundObj);
+            nmsNbtTagCompoundObj = new NBTTagCompound();
+            nmsItemStackObj = CraftItemStack.asNMSCopy(itemStack);
+            itemAsJsonObject = nmsItemStackObj.save(nmsNbtTagCompoundObj);
         } catch (Throwable t) {
             throw new RuntimeException("failed to serialize itemstack to nms item", t);
         }
