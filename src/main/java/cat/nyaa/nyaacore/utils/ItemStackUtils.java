@@ -8,13 +8,11 @@ import com.mojang.datafixers.DSL;
 import com.mojang.datafixers.DataFixer;
 import com.mojang.datafixers.Dynamic;
 import net.minecraft.server.v1_13_R2.*;
+import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v1_13_R2.inventory.CraftItemStack;
-import org.bukkit.craftbukkit.v1_13_R2.util.CraftMagicNumbers;
 import org.bukkit.inventory.ItemStack;
 
 import java.io.*;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -32,7 +30,7 @@ public final class ItemStackUtils {
                                                                                       .maximumWeight(100L * 1024 * 1024).build(); // Hard Coded 100M
 
     static {
-        currentDataVersion = CraftMagicNumbers.DATA_VERSION;
+        currentDataVersion = Bukkit.getUnsafe().getDataVersion();
     }
 
     /**
