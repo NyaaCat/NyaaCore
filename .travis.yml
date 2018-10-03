@@ -44,6 +44,7 @@ jobs:
       file: ./NyaaCore-v$VERSION_STRING.jar
       on:
         tags: false
+        all_branches: true
 
   - stage: javadoc
     language: java
