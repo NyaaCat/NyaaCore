@@ -79,7 +79,7 @@ public class Message {
         return append(template, varMap);
     }
 
-    private Message append(String template, Map<String, BaseComponent> varMap) {
+    public Message append(String template, Map<String, BaseComponent> varMap) {
         String remTemplate = template;
         while (remTemplate.length() > 0) {
             int idx = remTemplate.length();
@@ -126,7 +126,10 @@ public class Message {
         } else {
             try {
                 NyaaComponent.get(IMessageQueue.class).send(p, this);
-            } catch (ComponentNotAvailableException ignored) {
+            } catch (ComponentNotAvailableException e) {
+                Bukkit.getConsoleSender().sendMessage("failed to send a message to offline player: " + p.getName() + "(" + p.getUniqueId().toString() + ")");
+                Bukkit.getConsoleSender().sendMessage(inner.toLegacyText());
+                Bukkit.getConsoleSender().sendMessage("no IMessageQueue component found (did you installed NyaaUtils?)");
             }
 
             return this;
