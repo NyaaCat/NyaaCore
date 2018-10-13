@@ -1,5 +1,8 @@
 package cat.nyaa.nyaacore;
 
+import cat.nyaa.nyaacore.component.ComponentNotAvailableException;
+import cat.nyaa.nyaacore.component.IMessageQueue;
+import cat.nyaa.nyaacore.component.NyaaComponent;
 import cat.nyaa.nyaacore.utils.ItemStackUtils;
 import cat.nyaa.nyaacore.utils.LocaleUtils;
 import net.md_5.bungee.api.ChatMessageType;
@@ -109,12 +112,29 @@ public class Message {
     }
 
     public Message send(CommandSender p) {
-        if(p instanceof Player){
-            return send((Player) p, MessageType.CHAT);
+        if (p instanceof Player) {
+            return send((Player) p);
         } else {
             p.sendMessage(this.inner.toLegacyText());
             return this;
         }
+    }
+
+    public Message send(OfflinePlayer p) {
+        if (p.getPlayer() != null) {
+            return send(p.getPlayer());
+        } else {
+            try {
+                NyaaComponent.get(IMessageQueue.class).send(p, this);
+            } catch (ComponentNotAvailableException ignored) {
+            }
+
+            return this;
+        }
+    }
+
+    public Message send(Player p) {
+        return send(p.getPlayer(), MessageType.CHAT);
     }
 
     public Message send(Player p, MessageType type) {
@@ -175,11 +195,11 @@ public class Message {
         return this;
     }
 
-    private String getPlayerJson(OfflinePlayer player) {
+    public static String getPlayerJson(OfflinePlayer player) {
         return "{name:\"" + player.getName() + "\", type:\"Player\", id:\"" + player.getUniqueId() + "\"}";
     }
 
-    private String getItemJsonStripped(ItemStack item) {
+    public static String getItemJsonStripped(ItemStack item) {
         ItemStack cloned = item.clone();
         if (cloned.hasItemMeta() && cloned.getItemMeta() instanceof BookMeta) {
             return ItemStackUtils.itemToJson(removeBookContent(cloned));
@@ -228,7 +248,7 @@ public class Message {
      * @param item the book
      * @return book without contents.
      */
-    public ItemStack removeBookContent(ItemStack item) {
+    public static ItemStack removeBookContent(ItemStack item) {
         if (item.hasItemMeta() && item.getItemMeta() instanceof BookMeta) {
             ItemStack itemStack = item.clone();
             BookMeta meta = (BookMeta) itemStack.getItemMeta();
