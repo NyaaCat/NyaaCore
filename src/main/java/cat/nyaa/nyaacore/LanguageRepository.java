@@ -201,7 +201,7 @@ public abstract class LanguageRepository implements ILocalizer {
             getPlugin().getLogger().warning("Missing language key: " + key);
             StringBuilder keyBuilder = new StringBuilder("MISSING_LANG<" + key + ">");
             for (Object obj : para) {
-                keyBuilder.append("#<").append(obj.toString()).append(">");
+                keyBuilder.append("#<").append(obj).append(">");
             }
             return keyBuilder.toString();
         } else {
@@ -211,7 +211,7 @@ public abstract class LanguageRepository implements ILocalizer {
                 e.printStackTrace();
                 getPlugin().getLogger().warning("Corrupted language key: " + key);
                 getPlugin().getLogger().warning("val: " + val);
-                StringBuilder keyBuilder = new StringBuilder("");
+                StringBuilder keyBuilder = new StringBuilder();
                 for (Object obj : para) {
                     keyBuilder.append("#<").append(obj.toString()).append(">");
                 }

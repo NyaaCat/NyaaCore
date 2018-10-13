@@ -8,6 +8,7 @@ import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.block.BlockState;
 import org.bukkit.command.CommandSender;
@@ -72,6 +73,10 @@ public class Message {
             }
         }
 
+        return append(template, varMap);
+    }
+
+    private Message append(String template, Map<String, BaseComponent> varMap) {
         String remTemplate = template;
         while (remTemplate.length() > 0) {
             int idx = remTemplate.length();
@@ -170,6 +175,10 @@ public class Message {
         return this;
     }
 
+    private String getPlayerJson(OfflinePlayer player) {
+        return "{name:\"" + player.getName() + "\", type:\"Player\", id:\"" + player.getUniqueId() + "\"}";
+    }
+
     private String getItemJsonStripped(ItemStack item) {
         ItemStack cloned = item.clone();
         if (cloned.hasItemMeta() && cloned.getItemMeta() instanceof BookMeta) {
@@ -223,7 +232,7 @@ public class Message {
         if (item.hasItemMeta() && item.getItemMeta() instanceof BookMeta) {
             ItemStack itemStack = item.clone();
             BookMeta meta = (BookMeta) itemStack.getItemMeta();
-            meta.setPages(new ArrayList<String>());
+            meta.setPages(new ArrayList<>());
             itemStack.setItemMeta(meta);
             return itemStack;
         }
@@ -238,5 +247,5 @@ public class Message {
         player.sendTitle(title.toLegacyText(), subtitle.toLegacyText(), fadeInTicks, stayTicks, fadeOutTicks);
     }
 
-    public static enum MessageType {CHAT, ACTION_BAR, TITLE, SUBTITLE}
+    public enum MessageType {CHAT, ACTION_BAR, TITLE, SUBTITLE}
 }

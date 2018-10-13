@@ -115,6 +115,7 @@ javadoc {
         links 'https://hub.spigotmc.org/javadocs/spigot/'
         links 'https://google.github.io/guava/releases/21.0/api/docs/'
         links 'https://ci.md-5.net/job/BungeeCord/ws/chat/target/apidocs/'
+        links 'https://netty.io/4.1/api/index.html'
 
         locale 'en_US'
         encoding 'UTF-8'
