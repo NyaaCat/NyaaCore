@@ -36,18 +36,13 @@ repositories {
     }
 
     maven {
-        name 'nu-langchecker'
-        url 'https://raw.githubusercontent.com/Librazy/NyaaUtilsLangChecker/maven-repo'
-    }
-
-    maven {
         name 'ess-repo'
         url 'http://repo.ess3.net/content/groups/essentials'
     }
 
     maven {
-        name 'langutils-repo'
-        url 'https://raw.github.com/MascusJeoraly/LanguageUtils/mvn-repo/'
+        name 'NyaaCentral'
+        url 'https://raw.githubusercontent.com/NyaaCat/NyaaCentral/maven-repo'
     }
 }
 
@@ -73,7 +68,7 @@ dependencies {
     if (gradle.hasProperty("useLocalDependencies") && gradle.useLocalDependencies) {
         compile project(":LanguageUtils")
     } else {
-        compileOnly('com.meowj:LangUtils:1.9') {
+        compileOnly('cat.nyaa:LangUtils:2.1-SNAPSHOT') {
             transitive = false
         }
     }
@@ -115,6 +110,8 @@ publishing {
 
 javadoc {
     (options as StandardJavadocDocletOptions).with {
+        links 'https://nyaacat.github.io/NyaaCentral/LangUtils/2.1-mc1.13.1/javadoc/'
+
         links 'https://docs.oracle.com/javase/8/docs/api/'
         links 'https://hub.spigotmc.org/javadocs/spigot/'
         links 'https://google.github.io/guava/releases/21.0/api/docs/'
@@ -132,7 +129,7 @@ javadoc {
         }
 
         windowTitle = "NyaaCore Javadoc"
-        String fullVersion = System.getenv("FULL_VERSION_STRING");
+        String fullVersion = System.getenv("FULL_VERSION_STRING")
         if (fullVersion != null){
             docTitle = "<b>NyaaCore</b> " + System.getenv("FULL_VERSION_STRING")
         } else {

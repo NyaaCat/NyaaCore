@@ -9,6 +9,7 @@ import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
+import net.md_5.bungee.chat.ComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -199,7 +200,7 @@ public class Message {
     }
 
     public static String getPlayerJson(OfflinePlayer player) {
-        return "{name:\"" + player.getName() + "\", type:\"Player\", id:\"" + player.getUniqueId() + "\"}";
+        return "{name:\"{\\\"text\\\":\\\"" + player.getName()  + "\\\"}\",id:\"" + player.getUniqueId() +"\",type:\"minecraft:player\"}";
     }
 
     public static String getItemJsonStripped(ItemStack item) {
@@ -219,7 +220,7 @@ public class Message {
                             if (itemStack.hasItemMeta()) {
                                 if (itemStack.getItemMeta().hasLore()) {
                                     ItemMeta meta = itemStack.getItemMeta();
-                                    meta.setLore(new ArrayList<String>());
+                                    meta.setLore(new ArrayList<>());
                                     itemStack.setItemMeta(meta);
                                 }
                                 if (itemStack.getItemMeta() instanceof BookMeta) {
@@ -268,6 +269,11 @@ public class Message {
 
     public static void sendTitle(Player player, BaseComponent title, BaseComponent subtitle, int fadeInTicks, int stayTicks, int fadeOutTicks) {
         player.sendTitle(title.toLegacyText(), subtitle.toLegacyText(), fadeInTicks, stayTicks, fadeOutTicks);
+    }
+
+    @Override
+    public String toString() {
+        return ComponentSerializer.toString(inner);
     }
 
     public enum MessageType {CHAT, ACTION_BAR, TITLE, SUBTITLE}
