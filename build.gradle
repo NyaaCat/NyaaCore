@@ -70,8 +70,12 @@ dependencies {
     compileOnly('net.ess3:Essentials:2.13-SNAPSHOT') {
         transitive = false
     }
-    compileOnly('com.meowj:LangUtils:1.9') {
-        transitive = false
+    if (gradle.hasProperty("useLocalDependencies") && gradle.useLocalDependencies) {
+        compile project(":LanguageUtils")
+    } else {
+        compileOnly('com.meowj:LangUtils:1.9') {
+            transitive = false
+        }
     }
     testImplementation 'org.mockito:mockito-core:2.18.3'
     testImplementation 'org.xerial:sqlite-jdbc:3.21.0.1'
