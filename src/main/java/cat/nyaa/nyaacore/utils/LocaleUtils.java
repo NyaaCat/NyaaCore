@@ -2,7 +2,6 @@ package cat.nyaa.nyaacore.utils;
 
 import com.meowj.langutils.lang.LanguageHelper;
 import com.meowj.langutils.lang.convert.EnumItem;
-import com.meowj.langutils.lang.convert.ItemEntry;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.chat.TranslatableComponent;
@@ -17,7 +16,7 @@ import org.bukkit.inventory.meta.SkullMeta;
 public final class LocaleUtils {
     public static String getUnlocalizedName(Material material) {
         if (material == null) throw new IllegalArgumentException();
-        EnumItem enumItem = EnumItem.get(new ItemEntry(material));
+        EnumItem enumItem = EnumItem.get(material);
         return enumItem != null ? enumItem.getUnlocalizedName() : material.toString();
     }
 
