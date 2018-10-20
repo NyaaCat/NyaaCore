@@ -1,6 +1,5 @@
 package cat.nyaa.nyaacore;
 
-import cat.nyaa.nyaacore.component.ComponentNotAvailableException;
 import cat.nyaa.nyaacore.component.IMessageQueue;
 import cat.nyaa.nyaacore.component.NyaaComponent;
 import cat.nyaa.nyaacore.utils.ItemStackUtils;
@@ -122,17 +121,10 @@ public class Message {
     }
 
     public Message send(OfflinePlayer p) {
-        if (p.getPlayer() != null) {
+        if (p.isOnline()) {
             return send(p.getPlayer());
         } else {
-            try {
-                NyaaComponent.get(IMessageQueue.class).send(p, this);
-            } catch (ComponentNotAvailableException e) {
-                Bukkit.getConsoleSender().sendMessage("failed to send a message to offline player: " + p.getName() + "(" + p.getUniqueId().toString() + ")");
-                Bukkit.getConsoleSender().sendMessage(inner.toLegacyText());
-                Bukkit.getConsoleSender().sendMessage("no IMessageQueue component found (did you installed NyaaUtils?)");
-            }
-
+            NyaaComponent.get(IMessageQueue.class).send(p, this);
             return this;
         }
     }
@@ -200,7 +192,7 @@ public class Message {
     }
 
     public static String getPlayerJson(OfflinePlayer player) {
-        return "{name:\"{\\\"text\\\":\\\"" + player.getName()  + "\\\"}\",id:\"" + player.getUniqueId() +"\",type:\"minecraft:player\"}";
+        return "{name:\"{\\\"text\\\":\\\"" + player.getName() + "\\\"}\",id:\"" + player.getUniqueId() + "\",type:\"minecraft:player\"}";
     }
 
     public static String getItemJsonStripped(ItemStack item) {
