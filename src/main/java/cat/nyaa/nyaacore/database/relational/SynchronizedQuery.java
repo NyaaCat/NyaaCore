@@ -272,11 +272,6 @@ public abstract class SynchronizedQuery<T> implements Query<T> {
     public abstract static class NonTransactionalQuery<T> extends SynchronizedQuery<T> {
         public NonTransactionalQuery(Class<T> tableClass, Connection conn) {
             super(tableClass, conn);
-            try {
-                conn.setAutoCommit(true);
-            } catch (SQLException ex) {
-                throw new RuntimeException(ex);
-            }
         }
 
         @Override
