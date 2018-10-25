@@ -20,9 +20,7 @@
 package cat.nyaa.nyaacore.utils;
 
 import org.bukkit.Bukkit;
-import org.bukkit.inventory.ItemStack;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
@@ -145,37 +143,5 @@ public final class ReflectionUtils {
             loadedMethods.put(clazz, methods);
             return null;
         }
-    }
-
-    /**
-     * @deprecated use Material.isItem();
-     */
-    @Deprecated
-    public static boolean isValidItem(ItemStack item) {
-        Class<?> craftItemStackClazz = ReflectionUtils.getOBCClass("inventory.CraftItemStack");
-        Method asNMSCopyMethod = ReflectionUtils.getMethod(craftItemStackClazz, "asNMSCopy", ItemStack.class);
-        Object nmsItemStackObj = null;
-        try {
-            nmsItemStackObj = asNMSCopyMethod.invoke(null, item);
-            if (nmsItemStackObj == null) {
-                return false;
-            } else {
-                Method isEmptyMethod = ReflectionUtils.getMethod(nmsItemStackObj.getClass(), "isEmpty");
-                return !((boolean) isEmptyMethod.invoke(nmsItemStackObj));
-            }
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
-
-    /**
-     * @deprecated
-     */
-    @Deprecated
-    public static String convertItemStackToJson(ItemStack itemStack) throws RuntimeException {
-        return ItemStackUtils.itemToJson(itemStack);
     }
 }
