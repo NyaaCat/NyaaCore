@@ -1,9 +1,15 @@
 package cat.nyaa.nyaacore.utils;
 
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import net.minecraft.server.v1_13_R2.*;
+import net.minecraft.server.v1_13_R2.CriterionConditionNBT;
+import net.minecraft.server.v1_13_R2.EntityHuman;
+import net.minecraft.server.v1_13_R2.MojangsonParser;
+import net.minecraft.server.v1_13_R2.NBTTagCompound;
+import org.bukkit.World;
+import org.bukkit.craftbukkit.v1_13_R2.CraftWorld;
 import org.bukkit.craftbukkit.v1_13_R2.entity.CraftEntity;
 import org.bukkit.entity.Entity;
+
 import java.util.UUID;
 
 public final class NmsUtils {
@@ -33,5 +39,9 @@ public final class NmsUtils {
                 nmsEntity.a(uuid); // set uuid
             }
         }
+    }
+
+    public static boolean createExplosion(World world, Entity entity, double x, double y, double z, float power, boolean setFire, boolean breakBlocks) {
+        return !((CraftWorld) world).getHandle().createExplosion(((CraftEntity) entity).getHandle(), x, y, z, power, setFire, breakBlocks).wasCanceled;
     }
 }

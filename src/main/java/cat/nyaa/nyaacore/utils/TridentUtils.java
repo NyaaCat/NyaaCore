@@ -1,6 +1,5 @@
 package cat.nyaa.nyaacore.utils;
 
-import net.minecraft.server.v1_13_R2.Entity;
 import net.minecraft.server.v1_13_R2.EntityThrownTrident;
 import org.bukkit.craftbukkit.v1_13_R2.entity.CraftEntity;
 import org.bukkit.craftbukkit.v1_13_R2.inventory.CraftItemStack;
@@ -8,8 +7,6 @@ import org.bukkit.entity.Trident;
 import org.bukkit.inventory.ItemStack;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 
 public final class TridentUtils {
 
