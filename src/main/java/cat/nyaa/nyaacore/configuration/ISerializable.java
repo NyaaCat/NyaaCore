@@ -11,6 +11,7 @@ import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.logging.Level;
 
 /**
@@ -163,6 +164,8 @@ public interface ISerializable {
                         }
                     }
                     newValue = map;
+                } else if (UUID.class.isAssignableFrom(f.getType())) {
+                    newValue = UUID.fromString((String) newValue);
                 }
 
                 f.set(obj, newValue);
@@ -242,6 +245,8 @@ public interface ISerializable {
                     }
                 //} else if (List.class.isAssignableFrom(f.getType())) {
                 //    throw new RuntimeException("List serialization is not supported: " + f.toString());
+                } else if (UUID.class.isAssignableFrom(f.getType())) {
+                    config.set(cfgName, f.get(obj).toString());
                 } else {
                     Object origValue = f.get(obj);
                     if (origValue == null) continue;
