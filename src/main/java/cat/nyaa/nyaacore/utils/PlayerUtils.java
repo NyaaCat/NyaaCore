@@ -32,4 +32,9 @@ public class PlayerUtils {
         }
         player.playerConnection.sendPacket(new PacketPlayOutSetSlot(player.defaultContainer.windowId, index, CraftItemStack.asNMSCopy(itemStack)));
     }
+
+    public static int getPing(Player p) {
+        EntityPlayer player = ((CraftPlayer) p).getHandle();
+        return player.ping;
+    }
 }
