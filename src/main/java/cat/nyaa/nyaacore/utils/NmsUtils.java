@@ -44,4 +44,14 @@ public final class NmsUtils {
     public static boolean createExplosion(World world, Entity entity, double x, double y, double z, float power, boolean setFire, boolean breakBlocks) {
         return !((CraftWorld) world).getHandle().createExplosion(((CraftEntity) entity).getHandle(), x, y, z, power, setFire, breakBlocks).wasCanceled;
     }
+
+    public static boolean isFromMobSpawner(Entity entity) {
+        return entity instanceof CraftEntity && ((CraftEntity) entity).getHandle().fromMobSpawner;
+    }
+
+    public static void setFromMobSpawner(Entity entity, boolean fromMobSpawner) {
+        if (entity instanceof CraftEntity) {
+            ((CraftEntity) entity).getHandle().fromMobSpawner = fromMobSpawner;
+        }
+    }
 }
