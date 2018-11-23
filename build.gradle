@@ -56,6 +56,7 @@ dependencies {
     api 'javax.persistence:javax.persistence-api:2.2'
     api 'io.netty:netty-all:4.1.30.Final'
     shadow 'javax.persistence:javax.persistence-api:2.2'
+    shadow 'com.udojava:EvalEx:2.1'
     annotationProcessor 'org.librazy:NyaaUtilsLangChecker:2.0-SNAPSHOT'
     annotationProcessor "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT"
     compileOnly 'org.librazy:NyaaUtilsLangChecker:2.0-SNAPSHOT'
