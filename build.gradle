@@ -51,18 +51,18 @@ shadowJar {
 }
 
 dependencies {
-    // spigo dependencies
-    implementation "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT"
-    implementation 'io.netty:netty-all:4.1.30.Final' // netty is shadowed inside spigot jar
-    implementation files('lib/spigot-1.13.2.jar')    // for NMS
+    // spigot dependencies
+    compileOnly "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT"
+    compileOnly 'io.netty:netty-all:4.1.30.Final' // netty is shadowed inside spigot jar
+    compileOnly files('lib/spigot-1.13.2.jar')    // for NMS
 
     // other plugins
-    implementation ('net.milkbowl.vault:VaultAPI:1.7') { transitive = false }
-    implementation ('net.ess3:Essentials:2.13-SNAPSHOT') { transitive = false }
+    compileOnly ('net.milkbowl.vault:VaultAPI:1.7') { transitive = false }
+    compileOnly ('net.ess3:Essentials:2.13-SNAPSHOT') { transitive = false }
     if (gradle.hasProperty("useLocalDependencies") && gradle.useLocalDependencies) {
-        implementation project(":LanguageUtils")
+        compileOnly project(":LanguageUtils")
     } else {
-        implementation 'cat.nyaa:LangUtils:2.1-SNAPSHOT'
+        compileOnly 'cat.nyaa:LangUtils:2.1-SNAPSHOT'
     }
 
     // 3rd party packages to be shadowed
@@ -77,6 +77,8 @@ dependencies {
     annotationProcessor "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT"
 
     // Testing
+    testImplementation 'junit:junit:4.12'
+    testImplementation files('lib/spigot-1.13.2.jar')
     testImplementation 'org.mockito:mockito-core:2.18.3'
     testImplementation 'org.xerial:sqlite-jdbc:3.21.0.1'
 }
