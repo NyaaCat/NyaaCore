@@ -51,28 +51,32 @@ shadowJar {
 }
 
 dependencies {
-    compileOnly files('lib/spigot-1.13.2.jar')
-    api "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT"
+    // spigo dependencies
+    implementation "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT"
+    implementation 'io.netty:netty-all:4.1.30.Final' // netty is shadowed inside spigot jar
+    implementation files('lib/spigot-1.13.2.jar')    // for NMS
+
+    // other plugins
+    implementation ('net.milkbowl.vault:VaultAPI:1.7') { transitive = false }
+    implementation ('net.ess3:Essentials:2.13-SNAPSHOT') { transitive = false }
+    if (gradle.hasProperty("useLocalDependencies") && gradle.useLocalDependencies) {
+        implementation project(":LanguageUtils")
+    } else {
+        implementation 'cat.nyaa:LangUtils:2.1-SNAPSHOT'
+    }
+
+    // 3rd party packages to be shadowed
     api 'javax.persistence:javax.persistence-api:2.2'
-    api 'io.netty:netty-all:4.1.30.Final'
+    api 'com.udojava:EvalEx:2.1'
     shadow 'javax.persistence:javax.persistence-api:2.2'
     shadow 'com.udojava:EvalEx:2.1'
+
+    // Annotation precessor
+    compileOnly 'org.librazy:NyaaUtilsLangChecker:2.0-SNAPSHOT'
     annotationProcessor 'org.librazy:NyaaUtilsLangChecker:2.0-SNAPSHOT'
     annotationProcessor "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT"
-    compileOnly 'org.librazy:NyaaUtilsLangChecker:2.0-SNAPSHOT'
-    compileOnly('net.milkbowl.vault:VaultAPI:1.7') {
-        transitive = false
-    }
-    compileOnly('net.ess3:Essentials:2.13-SNAPSHOT') {
-        transitive = false
-    }
-    if (gradle.hasProperty("useLocalDependencies") && gradle.useLocalDependencies) {
-        compile project(":LanguageUtils")
-    } else {
-        compileOnly('cat.nyaa:LangUtils:2.1-SNAPSHOT') {
-            transitive = false
-        }
-    }
+
+    // Testing
     testImplementation 'org.mockito:mockito-core:2.18.3'
     testImplementation 'org.xerial:sqlite-jdbc:3.21.0.1'
 }
