@@ -47,6 +47,7 @@ public class Pair<K, V> implements Map.Entry<K, V> {
     }
 
     @Override
+    @SuppressWarnings("rawtypes")
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o instanceof Pair) {

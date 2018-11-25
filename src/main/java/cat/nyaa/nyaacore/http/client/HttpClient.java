@@ -33,6 +33,15 @@ public final class HttpClient {
 
     private static NioEventLoopGroup group;
 
+    private HttpClient() {
+        throw new IllegalStateException();
+    }
+
+    /**
+     * Init the client thread loop
+     *
+     * @param nThreads Number of threads
+     */
     public static void init(int nThreads) {
         try {
             sslCtx = SslContextBuilder.forClient().build();
@@ -59,6 +68,9 @@ public final class HttpClient {
         Runtime.getRuntime().addShutdownHook(new Thread(HttpClient::shutdown));
     }
 
+    /**
+     * Shutdown the client
+     */
     public static void shutdown() {
         if (group != null) {
             group.shutdownGracefully().syncUninterruptibly();
@@ -68,12 +80,19 @@ public final class HttpClient {
         bootstrap = null;
     }
 
+    /**
+     * Connect to url with specified http request
+     *
+     * @param url          Url to connect to
+     * @param httpRequest  Request
+     * @param httpCallback Callback. Remember to {@link ReferenceCountUtil#release} the response in callback
+     */
     public static void connect(String url, DefaultFullHttpRequest httpRequest, HttpCallback httpCallback) {
         URI uri = URI.create(url);
 
         String scheme = uri.getScheme() == null ? "http" : uri.getScheme();
         String host = uri.getHost();
-        if (host == null){
+        if (host == null) {
             httpCallback.response(null, null, new URISyntaxException(url, "Host is unspecified"));
             return;
         }
@@ -109,6 +128,13 @@ public final class HttpClient {
         });
     }
 
+    /**
+     * Get a url with headers
+     *
+     * @param url     URL
+     * @param headers Headers
+     * @return Future of response. Remember to {@link ReferenceCountUtil#release} the response
+     */
     public static CompletableFuture<FullHttpResponse> get(String url, Map<String, String> headers) {
         CompletableFuture<FullHttpResponse> future = new CompletableFuture<>();
         request(url, GET, headers, null, null, (ctx, response, throwable) -> {
@@ -130,6 +156,16 @@ public final class HttpClient {
         return future;
     }
 
+    /**
+     * Request a url with headers by method
+     *
+     * @param url         URL
+     * @param method      Method
+     * @param headers     Headers
+     * @param body        Body
+     * @param contentType ContentType. See {@link HttpHeaderValues}
+     * @return Future of response. Remember to {@link ReferenceCountUtil#release} the response
+     */
     public static CompletableFuture<FullHttpResponse> request(String url, HttpMethod method, Map<String, String> headers, ByteBuf body, AsciiString contentType) {
         CompletableFuture<FullHttpResponse> future = new CompletableFuture<>();
         request(url, method, headers, body, contentType, (ctx, response, throwable) -> {
@@ -149,7 +185,15 @@ public final class HttpClient {
         return future;
     }
 
-    public static CompletableFuture<FullHttpResponse> postJson(String url, Map<String, String> headers, String json){
+    /**
+     * Post a url with header and json body
+     *
+     * @param url     Url
+     * @param headers Headers
+     * @param json    Json as body
+     * @return Future of response. Remember to {@link ReferenceCountUtil#release} the response
+     */
+    public static CompletableFuture<FullHttpResponse> postJson(String url, Map<String, String> headers, String json) {
         CompletableFuture<FullHttpResponse> future = new CompletableFuture<>();
         postJson(url, headers, json, (ctx, response, throwable) -> {
             if (response == null) {
@@ -178,38 +222,85 @@ public final class HttpClient {
         });
     }
 
+
+    /**
+     * Post a url with header and body
+     *
+     * @param url          URL
+     * @param headers      Headers
+     * @param body         Body
+     * @param contentType  ContentType. See {@link HttpHeaderValues}
+     * @param httpCallback Callback. Remember to {@link ReferenceCountUtil#release} the response in callback
+     */
     public static void post(String url, Map<String, String> headers, String body, AsciiString contentType, HttpCallback httpCallback) {
         byte[] bodyBytes = body.getBytes(UTF_8);
         ByteBuf bodyBuf = PooledByteBufAllocator.DEFAULT.buffer(bodyBytes.length).writeBytes(bodyBytes);
         request(url, POST, headers, bodyBuf, contentType, httpCallback);
     }
 
+    /**
+     * Post a url with header and body
+     *
+     * @param url          URL
+     * @param headers      Headers
+     * @param body         Body
+     * @param contentType  ContentType. See {@link HttpHeaderValues}
+     * @param httpCallback Callback. Remember to {@link ReferenceCountUtil#release} the response in callback
+     */
     public static void post(String url, Map<String, String> headers, ByteBuf body, AsciiString contentType, HttpCallback httpCallback) {
         request(url, POST, headers, body, contentType, httpCallback);
     }
 
+    /**
+     * Post a url with header and json body
+     *
+     * @param url          URL
+     * @param headers      Headers
+     * @param json         Json
+     * @param httpCallback Callback. Remember to {@link ReferenceCountUtil#release} the response in callback
+     */
     public static void postJson(String url, Map<String, String> headers, Map<String, Object> json, HttpCallback httpCallback) {
         Gson gson = new Gson();
         String jsonStr = gson.toJson(json);
         postJson(url, headers, jsonStr, httpCallback);
     }
 
+    /**
+     * Post a url with header and json body
+     *
+     * @param url          URL
+     * @param headers      Headers
+     * @param json         Json
+     * @param httpCallback Callback. Remember to {@link ReferenceCountUtil#release} the response in callback
+     */
     public static void postJson(String url, Map<String, String> headers, String json, HttpCallback httpCallback) {
         byte[] bodyBytes = json.getBytes(UTF_8);
         ByteBuf body = PooledByteBufAllocator.DEFAULT.buffer(bodyBytes.length).writeBytes(bodyBytes);
         post(url, headers, body, HttpHeaderValues.APPLICATION_JSON, httpCallback);
     }
 
+
+    /**
+     * Request a url
+     *
+     * @param url          URL
+     * @param method       Method
+     * @param headers      Headers
+     * @param body         Body
+     * @param contentType  ContentType. See {@link HttpHeaderValues}
+     * @param httpCallback Callback. Remember to {@link ReferenceCountUtil#release} the response in callback
+     */
     public static void request(String url, HttpMethod method, Map<String, String> headers, ByteBuf body, AsciiString contentType, HttpCallback httpCallback) {
         DefaultFullHttpRequest request;
+        URI uri = URI.create(url);
+
         if (body != null) {
-            request = new DefaultFullHttpRequest(HTTP_1_1, method, url, body);
+            request = new DefaultFullHttpRequest(HTTP_1_1, method, uri.getRawPath(), body);
             HttpUtil.setContentLength(request, request.content().readableBytes());
             request.headers().add(HttpHeaderNames.CONTENT_TYPE, contentType);
         } else {
             request = new DefaultFullHttpRequest(HTTP_1_1, method, url);
-         }
-        URI uri = URI.create(url);
+        }
         request.headers().set(HttpHeaderNames.HOST, uri.getHost());
         request.headers().set(HttpHeaderNames.ACCEPT_ENCODING, HttpHeaderValues.GZIP);
         request.headers().add(HttpHeaderNames.USER_AGENT, "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:60.0; NyaaCore) Gecko/20100101 Firefox/60.0");
@@ -226,10 +317,6 @@ public final class HttpClient {
     @FunctionalInterface
     public interface HttpCallback {
         void response(ChannelHandlerContext ctx, FullHttpResponse response, Throwable throwable);
-    }
-
-    private HttpClient() {
-        throw new IllegalStateException();
     }
 }
 
