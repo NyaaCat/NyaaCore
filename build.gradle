@@ -53,7 +53,7 @@ shadowJar {
 dependencies {
     // spigot dependencies
     compileOnly "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT"
-    compileOnly 'io.netty:netty-all:4.1.30.Final' // netty is shadowed inside spigot jar
+    compileOnly 'io.netty:netty-all:4.1.25.Final' // netty is shadowed inside spigot jar
     compileOnly files('lib/spigot-1.13.2.jar')    // for NMS
 
     // other plugins
