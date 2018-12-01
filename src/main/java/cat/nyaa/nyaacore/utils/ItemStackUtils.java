@@ -222,4 +222,8 @@ public final class ItemStackUtils {
         // Return a string representation of the serialized object
         return itemAsJsonObject.toString();
     }
+
+    public static Object asNMSCopy(ItemStack itemStack) {
+        return CraftItemStack.asNMSCopy(itemStack);
+    }
 }
