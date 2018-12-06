@@ -12,6 +12,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
@@ -30,7 +31,18 @@ public class RayTraceUtils {
                 stopOnLiquid ? FluidCollisionOption.ALWAYS : FluidCollisionOption.NEVER, ignoreBlockWithoutBoundingBox, returnLastUncollidableBlock);
 
         if (mop != null) {
-            BlockPosition blockPos = mop.a();
+            BlockPosition blockPos = null;
+            try {
+                blockPos = mop.getBlockPosition();
+            } catch (Exception e) {
+                try {
+                    blockPos = (BlockPosition) ReflectionUtils.getMethod(MovingObjectPosition.class, "a").invoke(mop);
+                } catch (IllegalAccessException e1) {
+                    e1.printStackTrace();
+                } catch (InvocationTargetException e1) {
+                    e1.printStackTrace();
+                }
+            }
             return world.getBlockAt(blockPos.getX(), blockPos.getY(), blockPos.getZ());
         }
         return null;
@@ -83,7 +95,7 @@ public class RayTraceUtils {
     @SuppressWarnings("rawtypes")
     public static Predicate not(Entity e) {
         return (Object entity) ->
-                       !((EntityLiving) entity).getUniqueID().equals(e.getUniqueId());
+                !((EntityLiving) entity).getUniqueID().equals(e.getUniqueId());
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -133,7 +145,7 @@ public class RayTraceUtils {
         );
         net.minecraft.server.v1_13_R2.Entity targetEntity = null;
         double d2 = maxDistance;
-        Vec3D hitVec = null;
+        //Vec3D hitVec = null;
         for (net.minecraft.server.v1_13_R2.Entity entity1 : entities) {
             //getEntityBoundingBox().grow((double)entity1.getCollisionBorderSize());
             AxisAlignedBB axisAlignedBB = entity1.getBoundingBox().g((double) entity1.aM());
@@ -141,7 +153,7 @@ public class RayTraceUtils {
             if (axisAlignedBB.b(eyePos)) {// contains
                 if (d2 >= 0.0) {
                     targetEntity = entity1;
-                    hitVec = rayTraceResult == null ? eyePos : rayTraceResult.pos;
+                    //hitVec = rayTraceResult == null ? eyePos : rayTraceResult.pos;
                     d2 = 0.0;
                 }
             } else if (rayTraceResult != null) {
@@ -150,11 +162,11 @@ public class RayTraceUtils {
                     if (entity1.getRootVehicle() == ((CraftEntity) entity).getHandle().getRootVehicle()) {//getLowestRidingEntity
                         if (d2 == 0.0D) {
                             targetEntity = entity1;
-                            hitVec = rayTraceResult.pos;
+                            //hitVec = rayTraceResult.pos;
                         }
                     } else {
                         targetEntity = entity1;
-                        hitVec = rayTraceResult.pos;
+                        //hitVec = rayTraceResult.pos;
                         d2 = d3;
                     }
                 }
