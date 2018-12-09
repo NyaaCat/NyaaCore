@@ -12,13 +12,10 @@ public final class TridentUtils {
 
     private static Class<?> entityThrownTrident = ReflectionUtils.getNMSClass("EntityThrownTrident");
 
-    private static Field entityThrownTridentFieldAw;
     private static Field entityThrownTridentFieldAx;
 
     static {
         try {
-            entityThrownTridentFieldAw = entityThrownTrident.getDeclaredField("aw");
-            entityThrownTridentFieldAw.setAccessible(true);
             entityThrownTridentFieldAx = entityThrownTrident.getDeclaredField("ax");
             entityThrownTridentFieldAx.setAccessible(true);
         } catch (NoSuchFieldException e) {
@@ -27,23 +24,14 @@ public final class TridentUtils {
     }
 
     public static ItemStack getTridentItemStack(Trident entity) {
-        try {
-            EntityThrownTrident thrownTrident = (EntityThrownTrident) ((CraftEntity) entity).getHandle();
-            net.minecraft.server.v1_13_R2.ItemStack nmsItemStack = (net.minecraft.server.v1_13_R2.ItemStack) entityThrownTridentFieldAw.get(thrownTrident);
-            return CraftItemStack.asBukkitCopy(nmsItemStack);
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
+        EntityThrownTrident thrownTrident = (EntityThrownTrident) ((CraftEntity) entity).getHandle();
+        net.minecraft.server.v1_13_R2.ItemStack nmsItemStack = thrownTrident.trident;
+        return CraftItemStack.asBukkitCopy(nmsItemStack);
     }
 
     public static void setTridentItemStack(Trident entity, ItemStack itemStack) {
-        try {
-            EntityThrownTrident thrownTrident = (EntityThrownTrident) ((CraftEntity) entity).getHandle();
-            net.minecraft.server.v1_13_R2.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
-            entityThrownTridentFieldAw.set(thrownTrident, nmsItemStack);
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
+        EntityThrownTrident thrownTrident = (EntityThrownTrident) ((CraftEntity) entity).getHandle();
+        thrownTrident.trident = CraftItemStack.asNMSCopy(itemStack);
     }
 
     public static boolean getTridentDealtDamage(Trident entity) {
