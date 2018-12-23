@@ -1,9 +1,7 @@
 package cat.nyaa.nyaacore.utils;
 
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -21,20 +19,22 @@ public class ClickSelectionUtils {
     private static final Map<UUID, Consumer<Location>> callbackMap = new HashMap<>();
     private static final Map<UUID, BukkitRunnable> timeoutListener = new HashMap<>();
 
-    public class _Listener implements Listener {
+    public static class _Listener implements Listener {
         @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
         public void onRightClickBlock(PlayerInteractEvent ev) {
             if (callbackMap.containsKey(ev.getPlayer().getUniqueId()) && ev.hasBlock() && ev.getAction() == Action.RIGHT_CLICK_BLOCK) {
                 Block b = ev.getClickedBlock();
-                callbackMap.remove(ev.getPlayer().getUniqueId()).accept(b.getLocation());
-                if (timeoutListener.containsKey(ev.getPlayer().getUniqueId()))
-                    timeoutListener.remove(ev.getPlayer().getUniqueId()).cancel();
-                ev.setCancelled(true);
+                Consumer<Location> cb = callbackMap.remove(ev.getPlayer().getUniqueId());
+                BukkitRunnable tl = timeoutListener.remove(ev.getPlayer().getUniqueId());
+
+                if (tl == null || !tl.isCancelled()) {
+                    cb.accept(b.getLocation());
+                    ev.setCancelled(true);
+                }
             }
         }
     }
 
-    // FIXME: cannot handle new request when current request unfinished.
     /**
      * Callback will be invoked if the player right clicked on a block, or the timer goes off.
      * @param player the player
@@ -42,6 +42,13 @@ public class ClickSelectionUtils {
      * @param callback if timeout, the parameter will be null
      */
     public static void registerRightClickBlock(UUID player, int timeout, Consumer<Location> callback, Plugin plugin) {
+        // force timeout any existing listeners
+        Consumer<Location> cb = callbackMap.remove(player);
+        BukkitRunnable tl = timeoutListener.remove(player);
+        if (cb != null) cb.accept(null);
+        if (tl != null) tl.cancel();
+
+        // add new callback
         callbackMap.put(player, callback);
         BukkitRunnable runnable = new BukkitRunnable() {
             @Override
