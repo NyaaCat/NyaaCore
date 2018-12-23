@@ -446,6 +446,17 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
             }
         }
 
+        public long nextLong() {
+            String str = next();
+            if (str == null) throw new BadCommandException("internal.error.no_more_int");
+            if (str.endsWith("k")) str = str.substring(0, str.length() - 1) + "000";
+            try {
+                return Long.parseLong(str);
+            } catch (NumberFormatException ex) {
+                throw new BadCommandException("internal.error.bad_int", ex, str);
+            }
+        }
+
         public double nextDouble() {
             String str = next();
             if (str == null) throw new BadCommandException("internal.error.no_more_double");

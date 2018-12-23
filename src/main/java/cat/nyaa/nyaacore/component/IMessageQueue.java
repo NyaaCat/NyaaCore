@@ -21,6 +21,7 @@ public interface IMessageQueue extends IComponent {
 
     /**
      * Send a message to a offline player
+     * If player is online, behavior is implementation-defined
      *
      * @param player  recipient of the message
      * @param message content of the message
@@ -29,6 +30,7 @@ public interface IMessageQueue extends IComponent {
 
     /**
      * Send a message to a offline player, with a set
+     * If player is online, behavior is implementation-defined
      *
      * @param player  recipient of the message
      * @param message content of the message
@@ -57,6 +59,7 @@ public interface IMessageQueue extends IComponent {
 
         @Override
         public void send(OfflinePlayer player, Message message, long time) {
+            if (player.isOnline()) return;
             messageStorage.compute(player, (uuid, msgs) -> {
                 if (msgs == null) msgs = LinkedListMultimap.create();
                 msgs.put(time, message);
@@ -69,7 +72,7 @@ public interface IMessageQueue extends IComponent {
             Multimap<Long, Message> msgs = messageStorage.remove(event.getPlayer());
             if (msgs == null) return;
             msgs.forEach((time, msgJson) -> {
-                Message message = new Message("").append(DateFormat.getDateTimeInstance().format(time) + ": {message}", Collections.singletonMap("{message}", msgJson.inner));
+                Message message = new Message("").append(DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG).format(time) + ": {message}", Collections.singletonMap("{message}", msgJson.inner));
                 message.send(event.getPlayer());
             });
         }

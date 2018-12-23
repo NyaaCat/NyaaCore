@@ -2,6 +2,7 @@ package cat.nyaa.nyaacore.database.relational;
 
 import javax.persistence.Column;
 import javax.persistence.Table;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.sql.ResultSet;
@@ -15,24 +16,38 @@ public class TableStructure<T> {
     @SuppressWarnings("unchecked")
     public static <X> TableStructure<X> fromClass(Class<X> cls) {
         if (structured_tables.containsKey(cls)) return (TableStructure<X>) structured_tables.get(cls);
-        TableStructure<X> ts = new TableStructure<>(cls);
+        TableStructure<X> ts;
+        try {
+            ts = new TableStructure<>(cls);
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
         structured_tables.put(cls, ts);
         return ts;
     }
 
     public final Class<T> tableClass;
+    public final Constructor<T> tableCtor;
     public final String tableName;
 
     public final Map<String, ColumnStructure> columns = new HashMap<>();
     public final String primaryKey; // null if no primary key
     public final List<String> orderedColumnName = new ArrayList<>();
 
-    private TableStructure(Class<T> tableClass) {
+    private TableStructure(Class<T> tableClass) throws NoSuchMethodException {
         Table annoDT = tableClass.getDeclaredAnnotation(Table.class);
         if (annoDT == null)
             throw new IllegalArgumentException("Class missing table annotation: " + tableClass.getName());
 
         this.tableClass = tableClass;
+        Constructor<T> ctor;
+        try {
+            ctor = tableClass.getConstructor();
+        } catch (NoSuchMethodException e) {
+            ctor = tableClass.getDeclaredConstructor();
+        }
+        this.tableCtor = ctor;
+        tableCtor.setAccessible(true);
         if (annoDT.name().isEmpty()) {
             this.tableName = tableClass.getSimpleName();
         } else {
@@ -176,7 +191,7 @@ public class TableStructure<T> {
      * Only CURRENT result row will be picked
      */
     public T getObjectFromResultSet(ResultSet rs) throws ReflectiveOperationException, SQLException {
-        T obj = tableClass.newInstance();
+        T obj = tableCtor.newInstance();
         for (String colName : orderedColumnName) {
             Object colValue = rs.getObject(colName);
             this.columns.get(colName).setSqlObject(obj, colValue);

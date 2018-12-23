@@ -21,6 +21,7 @@ public class ColumnStructure {
     public enum AccessMethod {
         DIRECT_FIELD,  // directly get from field
         GETTER_SETTER  // use getter and setter
+        // TODO: GETTER_CTOR
     }
 
     public final String name;
@@ -54,6 +55,7 @@ public class ColumnStructure {
         this.table = table;
         accessMethod = AccessMethod.DIRECT_FIELD;
         field = dataField;
+        field.setAccessible(true);
         setter = null;
         getter = null;
 

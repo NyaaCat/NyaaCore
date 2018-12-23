@@ -120,11 +120,32 @@ public class Message {
         }
     }
 
+    /**
+     * Send this to an player. If he's offline, add this to his message queue.
+     *
+     * @param p recipient
+     * @return this
+     */
     public Message send(OfflinePlayer p) {
+        if (p.isOnline()) {
+            return send(p.getPlayer(), false);
+        } else {
+            return send(p, true);
+        }
+    }
+
+    /**
+     * @param p              recipient
+     * @param queuedIfOnline whether to add this to message queue if player is online
+     * @return this
+     */
+    public Message send(OfflinePlayer p, boolean queuedIfOnline) {
+        if (queuedIfOnline || !p.isOnline()) {
+            NyaaComponent.get(IMessageQueue.class).send(p, this);
+        }
         if (p.isOnline()) {
             return send(p.getPlayer());
         } else {
-            NyaaComponent.get(IMessageQueue.class).send(p, this);
             return this;
         }
     }
