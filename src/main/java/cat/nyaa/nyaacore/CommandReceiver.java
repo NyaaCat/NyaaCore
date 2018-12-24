@@ -311,7 +311,7 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
 
     // Whether show default command complete message
     protected boolean showCompleteMessage() {
-        return true;
+        return false;
     }
 
     public static Player asPlayer(CommandSender target) {
