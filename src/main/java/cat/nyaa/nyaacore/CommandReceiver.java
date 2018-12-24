@@ -1,6 +1,7 @@
 package cat.nyaa.nyaacore;
 
 import cat.nyaa.nyaacore.utils.OfflinePlayerUtils;
+import com.earth2me.essentials.I18n;
 import com.google.common.base.Strings;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -207,12 +208,14 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
                 }
             } catch (ReflectiveOperationException ex) {
                 Throwable cause = ex.getCause();
-                if (cause != null && cause instanceof RuntimeException)
+                if (cause instanceof RuntimeException)
                     throw (RuntimeException) cause;
                 else
                     throw new RuntimeException("Failed to invoke subcommand", ex);
             }
-            if (!subClassCommand && showCompleteMessage()) msg(sender, "internal.info.command_complete");
+            if (!subClassCommand && showCompleteMessage() && !Strings.isNullOrEmpty(i18n.getFormatted("internal.info.command_complete"))) {
+                msg(sender, "internal.info.command_complete");
+            }
         } catch (NotPlayerException ex) {
             msg(sender, "internal.error.not_player");
         } catch (NoItemInHandException ex) {
