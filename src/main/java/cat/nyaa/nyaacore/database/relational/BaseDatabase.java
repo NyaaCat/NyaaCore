@@ -1,7 +1,6 @@
 package cat.nyaa.nyaacore.database.relational;
 
 import org.apache.commons.lang.Validate;
-import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 
 import java.sql.Connection;
@@ -13,8 +12,11 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.RunnableFuture;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Consumer;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @SuppressWarnings("rawtypes")
 public abstract class BaseDatabase implements RelationalDB {
@@ -25,6 +27,13 @@ public abstract class BaseDatabase implements RelationalDB {
     protected final List<Connection> usedConnections = new CopyOnWriteArrayList<>();
     protected int minPoolSize = 5;
     protected double validPoolChance = 0.05;
+    protected final Logger logger;
+    protected final Consumer<Runnable> executor;
+
+    protected BaseDatabase(Logger logger, Consumer<Runnable> executor) {
+        this.logger = logger;
+        this.executor = executor;
+    }
 
     @Override
     public Connection newConnection() {
@@ -34,14 +43,14 @@ public abstract class BaseDatabase implements RelationalDB {
                 connection.close();
             }
         } catch (SQLException e) {
-            getPlugin().getLogger().log(Level.INFO, "Bad connection found", e);
+            getLogger().log(Level.INFO, "Bad connection found", e);
         }
         if (connection == null) {
             connection = createConnection();
         }
         usedConnections.add(connection);
         if (ThreadLocalRandom.current().nextDouble() < validPoolChance) {
-            Bukkit.getScheduler().runTaskAsynchronously(getPlugin(), this::validPool);
+            executeAsync(this::validPool);
         }
         return connection;
     }
@@ -78,7 +87,7 @@ public abstract class BaseDatabase implements RelationalDB {
 
     @Override
     public void recycleConnection(Connection conn) {
-        Bukkit.getScheduler().runTaskAsynchronously(getPlugin(), () -> {
+        executeAsync(() -> {
             if (usedConnections.remove(conn)) {
                 try {
                     if (conn.getAutoCommit() && conn.isValid(1)) {
@@ -120,7 +129,7 @@ public abstract class BaseDatabase implements RelationalDB {
             try {
                 usedConnection.close();
             } catch (SQLException e) {
-                getPlugin().getLogger().log(Level.INFO, "Bad connection found", e);
+                getLogger().log(Level.INFO, "Bad connection found", e);
             }
         }
         for (Connection connection : connectionPool) {
@@ -202,4 +211,12 @@ public abstract class BaseDatabase implements RelationalDB {
     }
 
     public abstract Plugin getPlugin();
+
+    protected void executeAsync(Runnable runnable){
+        executor.accept(runnable);
+    }
+
+    protected Logger getLogger() {
+        return logger;
+    }
 }

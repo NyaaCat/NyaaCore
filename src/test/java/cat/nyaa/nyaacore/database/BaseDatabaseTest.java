@@ -25,7 +25,7 @@ public class BaseDatabaseTest {
         Mockito.when(p.getDataFolder()).thenReturn(new File("."));
         Mockito.when(p.getLogger()).thenReturn(Logger.getLogger("BaseDatabaseTest"));
 
-        db = new SQLiteDatabase(p, "test.db");
+        db = new SQLiteDatabase(p, "test.db", Runnable::run, Logger.getLogger("BaseDatabaseTest"));
         record = new TestTable();
         record.id = null;
         record.string = "test";

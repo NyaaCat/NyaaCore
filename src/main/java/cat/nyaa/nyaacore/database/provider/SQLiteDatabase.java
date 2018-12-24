@@ -11,18 +11,31 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.logging.Logger;
 
 public class SQLiteDatabase extends BaseDatabase {
 
     private Plugin plugin;
     private String file;
     private Connection dbConn;
+    public static Function<Plugin, Consumer<Runnable>> executor = (plugin) -> (runnable) -> Bukkit.getScheduler().runTaskAsynchronously(plugin, runnable);
 
     public SQLiteDatabase(Plugin basePlugin, String fileName) {
+        super(basePlugin.getLogger(), executor.apply(basePlugin));
         file = fileName;
         plugin = basePlugin;
         dbConn = createConnection();
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, this::fillPool);
+        executeAsync(this::fillPool);
+    }
+
+    public SQLiteDatabase(Plugin basePlugin, String fileName, Consumer<Runnable> executor, Logger logger) {
+        super(logger, executor);
+        file = fileName;
+        plugin = basePlugin;
+        dbConn = createConnection();
+        executeAsync(this::fillPool);
     }
 
     @Override

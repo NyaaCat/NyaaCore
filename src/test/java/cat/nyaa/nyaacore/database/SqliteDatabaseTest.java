@@ -1,5 +1,6 @@
 package cat.nyaa.nyaacore.database;
 
+import cat.nyaa.nyaacore.database.provider.SQLiteDatabase;
 import cat.nyaa.nyaacore.database.relational.RelationalDB;
 import cat.nyaa.nyaacore.database.relational.Query;
 import org.bukkit.plugin.Plugin;
@@ -18,6 +19,7 @@ public class SqliteDatabaseTest {
     private RelationalDB db2;
     @Before
     public void prepareDatabase() {
+        SQLiteDatabase.executor = (p) -> Runnable::run;
         Map<String, Object> conf = new HashMap<>();
         File file = new File("./testdb.db");
         if(file.exists()){
