@@ -1,6 +1,7 @@
 package cat.nyaa.nyaacore.database.provider;
 
 import cat.nyaa.nyaacore.database.relational.BaseDatabase;
+import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 
 import java.sql.Connection;
@@ -16,13 +17,19 @@ public class MysqlDatabase extends BaseDatabase {
     private String password;
     private Connection connection;
 
-    public MysqlDatabase(Plugin basePlugin, String jdbcDriver, String dbUrl, String user, String password){
+    public MysqlDatabase(Plugin basePlugin, String jdbcDriver, String dbUrl, String user, String password) {
+        try {
+            Class.forName(jdbcDriver);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException("Jdbc Driver not available", e);
+        }
         this.plugin = basePlugin;
         this.jdbcDriver = jdbcDriver;
         this.dbUrl = dbUrl;
         this.user = user;
         this.password = password;
-        this.connection = newConnection();
+        this.connection = createConnection();
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, this::fillPool);
     }
 
     public Connection getConnection() {
@@ -30,13 +37,8 @@ public class MysqlDatabase extends BaseDatabase {
     }
 
     @Override
-    public Connection newConnection() {
+    public Connection createConnection() {
         Connection conn;
-        try {
-            Class.forName(jdbcDriver);
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException("Jdbc Driver not available", e);
-        }
         try {
             conn = DriverManager.getConnection(dbUrl, user, password);
             conn.setAutoCommit(true);
@@ -47,16 +49,8 @@ public class MysqlDatabase extends BaseDatabase {
     }
 
     @Override
-    public void recycleConnection(Connection conn) {
-        try {
-            conn.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
     public void close() {
+        super.close();
         try {
             connection.close();
         } catch (SQLException e) {
@@ -68,7 +62,15 @@ public class MysqlDatabase extends BaseDatabase {
     @Override
     protected Object clone() throws CloneNotSupportedException {
         MysqlDatabase db = (MysqlDatabase) super.clone();
-        db.connection = db.newConnection();
+        db.connection = db.createConnection();
+        db.connectionPool.clear();
+        db.usedConnections.clear();
+        db.fillPool();
         return db;
+    }
+
+    @Override
+    public Plugin getPlugin() {
+        return plugin;
     }
 }

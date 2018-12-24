@@ -1,16 +1,104 @@
 package cat.nyaa.nyaacore.database.relational;
 
 import org.apache.commons.lang.Validate;
+import org.bukkit.Bukkit;
+import org.bukkit.plugin.Plugin;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.logging.Level;
 
 @SuppressWarnings("rawtypes")
 public abstract class BaseDatabase implements RelationalDB {
     protected Set<Class> createdTableClasses = new HashSet<>();
+
+    protected int maxPoolSize = 20;
+    protected final Queue<Connection> connectionPool = new ArrayBlockingQueue<>(maxPoolSize);
+    protected final List<Connection> usedConnections = new CopyOnWriteArrayList<>();
+    protected int minPoolSize = 5;
+    protected double validPoolChance = 0.05;
+
+    @Override
+    public Connection newConnection() {
+        Connection connection = connectionPool.poll();
+        try {
+            for (; connection != null && !connection.isValid(1); connection = connectionPool.poll()) {
+                connection.close();
+            }
+        } catch (SQLException e) {
+            getPlugin().getLogger().log(Level.INFO, "Bad connection found", e);
+        }
+        if (connection == null) {
+            connection = createConnection();
+        }
+        usedConnections.add(connection);
+        if (ThreadLocalRandom.current().nextDouble() < validPoolChance) {
+            Bukkit.getScheduler().runTaskAsynchronously(getPlugin(), this::validPool);
+        }
+        return connection;
+    }
+
+    protected void fillPool() {
+        int filled = 0;
+        while (connectionPool.size() < minPoolSize) {
+            connectionPool.offer(createConnection());
+            ++filled;
+        }
+        getPlugin().getLogger().log(Level.FINE, "fillPool: " + filled + " filled. " + connectionPool.size());
+    }
+
+    protected void validPool() {
+        int size = connectionPool.size();
+        int failed = 0;
+        while (size-- > 0) {
+            Connection connection = connectionPool.poll();
+            if (connection == null) break;
+            try {
+                if (connection.isValid(1)) {
+                    connectionPool.offer(connection);
+                } else {
+                    ++failed;
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                getPlugin().getLogger().log(Level.INFO, "Bad connection found", e);
+            }
+        }
+        getPlugin().getLogger().log(Level.FINE, "validPool: " + failed + " disposed. " + connectionPool.size());
+        fillPool();
+    }
+
+    @Override
+    public void recycleConnection(Connection conn) {
+        Bukkit.getScheduler().runTaskAsynchronously(getPlugin(), () -> {
+            if (usedConnections.remove(conn)) {
+                try {
+                    if (conn.getAutoCommit() && conn.isValid(1)) {
+                        getPlugin().getLogger().log(Level.FINE, "Connection recycled");
+                        connectionPool.offer(conn);
+                    } else {
+                        getPlugin().getLogger().log(Level.FINE, "Connection disposed");
+                        conn.close();
+                    }
+                } catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+            if (ThreadLocalRandom.current().nextDouble() < validPoolChance) {
+                validPool();
+            }
+        });
+    }
+
+    public abstract Connection createConnection();
 
     @Override
     public void createTable(Class<?> cls) {
@@ -23,6 +111,24 @@ public abstract class BaseDatabase implements RelationalDB {
             createdTableClasses.add(cls);
         } catch (SQLException ex) {
             throw new RuntimeException(sql, ex);
+        }
+    }
+
+    @Override
+    public void close() {
+        for (Connection usedConnection : usedConnections) {
+            try {
+                usedConnection.close();
+            } catch (SQLException e) {
+                getPlugin().getLogger().log(Level.INFO, "Bad connection found", e);
+            }
+        }
+        for (Connection connection : connectionPool) {
+            try {
+                connection.close();
+            } catch (SQLException e) {
+                getPlugin().getLogger().log(Level.INFO, "Bad connection found", e);
+            }
         }
     }
 
@@ -84,8 +190,16 @@ public abstract class BaseDatabase implements RelationalDB {
             @Override
             public void close() {
                 super.close();
-                recycleConnection(conn);
+                try {
+                    conn.setAutoCommit(true);
+                } catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                } finally {
+                    recycleConnection(conn);
+                }
             }
         };
     }
+
+    public abstract Plugin getPlugin();
 }

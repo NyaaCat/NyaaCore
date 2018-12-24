@@ -3,6 +3,7 @@ package cat.nyaa.nyaacore.database.provider;
 import cat.nyaa.nyaacore.database.relational.BaseDatabase;
 import cat.nyaa.nyaacore.database.relational.TableStructure;
 import org.apache.commons.lang.Validate;
+import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 
 import java.io.File;
@@ -20,11 +21,13 @@ public class SQLiteDatabase extends BaseDatabase {
     public SQLiteDatabase(Plugin basePlugin, String fileName) {
         file = fileName;
         plugin = basePlugin;
-        dbConn = newConnection();
+        dbConn = createConnection();
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, this::fillPool);
     }
 
     @Override
     public void close() {
+        super.close();
         try {
             dbConn.close();
             dbConn = null;
@@ -39,7 +42,7 @@ public class SQLiteDatabase extends BaseDatabase {
     }
 
     @Override
-    public Connection newConnection() {
+    public Connection createConnection() {
         Connection conn;
         File dbFile = new File(plugin.getDataFolder(), file);
         try {
@@ -53,22 +56,16 @@ public class SQLiteDatabase extends BaseDatabase {
         return conn;
     }
 
-    @Override
-    public void recycleConnection(Connection conn) {
-        try {
-            conn.close();
-        } catch (SQLException ex) {
-            throw new RuntimeException(ex);
-        }
-    }
-
     /**
      * Remember to close the new connection cloned.
      */
     @Override
     protected Object clone() throws CloneNotSupportedException {
         SQLiteDatabase db = (SQLiteDatabase) super.clone();
-        db.dbConn = db.newConnection();
+        db.dbConn = db.createConnection();
+        db.connectionPool.clear();
+        db.usedConnections.clear();
+        db.fillPool();
         return db;
     }
 
@@ -79,11 +76,16 @@ public class SQLiteDatabase extends BaseDatabase {
         if (createdTableClasses.contains(cls)) return;
         TableStructure ts = TableStructure.fromClass(cls);
         String sql = ts.getCreateTableSQL("sqlite");
-        try (Statement smt = getConnection().createStatement()){
+        try (Statement smt = getConnection().createStatement()) {
             smt.executeUpdate(sql);
             createdTableClasses.add(cls);
         } catch (SQLException ex) {
             throw new RuntimeException(sql, ex);
         }
+    }
+
+    @Override
+    public Plugin getPlugin() {
+        return plugin;
     }
 }
