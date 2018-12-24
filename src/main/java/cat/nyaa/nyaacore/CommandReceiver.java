@@ -1,5 +1,7 @@
 package cat.nyaa.nyaacore;
 
+import cat.nyaa.nyaacore.utils.OfflinePlayerUtils;
+import com.google.common.base.Strings;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -113,8 +115,8 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
             if (anno == null) continue;
             Class<?>[] params = m.getParameterTypes();
             if (!(params.length == 2 &&
-                    params[0] == CommandSender.class &&
-                    params[1] == Arguments.class)) {
+                          params[0] == CommandSender.class &&
+                          params[1] == Arguments.class)) {
                 plugin.getLogger().warning(i18n.getFormatted("internal.error.bad_subcommand", m.toString()));
             } else {
                 m.setAccessible(true);
@@ -132,7 +134,7 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
                 CommandReceiver obj = null;
                 try {
                     String subCommandName = anno.value();
-                    obj = newInstance(f.getType(),plugin, i18n);
+                    obj = newInstance(f.getType(), plugin, i18n);
                     f.setAccessible(true);
                     f.set(this, obj);
 
@@ -152,8 +154,8 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
     private CommandReceiver newInstance(Class cls, Object arg1, Object arg2) throws ReflectiveOperationException {
         for (Constructor c : cls.getConstructors()) {
             if (c.getParameterCount() == 2 &&
-                    c.getParameterTypes()[0].isAssignableFrom(arg1.getClass()) &&
-                    c.getParameterTypes()[1].isAssignableFrom(arg2.getClass())) {
+                        c.getParameterTypes()[0].isAssignableFrom(arg1.getClass()) &&
+                        c.getParameterTypes()[1].isAssignableFrom(arg2.getClass())) {
                 return (CommandReceiver) c.newInstance(arg1, arg2);
             }
         }
@@ -272,6 +274,7 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
      * If the class is registered to bukkit directly, you should return a empty string.
      * If the class is registered through @SubCommand annotation, you should return the subcommand name.
      * If it's a nested subcommand, separate the prefixes using dot.
+     *
      * @return the prefix
      */
     public abstract String getHelpPrefix();
@@ -526,15 +529,8 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
 
         public OfflinePlayer nextOfflinePlayer() {
             String name = next();
-            if (name == null || name.length() <= 0) throw new BadCommandException("internal.error.no_more_player");
-            OfflinePlayer player = null;
-            for (OfflinePlayer p : Bukkit.getOfflinePlayers()) {
-                if (name.equalsIgnoreCase(p.getName())) {
-                    if (player == null || player.getLastPlayed() < p.getLastPlayed()) {
-                        player = p;
-                    }
-                }
-            }
+            if (Strings.isNullOrEmpty(name)) throw new BadCommandException("internal.error.no_more_player");
+            OfflinePlayer player = OfflinePlayerUtils.lookupPlayer(name);
             if (player == null) throw new BadCommandException("internal.error.player_not_found", name);
             return player;
         }
@@ -626,7 +622,9 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
         }
     }
 
-    /** SubCommands ARE CASE-SENSITIVE */
+    /**
+     * SubCommands ARE CASE-SENSITIVE
+     */
     @Target({ElementType.METHOD, ElementType.FIELD})
     @Retention(RetentionPolicy.RUNTIME)
     public @interface SubCommand {
