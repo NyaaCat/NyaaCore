@@ -80,4 +80,16 @@ public final class NmsUtils {
             nmsEntity.getHandle().lastPitch = newPitch;
         }
     }
+
+    /**
+     * Set "OnGround" flag for an entity
+     *
+     * @param e          the entity
+     * @param isOnGround new OnGround value
+     */
+    public static void setEntityOnGround(Entity e, boolean isOnGround) {
+        if (e == null) throw new IllegalArgumentException();
+        CraftEntity nmsEntity = (CraftEntity) e;
+        nmsEntity.getHandle().onGround = isOnGround;
+    }
 }
