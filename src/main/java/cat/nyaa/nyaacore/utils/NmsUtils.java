@@ -8,7 +8,9 @@ import net.minecraft.server.v1_13_R2.NBTTagCompound;
 import org.bukkit.World;
 import org.bukkit.craftbukkit.v1_13_R2.CraftWorld;
 import org.bukkit.craftbukkit.v1_13_R2.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_13_R2.entity.CraftLivingEntity;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
 
 import java.util.UUID;
 
@@ -52,6 +54,30 @@ public final class NmsUtils {
     public static void setFromMobSpawner(Entity entity, boolean fromMobSpawner) {
         if (entity instanceof CraftEntity) {
             ((CraftEntity) entity).getHandle().fromMobSpawner = fromMobSpawner;
+        }
+    }
+
+    /**
+     * Update the yaw & pitch of entities. Can be used to set head orientation.
+     *
+     * @param entity the living entity
+     * @param newYaw can be null if not to be modified
+     * @param newPitch can be null if not to be modified
+     */
+    public static void updateEntityYawPitch(LivingEntity entity, Float newYaw, Float newPitch) {
+        if (entity == null) throw new IllegalArgumentException();
+        if (newYaw == null && newPitch == null) return;
+        CraftLivingEntity nmsEntity = (CraftLivingEntity) entity;
+        if (newYaw != null) {
+            nmsEntity.getHandle().yaw = newYaw;
+            nmsEntity.getHandle().lastYaw = newYaw;
+            nmsEntity.getHandle().setHeadRotation(newYaw);
+        }
+
+        if (newPitch != null) {
+            nmsEntity.getHandle().a();
+            nmsEntity.getHandle().pitch = newPitch;
+            nmsEntity.getHandle().lastPitch = newPitch;
         }
     }
 }
