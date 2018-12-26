@@ -498,9 +498,7 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
             }
         }
 
-        public <T extends Enum<T>> T nextEnum(Class<T> cls) {
-            String str = next();
-            if (str == null) throw new BadCommandException("internal.error.no_more_enum");
+        public static <T extends Enum<T>> T parseEnum(Class<T> cls, String str) {
             try {
                 return Enum.valueOf(cls, str);
             } catch (IllegalArgumentException ex) {
@@ -514,6 +512,12 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
 
                 throw new BadCommandException("internal.error.bad_enum", cls.getName(), vals);
             }
+        }
+
+        public <T extends Enum<T>> T nextEnum(Class<T> cls) {
+            String str = next();
+            if (str == null) throw new BadCommandException("internal.error.no_more_enum");
+            return parseEnum(cls, str);
         }
 
         public boolean nextBoolean() {
