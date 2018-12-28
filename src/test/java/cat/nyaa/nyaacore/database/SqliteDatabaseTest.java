@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Logger;
+import java.util.stream.IntStream;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
@@ -133,6 +134,23 @@ public class SqliteDatabaseTest {
         }
         assertEquals(4, db.query(TestTable.class).count());
         assertEquals(4, db2.query(TestTable.class).count());
+    }
+    
+    @Test
+    public void testTransUpdateParallel() {
+        assertEquals(0, db.query(TestTable.class).count());
+        db.query(TestTable.class).insert(new TestTable(1L, "0", UUID.randomUUID(), UUID.randomUUID()));
+        IntStream.range(0, 100).parallel().forEach((i) -> {
+            try (Query<TestTable> query = db.queryTransactional(TestTable.class)) {
+                TestTable current = query.whereEq("id", 1L).selectUniqueForUpdate();
+                assertNotNull(current);
+                int currentInt = Integer.parseInt(current.string);
+                current.string = String.valueOf(currentInt + 1);
+                query.update(current, "string");
+                query.commit();
+            }
+        });
+        assertEquals("100", db.query(TestTable.class).selectUnique().string);
     }
 
     @After

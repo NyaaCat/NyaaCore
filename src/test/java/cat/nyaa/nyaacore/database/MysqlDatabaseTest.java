@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.IntStream;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
@@ -35,7 +36,7 @@ public class MysqlDatabaseTest {
         MysqlDatabase.executor = (p) -> Runnable::run;
         MysqlDatabase.logger = (p) -> Logger.getLogger("NyaaCoreTest");
         DBConfigurationBuilder configBuilder = DBConfigurationBuilder.newBuilder();
-        String tmpDir = System.getProperty("java.io.tmpdir");
+        String tmpDir = new File(System.getProperty("java.io.tmpdir")).getCanonicalPath();
         configBuilder.setBaseDir(tmpDir + "MariaDB4j\\base");
         configBuilder.setLibDir(tmpDir + "MariaDB4j\\base\\libs");
         configBuilder.setDataDir(tmpDir + "MariaDB4j\\data");
@@ -76,7 +77,7 @@ public class MysqlDatabaseTest {
     }
 
     @Test
-    public void testClear() {
+    public void testReset() {
         db.query(TestTable.class).reset();
     }
 
@@ -88,7 +89,7 @@ public class MysqlDatabaseTest {
     }
 
     @Test
-    public void testTransInsert() throws Exception {
+    public void testTransInsert() {
         assertEquals(0, db.query(TestTable.class).count());
         try (Query<TestTable> query = db.queryTransactional(TestTable.class)) {
             query.insert(new TestTable(1L, "test", UUID.randomUUID(), UUID.randomUUID()));
@@ -167,6 +168,40 @@ public class MysqlDatabaseTest {
         }
         assertEquals(4, db.query(TestTable.class).count());
         assertEquals(4, db2.query(TestTable.class).count());
+    }
+
+    @Test
+    public void testTransUpdateParallel() {
+        assertEquals(0, db.query(TestTable.class).count());
+        db.query(TestTable.class).insert(new TestTable(1L, "0", UUID.randomUUID(), UUID.randomUUID()));
+        IntStream.range(0, 100).parallel().forEach((i) -> {
+            try (Query<TestTable> query = db.queryTransactional(TestTable.class)) {
+                TestTable current = query.whereEq("id", 1L).selectUniqueForUpdate();
+                assertNotNull(current);
+                int currentInt = Integer.parseInt(current.string);
+                current.string = String.valueOf(currentInt + 1);
+                query.update(current, "string");
+                query.commit();
+            }
+        });
+        assertEquals("100", db.query(TestTable.class).selectUnique().string);
+    }
+
+    @Test
+    public void testTransUpdateParallelNotForUpdate() {
+        assertEquals(0, db.query(TestTable.class).count());
+        db.query(TestTable.class).insert(new TestTable(1L, "0", UUID.randomUUID(), UUID.randomUUID()));
+        IntStream.range(0, 100).parallel().forEach((i) -> {
+            try (Query<TestTable> query = db.queryTransactional(TestTable.class)) {
+                TestTable current = query.whereEq("id", 1L).selectUnique();
+                assertNotNull(current);
+                int currentInt = Integer.parseInt(current.string);
+                current.string = String.valueOf(currentInt + 1);
+                query.update(current, "string");
+                query.commit();
+            }
+        });
+        System.out.println(db.query(TestTable.class).selectUnique().string);
     }
 
     @After
