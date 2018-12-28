@@ -37,9 +37,9 @@ public class MysqlDatabaseTest {
         MysqlDatabase.logger = (p) -> Logger.getLogger("NyaaCoreTest");
         DBConfigurationBuilder configBuilder = DBConfigurationBuilder.newBuilder();
         String tmpDir = new File(System.getProperty("java.io.tmpdir")).getCanonicalPath();
-        configBuilder.setBaseDir(tmpDir + "MariaDB4j\\base");
-        configBuilder.setLibDir(tmpDir + "MariaDB4j\\base\\libs");
-        configBuilder.setDataDir(tmpDir + "MariaDB4j\\data");
+        configBuilder.setBaseDir(tmpDir + File.separatorChar + "MariaDB4j" + File.separatorChar + "base");
+        configBuilder.setLibDir(tmpDir + File.separatorChar + "MariaDB4j" + File.separatorChar + "base" + File.separatorChar + "libs");
+        configBuilder.setDataDir(tmpDir + File.separatorChar + "MariaDB4j" + File.separatorChar + "data");
         ServerSocket s = new ServerSocket(0);
         port = s.getLocalPort();
         configBuilder.setPort(port);
