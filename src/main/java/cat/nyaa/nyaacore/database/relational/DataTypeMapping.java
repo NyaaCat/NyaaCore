@@ -31,15 +31,23 @@ public class DataTypeMapping {
         DOUBLE,
         MEDIUMTEXT,
         LONGBLOB;
+
+        public boolean isBlobOrText() {
+            return this == MEDIUMTEXT || this == LONGBLOB;
+        }
     }
 
     /**
      * @param <T> Java type
      */
     public interface IDataTypeConverter<T> {
-        public default Object toSqlType(T obj) {return obj;};
-        public T toJavaType(Object obj);
-        public Types getSqlType ();
+        default Object toSqlType(T obj) {
+            return obj;
+        }
+
+        T toJavaType(Object obj);
+
+        Types getSqlType();
     }
 
     public static class BooleanConverter implements IDataTypeConverter<Boolean> {

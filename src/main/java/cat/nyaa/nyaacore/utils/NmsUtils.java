@@ -58,7 +58,7 @@ public final class NmsUtils {
     }
 
     /**
-     * Update the yaw & pitch of entities. Can be used to set head orientation.
+     * Update the yaw &amp; pitch of entities. Can be used to set head orientation.
      *
      * @param entity the living entity
      * @param newYaw can be null if not to be modified

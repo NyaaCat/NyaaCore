@@ -1,6 +1,7 @@
 package cat.nyaa.nyaacore.database.provider;
 
 import cat.nyaa.nyaacore.database.relational.BaseDatabase;
+import cat.nyaa.nyaacore.database.relational.SynchronizedQuery;
 import cat.nyaa.nyaacore.database.relational.TableStructure;
 import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
@@ -21,17 +22,10 @@ public class SQLiteDatabase extends BaseDatabase {
     private String file;
     private Connection dbConn;
     public static Function<Plugin, Consumer<Runnable>> executor = (plugin) -> (runnable) -> Bukkit.getScheduler().runTaskAsynchronously(plugin, runnable);
+    public static Function<Plugin, Logger> logger = Plugin::getLogger;
 
     public SQLiteDatabase(Plugin basePlugin, String fileName) {
-        super(basePlugin.getLogger(), executor.apply(basePlugin));
-        file = fileName;
-        plugin = basePlugin;
-        dbConn = createConnection();
-        executeAsync(this::fillPool);
-    }
-
-    public SQLiteDatabase(Plugin basePlugin, String fileName, Consumer<Runnable> executor, Logger logger) {
-        super(logger, executor);
+        super(logger.apply(basePlugin), executor.apply(basePlugin));
         file = fileName;
         plugin = basePlugin;
         dbConn = createConnection();
@@ -100,5 +94,34 @@ public class SQLiteDatabase extends BaseDatabase {
     @Override
     public Plugin getPlugin() {
         return plugin;
+    }
+
+    @Override
+    public <T> SynchronizedQuery.TransactionalQuery<T> queryTransactional(Class<T> tableClass) {
+        createTable(tableClass);
+        Connection conn = newConnection();
+        try {
+            conn.setAutoCommit(false);
+        } catch (SQLException ex) {
+            throw new RuntimeException(ex);
+        }
+        return new SynchronizedQuery.TransactionalQuery<T>(tableClass, conn) {
+            @Override
+            public T selectUniqueForUpdate() {
+                return selectUniqueUnchecked();
+            }
+
+            @Override
+            public void close() {
+                super.close();
+                try {
+                    conn.setAutoCommit(true);
+                } catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                } finally {
+                    recycleConnection(conn);
+                }
+            }
+        };
     }
 }

@@ -125,7 +125,7 @@ public abstract class SynchronizedQuery<T> implements Query<T> {
         }
     }
 
-    private String buildWhereClause(String sql, List<Object> objects) {
+    protected String buildWhereClause(String sql, List<Object> objects) {
         if (whereClause.size() > 0) {
             sql += " WHERE";
             for (Map.Entry<?, ?> e : whereClause.entrySet()) {

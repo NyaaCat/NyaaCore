@@ -25,6 +25,8 @@ public interface Query<T> extends AutoCloseable {
 
     T selectUniqueUnchecked();
 
+    T selectUniqueForUpdate();
+
     int count();
 
     void update(T obj, String... columns);

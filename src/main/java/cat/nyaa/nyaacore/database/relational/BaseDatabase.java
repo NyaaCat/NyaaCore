@@ -12,7 +12,6 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.RunnableFuture;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Consumer;
 import java.util.logging.Level;
@@ -61,7 +60,7 @@ public abstract class BaseDatabase implements RelationalDB {
             connectionPool.offer(createConnection());
             ++filled;
         }
-        getPlugin().getLogger().log(Level.FINE, "fillPool: " + filled + " filled. " + connectionPool.size());
+        logger.log(Level.FINE, "fillPool: " + filled + " filled. " + connectionPool.size());
     }
 
     protected void validPool() {
@@ -78,10 +77,10 @@ public abstract class BaseDatabase implements RelationalDB {
                     connection.close();
                 }
             } catch (SQLException e) {
-                getPlugin().getLogger().log(Level.INFO, "Bad connection found", e);
+                logger.log(Level.INFO, "Bad connection found", e);
             }
         }
-        getPlugin().getLogger().log(Level.FINE, "validPool: " + failed + " disposed. " + connectionPool.size());
+        logger.log(Level.FINE, "validPool: " + failed + " disposed. " + connectionPool.size());
         fillPool();
     }
 
@@ -91,10 +90,10 @@ public abstract class BaseDatabase implements RelationalDB {
             if (usedConnections.remove(conn)) {
                 try {
                     if (conn.getAutoCommit() && conn.isValid(1)) {
-                        getPlugin().getLogger().log(Level.FINE, "Connection recycled");
+                        logger.log(Level.FINE, "Connection recycled");
                         connectionPool.offer(conn);
                     } else {
-                        getPlugin().getLogger().log(Level.FINE, "Connection disposed");
+                        logger.log(Level.FINE, "Connection disposed");
                         conn.close();
                     }
                 } catch (SQLException ex) {
@@ -136,7 +135,7 @@ public abstract class BaseDatabase implements RelationalDB {
             try {
                 connection.close();
             } catch (SQLException e) {
-                getPlugin().getLogger().log(Level.INFO, "Bad connection found", e);
+                logger.log(Level.INFO, "Bad connection found", e);
             }
         }
     }
@@ -170,6 +169,16 @@ public abstract class BaseDatabase implements RelationalDB {
         }
     }
 
+    public abstract Plugin getPlugin();
+
+    protected void executeAsync(Runnable runnable) {
+        executor.accept(runnable);
+    }
+
+    protected Logger getLogger() {
+        return logger;
+    }
+
     /**
      * Return the SynchronizedQuery object for specified table class.
      *
@@ -180,43 +189,14 @@ public abstract class BaseDatabase implements RelationalDB {
         createTable(tableClass);
         return new SynchronizedQuery.NonTransactionalQuery<T>(tableClass, this.getConnection()) {
             @Override
-            public void close() {
-
+            public T selectUniqueForUpdate() {
+                throw new UnsupportedOperationException();
             }
-        };
-    }
 
-    @Override
-    public <T> SynchronizedQuery.TransactionalQuery<T> queryTransactional(Class<T> tableClass) {
-        createTable(tableClass);
-        Connection conn = newConnection();
-        try {
-            conn.setAutoCommit(false);
-        } catch (SQLException ex) {
-            throw new RuntimeException(ex);
-        }
-        return new SynchronizedQuery.TransactionalQuery<T>(tableClass, conn) {
             @Override
             public void close() {
-                super.close();
-                try {
-                    conn.setAutoCommit(true);
-                } catch (SQLException ex) {
-                    throw new RuntimeException(ex);
-                } finally {
-                    recycleConnection(conn);
-                }
+
             }
         };
-    }
-
-    public abstract Plugin getPlugin();
-
-    protected void executeAsync(Runnable runnable){
-        executor.accept(runnable);
-    }
-
-    protected Logger getLogger() {
-        return logger;
     }
 }

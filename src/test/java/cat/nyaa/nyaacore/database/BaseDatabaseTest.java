@@ -2,10 +2,8 @@ package cat.nyaa.nyaacore.database;
 
 import cat.nyaa.nyaacore.database.provider.SQLiteDatabase;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -13,7 +11,7 @@ import java.io.File;
 import java.util.UUID;
 import java.util.logging.Logger;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class BaseDatabaseTest {
     SQLiteDatabase db;
@@ -21,11 +19,13 @@ public class BaseDatabaseTest {
 
     @Before
     public void prepareDatabase() {
+        SQLiteDatabase.executor = (p) -> Runnable::run;
+        SQLiteDatabase.logger = (p) -> Logger.getLogger("NyaaCoreTest");
+
         Plugin p = Mockito.mock(Plugin.class);
         Mockito.when(p.getDataFolder()).thenReturn(new File("."));
-        Mockito.when(p.getLogger()).thenReturn(Logger.getLogger("BaseDatabaseTest"));
 
-        db = new SQLiteDatabase(p, "test.db", Runnable::run, Logger.getLogger("BaseDatabaseTest"));
+        db = new SQLiteDatabase(p, "test.db");
         record = new TestTable();
         record.id = null;
         record.string = "test";

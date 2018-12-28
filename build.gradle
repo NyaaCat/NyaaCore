@@ -19,6 +19,7 @@ targetCompatibility = 1.8
 
 repositories {
     jcenter()
+    // mavenLocal()
 
     maven {
         name 'Spigot'
@@ -57,8 +58,8 @@ dependencies {
     compileOnly files('lib/spigot-1.13.2.jar')    // for NMS
 
     // other plugins
-    compileOnly ('net.milkbowl.vault:VaultAPI:1.7') { transitive = false }
-    compileOnly ('net.ess3:Essentials:2.13-SNAPSHOT') { transitive = false }
+    compileOnly('net.milkbowl.vault:VaultAPI:1.7') { transitive = false }
+    compileOnly('net.ess3:Essentials:2.13-SNAPSHOT') { transitive = false }
     if (gradle.hasProperty("useLocalDependencies") && gradle.useLocalDependencies) {
         compileOnly project(":LanguageUtils")
     } else {
@@ -81,6 +82,26 @@ dependencies {
     testImplementation files('lib/spigot-1.13.2.jar')
     testImplementation 'org.mockito:mockito-core:2.18.3'
     testImplementation 'org.xerial:sqlite-jdbc:3.21.0.1'
+    testImplementation 'ch.vorburger.mariaDB4j:mariaDB4j:2.2.3'
+}
+
+import org.gradle.internal.os.OperatingSystem
+String tmpDir = new File(System.getProperty("java.io.tmpdir")).getCanonicalPath()
+if (tmpDir.contains(' ')) {
+    if (OperatingSystem.current().isWindows()) {
+        tmpDir = 'C:\\ProgramData\\NyaaCore\\'
+    } else if (OperatingSystem.current().isLinux()) {
+        tmpDir = '/tmp/NyaaCore/'
+    }
+}
+
+test {
+    useJUnit()
+    testLogging {
+        exceptionFormat = 'full'
+        showStandardStreams = true
+    }
+    systemProperty 'java.io.tmpdir', tmpDir
 }
 
 compileJava {
@@ -137,7 +158,7 @@ javadoc {
 
         windowTitle = "NyaaCore Javadoc"
         String fullVersion = System.getenv("FULL_VERSION_STRING")
-        if (fullVersion != null){
+        if (fullVersion != null) {
             docTitle = "<b>NyaaCore</b> " + System.getenv("FULL_VERSION_STRING")
         } else {
             docTitle = "<b>NyaaCore</b>"

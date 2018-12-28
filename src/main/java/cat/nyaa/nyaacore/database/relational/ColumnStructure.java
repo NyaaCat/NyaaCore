@@ -1,5 +1,7 @@
 package cat.nyaa.nyaacore.database.relational;
 
+import com.google.common.base.Strings;
+
 import javax.persistence.Column;
 import javax.persistence.Id;
 import java.lang.reflect.Field;
@@ -18,6 +20,11 @@ import java.lang.reflect.Modifier;
  */
 @SuppressWarnings("rawtypes")
 public class ColumnStructure {
+
+    public int getLength() {
+        return length;
+    }
+
     public enum AccessMethod {
         DIRECT_FIELD,  // directly get from field
         GETTER_SETTER  // use getter and setter
@@ -29,7 +36,8 @@ public class ColumnStructure {
     public final boolean nullable;
     public final boolean unique;
     public final boolean primary;
-
+    private final String columnDefinition;
+    private final int length;
     public final AccessMethod accessMethod;
     public final Field field;   // used if access method is DIRECT_FIELD
     public final Method setter; // used if access method is GETTER_SETTER
@@ -62,6 +70,8 @@ public class ColumnStructure {
         javaType = field.getType();
         typeConverter = DataTypeMapping.getDataTypeConverter(javaType);
         sqlType = typeConverter.getSqlType();
+        this.columnDefinition = Strings.isNullOrEmpty(anno.columnDefinition()) ? sqlType.name() : anno.columnDefinition();
+        this.length = anno.length();
     }
 
     /**
@@ -121,6 +131,8 @@ public class ColumnStructure {
         this.javaType = methodType;
         this.typeConverter = DataTypeMapping.getDataTypeConverter(this.javaType);
         this.sqlType = this.typeConverter.getSqlType();
+        this.columnDefinition = Strings.isNullOrEmpty(anno.columnDefinition()) ? sqlType.name() : anno.columnDefinition();
+        this.length = anno.length();
     }
 
     public String getName() {
@@ -132,7 +144,7 @@ public class ColumnStructure {
     }
 
     public String getTableCreationScheme() {
-        String ret = name + " " + sqlType.name();
+        String ret = name + " " + columnDefinition;
         if (!nullable) ret += " NOT NULL";
         if (unique) ret += "UNIQUE";
         return ret;

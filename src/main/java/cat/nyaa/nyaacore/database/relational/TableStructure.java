@@ -31,7 +31,8 @@ public class TableStructure<T> {
     public final String tableName;
 
     public final Map<String, ColumnStructure> columns = new HashMap<>();
-    public final String primaryKey; // null if no primary key
+    private final String primaryKey; // null if no primary key
+    private final ColumnStructure primKeyStructure; // null if no primary key
     public final List<String> orderedColumnName = new ArrayList<>();
 
     private TableStructure(Class<T> tableClass) throws NoSuchMethodException {
@@ -54,7 +55,7 @@ public class TableStructure<T> {
             this.tableName = annoDT.name();
         }
 
-        String primKeyName = null;
+        ColumnStructure primKeyStructure = null;
 
         // load all the fields
         for (Field f : tableClass.getDeclaredFields()) {
@@ -64,8 +65,8 @@ public class TableStructure<T> {
             if (columns.containsKey(structure.getName()))
                 throw new RuntimeException("Duplicated column name: " + structure.getName());
             if (structure.primary) {
-                if (primKeyName != null) throw new RuntimeException("Duplicated primary key at: " + f.getName());
-                primKeyName = structure.getName();
+                if (primKeyStructure != null) throw new RuntimeException("Duplicated primary key at: " + f.getName());
+                primKeyStructure = structure;
             }
             columns.put(structure.getName(), structure);
         }
@@ -78,13 +79,13 @@ public class TableStructure<T> {
             if (columns.containsKey(structure.getName()))
                 throw new RuntimeException("Duplicated column name: " + structure.getName());
             if (structure.primary) {
-                if (primKeyName != null) throw new RuntimeException("Duplicated primary key at: " + m.getName());
-                primKeyName = structure.getName();
+                if (primKeyStructure != null) throw new RuntimeException("Duplicated primary key at: " + m.getName());
+                primKeyStructure = structure;
             }
             columns.put(structure.getName(), structure);
         }
-
-        primaryKey = primKeyName;
+        this.primKeyStructure = primKeyStructure;
+        primaryKey = primKeyStructure != null ? primKeyStructure.getName() : null;
         orderedColumnName.addAll(columns.keySet());
         orderedColumnName.sort(String::compareTo);
     }
@@ -95,6 +96,10 @@ public class TableStructure<T> {
 
     public ColumnStructure getColumn(String columnName) {
         return columns.get(columnName);
+    }
+
+    public ColumnStructure getPrimKeyStructure() {
+        return primKeyStructure;
     }
 
     public String getPrimaryKey() {
@@ -131,8 +136,12 @@ public class TableStructure<T> {
         for (String colName : orderedColumnName) {
             colStr.add(columns.get(colName).getTableCreationScheme());
         }
-        if (primaryKey != null) {
-            colStr.add(String.format("CONSTRAINT constraint_PK PRIMARY KEY (%s)", primaryKey));
+        if (primKeyStructure != null) {
+            if (primKeyStructure.sqlType.isBlobOrText() && primKeyStructure.getLength() > 0) {
+                colStr.add(String.format("CONSTRAINT constraint_PK PRIMARY KEY (%s(%d))", primaryKey, primKeyStructure.getLength()));
+            } else {
+                colStr.add(String.format("CONSTRAINT constraint_PK PRIMARY KEY (%s)", primaryKey));
+            }
         }
         return String.format("CREATE TABLE IF NOT EXISTS %s(%s)", tableName, colStr.toString());
     }

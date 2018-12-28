@@ -1,49 +1,78 @@
 package cat.nyaa.nyaacore.database;
 
-import cat.nyaa.nyaacore.database.provider.SQLiteDatabase;
+import cat.nyaa.nyaacore.database.provider.MysqlDatabase;
 import cat.nyaa.nyaacore.database.relational.Query;
 import cat.nyaa.nyaacore.database.relational.RelationalDB;
+import ch.vorburger.exec.ManagedProcessException;
+import ch.vorburger.mariadb4j.DB;
+import ch.vorburger.mariadb4j.DBConfigurationBuilder;
 import org.bukkit.plugin.Plugin;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.ServerSocket;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class SqliteDatabaseTest {
+public class MysqlDatabaseTest {
+    private static int port;
+    private static DB embeddedDB;
     private RelationalDB db;
     private RelationalDB db2;
 
-    @Before
-    public void prepareDatabase() {
-        SQLiteDatabase.executor = (p) -> Runnable::run;
-        SQLiteDatabase.logger = (p) -> Logger.getLogger("NyaaCoreTest");
+    @BeforeClass
+    public static void prepareEmbeddedDB() throws ManagedProcessException, IOException {
+        MysqlDatabase.executor = (p) -> Runnable::run;
+        MysqlDatabase.logger = (p) -> Logger.getLogger("NyaaCoreTest");
+        DBConfigurationBuilder configBuilder = DBConfigurationBuilder.newBuilder();
+        String tmpDir = System.getProperty("java.io.tmpdir");
+        configBuilder.setBaseDir(tmpDir + "MariaDB4j\\base");
+        configBuilder.setLibDir(tmpDir + "MariaDB4j\\base\\libs");
+        configBuilder.setDataDir(tmpDir + "MariaDB4j\\data");
+        ServerSocket s = new ServerSocket(0);
+        port = s.getLocalPort();
+        configBuilder.setPort(port);
+        embeddedDB = DB.newEmbeddedDB(configBuilder.build());
+        s.close();
+        embeddedDB.start();
+        port = embeddedDB.getConfiguration().getPort();
+    }
 
-        Map<String, Object> conf = new HashMap<>();
-        File file = new File("./testdb.db");
-        if (file.exists()) {
-            if (!new File("./testdb.db").delete()) {
-                throw new IllegalStateException();
-            }
+
+    @AfterClass
+    public static void shutdownEmbeddedDB() {
+        try {
+            embeddedDB.stop();
+        } catch (Exception e) {
+            Logger.getLogger("NyaaCoreTest").log(Level.WARNING, "failed to stop embeddedDB", e);
         }
-        conf.put("file", "testdb.db");
+    }
+
+    @Before
+    public void prepareDatabase() throws ManagedProcessException {
+        embeddedDB.run("drop database if exists test;");
+        embeddedDB.run("create database test;");
+        Map<String, Object> conf = new HashMap<>();
+        conf.put("url", String.format("jdbc:mysql://127.0.0.1:%d/test?useSSL=false", port));
         conf.put("autoscan", "false");
+        conf.put("username", "root");
+        conf.put("password", "");
         conf.put("tables", Collections.singleton(TestTable.class.getName()));
         Plugin mockPlugin = mock(Plugin.class);
         when(mockPlugin.getDataFolder()).thenReturn(new File("./"));
         when(mockPlugin.getLogger()).thenReturn(Logger.getGlobal());
-        db = DatabaseUtils.get("sqlite", mockPlugin, conf, RelationalDB.class);
-        db2 = DatabaseUtils.get("sqlite", mockPlugin, conf, RelationalDB.class);
+        db = DatabaseUtils.get("mysql", mockPlugin, conf, RelationalDB.class);
+        db2 = DatabaseUtils.get("mysql", mockPlugin, conf, RelationalDB.class);
     }
 
     @Test
@@ -60,6 +89,7 @@ public class SqliteDatabaseTest {
 
     @Test
     public void testTransInsert() throws Exception {
+        assertEquals(0, db.query(TestTable.class).count());
         try (Query<TestTable> query = db.queryTransactional(TestTable.class)) {
             query.insert(new TestTable(1L, "test", UUID.randomUUID(), UUID.randomUUID()));
             query.insert(new TestTable(2L, "test", UUID.randomUUID(), UUID.randomUUID()));
@@ -70,6 +100,7 @@ public class SqliteDatabaseTest {
 
     @Test
     public void testTransInsertRollbackedByNonSqlEx() {
+        assertEquals(0, db.query(TestTable.class).count());
         db.query(TestTable.class).insert(new TestTable(3L, "test", UUID.randomUUID(), UUID.randomUUID()));
         db.query(TestTable.class).insert(new TestTable(4L, "test", UUID.randomUUID(), UUID.randomUUID()));
         try (Query<TestTable> query = db.queryTransactional(TestTable.class)) {
@@ -88,6 +119,7 @@ public class SqliteDatabaseTest {
 
     @Test
     public void testTransInsertRollbackedBySqlEx() {
+        assertEquals(0, db.query(TestTable.class).count());
         db.query(TestTable.class).insert(new TestTable(3L, "test", UUID.randomUUID(), UUID.randomUUID()));
         db.query(TestTable.class).insert(new TestTable(4L, "test", UUID.randomUUID(), UUID.randomUUID()));
         try (Query<TestTable> query = db.queryTransactional(TestTable.class)) {
@@ -95,6 +127,7 @@ public class SqliteDatabaseTest {
             query.insert(new TestTable(2L, "test", UUID.randomUUID(), UUID.randomUUID()));
             //Throws SQLException because of comparator
             query.where("string", " throw ", "test").count();
+            fail();
         } catch (Exception e) {
             assertTrue(e.getCause() instanceof SQLException);
         }
@@ -103,6 +136,7 @@ public class SqliteDatabaseTest {
 
     @Test
     public void testTransInsertNotVisibleBeforeCommit() {
+        assertEquals(0, db.query(TestTable.class).count());
         try (Query<TestTable> query = db.queryTransactional(TestTable.class)) {
             query.insert(new TestTable(1L, "test", UUID.randomUUID(), UUID.randomUUID()));
             query.insert(new TestTable(2L, "test", UUID.randomUUID(), UUID.randomUUID()));
@@ -139,8 +173,5 @@ public class SqliteDatabaseTest {
     public void closeDatabase() {
         db.close();
         db2.close();
-        if (!new File("./testdb.db").delete()) {
-            throw new IllegalStateException();
-        }
     }
 }
