@@ -1,18 +1,19 @@
 package cat.nyaa.nyaacore.utils;
 
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import net.minecraft.server.v1_13_R2.CriterionConditionNBT;
-import net.minecraft.server.v1_13_R2.EntityHuman;
-import net.minecraft.server.v1_13_R2.MojangsonParser;
-import net.minecraft.server.v1_13_R2.NBTTagCompound;
+import net.minecraft.server.v1_13_R2.*;
 import org.bukkit.World;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockState;
 import org.bukkit.craftbukkit.v1_13_R2.CraftWorld;
 import org.bukkit.craftbukkit.v1_13_R2.entity.CraftEntity;
 import org.bukkit.craftbukkit.v1_13_R2.entity.CraftLivingEntity;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public final class NmsUtils {
     /* see CommandEntityData.java */
@@ -91,5 +92,17 @@ public final class NmsUtils {
         if (e == null) throw new IllegalArgumentException();
         CraftEntity nmsEntity = (CraftEntity) e;
         nmsEntity.getHandle().onGround = isOnGround;
+    }
+
+    public static List<Block> getTileEntities(World world){
+        List<TileEntity> tileEntityList = ((CraftWorld) world).getHandle().tileEntityListTick;
+        // Safe to parallelize getPosition and getBlockAt
+        return tileEntityList.stream().parallel().map(TileEntity::getPosition).map(p -> world.getBlockAt(p.getX(), p.getY(), p.getZ())).collect(Collectors.toList());
+    }
+
+    public static List<BlockState> getTileEntityBlockStates(World world){
+        List<TileEntity> tileEntityList = ((CraftWorld) world).getHandle().tileEntityListTick;
+        // Not safe to parallelize getState
+        return tileEntityList.stream().map(TileEntity::getPosition).map(p -> world.getBlockAt(p.getX(), p.getY(), p.getZ())).map(Block::getState).collect(Collectors.toList());
     }
 }

@@ -7,6 +7,7 @@ import cat.nyaa.nyaacore.timer.TimerManager;
 import cat.nyaa.nyaacore.utils.ClickSelectionUtils;
 import cat.nyaa.nyaacore.utils.OfflinePlayerUtils;
 import org.bukkit.Bukkit;
+import org.bukkit.craftbukkit.v1_13_R2.util.CraftMagicNumbers;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class NyaaCoreLoader extends JavaPlugin {
@@ -17,6 +18,8 @@ public class NyaaCoreLoader extends JavaPlugin {
         return instance;
     }
 
+    public static final String TARGET_MAPPING = "00ed8e5c39debc3ed194ad7c5645cc45";
+
     @Override
     public void onLoad() {
         instance = this;
@@ -26,6 +29,14 @@ public class NyaaCoreLoader extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        try {
+            boolean check = MappingChecker.check();
+            if (!check){
+                getLogger().severe("CraftBukkit Mapping changed! Use with caution!");
+            }
+        } catch (NoSuchMethodError e){
+            getLogger().info("Cannot detect CraftBukkit Mapping!");
+        }
         HttpClient.init(0);
         IMessageQueue.DefaultMessageQueue defaultMessageQueue = new IMessageQueue.DefaultMessageQueue();
         Bukkit.getPluginManager().registerEvents(defaultMessageQueue, this);
@@ -40,5 +51,12 @@ public class NyaaCoreLoader extends JavaPlugin {
     public void onDisable() {
         HttpClient.shutdown();
         //timerManager.save();
+    }
+
+    private static class MappingChecker {
+        static boolean check() {
+            String mappingsVersion = ((CraftMagicNumbers) CraftMagicNumbers.INSTANCE).getMappingsVersion();
+            return TARGET_MAPPING.equals(mappingsVersion);
+        }
     }
 }

@@ -10,7 +10,7 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 
 public final class VaultUtils {
     public static Economy getVaultEconomy() {
-        if(eco == null){
+        if (eco == null) {
             RegisteredServiceProvider<Economy> provider = Bukkit.getServer().getServicesManager().getRegistration(Economy.class);
             if (provider != null) {
                 return eco = provider.getProvider();
@@ -23,7 +23,7 @@ public final class VaultUtils {
     }
 
     public static Chat getVaultChat() {
-        if(chat == null){
+        if (chat == null) {
             RegisteredServiceProvider<Chat> provider = Bukkit.getServer().getServicesManager().getRegistration(Chat.class);
             if (provider != null) {
                 return chat = provider.getProvider();

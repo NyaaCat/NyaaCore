@@ -72,3 +72,5 @@ build
 !lib/LocketteProAPI.jar
 !lib/EssentialsX-2.0.1-468.jar
 !/gradle/wrapper/gradle-wrapper.jar
+/testdb.db
+/testdb.db-journal
