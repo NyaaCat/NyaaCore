@@ -48,25 +48,40 @@ import static java.util.logging.Level.WARNING;
 public final class ClassPathUtils {
 
     @SuppressWarnings("unchecked")
-    public static <T> Class<? extends T>[] scanSubclasses(Plugin plugin, String pack, Class<T> clazz) {
+    public static <T> Class<? extends T>[] scanSubclasses(File file, ClassLoader classLoader, String pack, Class<T> clazz) {
         try {
-            Set<ClassPathUtils.ClassInfo> classInfos = from(new File(plugin.getClass().getProtectionDomain().getCodeSource().getLocation().toURI()), plugin.getClass().getClassLoader()).getAllClasses();
-            return (Class<? extends T>[])loadClassesInPackage(pack, classInfos)
-                           .filter(c -> c != null && clazz.isAssignableFrom(c))
-                           .toArray(Class<?>[]::new);
-        } catch (IOException | URISyntaxException e) {
+            Set<ClassPathUtils.ClassInfo> classInfos = from(file, classLoader).getAllClasses();
+            return (Class<? extends T>[]) loadClassesInPackage(pack, classInfos)
+                                                  .filter(c -> c != null && clazz.isAssignableFrom(c))
+                                                  .toArray(Class<?>[]::new);
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    @SuppressWarnings("unchecked")
-    public static Class<?>[] scanClassesWithAnnotations(Plugin plugin, String pack, Class<? extends Annotation> annotation) {
+    public static Class<?>[] scanClassesWithAnnotations(File file, ClassLoader classLoader, String pack, Class<? extends Annotation> annotation) {
         try {
-            Set<ClassPathUtils.ClassInfo> classInfos = from(new File(plugin.getClass().getProtectionDomain().getCodeSource().getLocation().toURI()), plugin.getClass().getClassLoader()).getAllClasses();
+            Set<ClassPathUtils.ClassInfo> classInfos = from(file, classLoader).getAllClasses();
             return loadClassesInPackage(pack, classInfos)
                            .filter(c -> c != null && c.getAnnotation(annotation) != null)
                            .toArray(Class<?>[]::new);
-        } catch (IOException | URISyntaxException e) {
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static <T> Class<? extends T>[] scanSubclasses(Plugin plugin, String pack, Class<T> clazz) {
+        try {
+            return scanSubclasses(new File(plugin.getClass().getProtectionDomain().getCodeSource().getLocation().toURI()), plugin.getClass().getClassLoader(), pack, clazz);
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static Class<?>[] scanClassesWithAnnotations(Plugin plugin, String pack, Class<? extends Annotation> annotation) {
+        try {
+            return scanClassesWithAnnotations(new File(plugin.getClass().getProtectionDomain().getCodeSource().getLocation().toURI()), plugin.getClass().getClassLoader(), pack, annotation);
+        } catch (URISyntaxException e) {
             throw new RuntimeException(e);
         }
     }
