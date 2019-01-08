@@ -33,8 +33,8 @@ public class MysqlDatabaseTest {
 
     @BeforeClass
     public static void prepareEmbeddedDB() throws ManagedProcessException, IOException {
-        MysqlDatabase.executor = (p) -> Runnable::run;
-        MysqlDatabase.logger = (p) -> Logger.getLogger("NyaaCoreTest");
+        MysqlDatabase.executorSupplier = (p) -> Runnable::run;
+        MysqlDatabase.loggerSupplier = (p) -> Logger.getLogger("NyaaCoreTest");
         DBConfigurationBuilder configBuilder = DBConfigurationBuilder.newBuilder();
         String tmpDir = new File(System.getProperty("java.io.tmpdir")).getCanonicalPath();
         configBuilder.setBaseDir(tmpDir + File.separatorChar + "MariaDB4j" + File.separatorChar + "base");

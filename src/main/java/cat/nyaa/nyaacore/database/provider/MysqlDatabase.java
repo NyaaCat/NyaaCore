@@ -19,11 +19,11 @@ public class MysqlDatabase extends BaseDatabase {
     private String user;
     private String password;
     private Connection connection;
-    public static Function<Plugin, Consumer<Runnable>> executor = (plugin) -> (runnable) -> Bukkit.getScheduler().runTaskAsynchronously(plugin, runnable);
-    public static Function<Plugin, Logger> logger = Plugin::getLogger;
+    public static Function<Plugin, Consumer<Runnable>> executorSupplier = (plugin) -> (runnable) -> Bukkit.getScheduler().runTaskAsynchronously(plugin, runnable);
+    public static Function<Plugin, Logger> loggerSupplier = Plugin::getLogger;
 
     public MysqlDatabase(Plugin basePlugin, String jdbcDriver, String dbUrl, String user, String password) {
-        super(logger.apply(basePlugin), (runnable) -> executor.apply(basePlugin));
+        super(loggerSupplier.apply(basePlugin), (runnable) -> executorSupplier.apply(basePlugin));
         try {
             Class.forName(jdbcDriver);
         } catch (ClassNotFoundException e) {

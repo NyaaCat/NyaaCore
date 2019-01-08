@@ -19,8 +19,8 @@ public class BaseDatabaseTest {
 
     @Before
     public void prepareDatabase() {
-        SQLiteDatabase.executor = (p) -> Runnable::run;
-        SQLiteDatabase.logger = (p) -> Logger.getLogger("NyaaCoreTest");
+        SQLiteDatabase.executorSupplier = (p) -> Runnable::run;
+        SQLiteDatabase.loggerSupplier = (p) -> Logger.getLogger("NyaaCoreTest");
 
         Plugin p = Mockito.mock(Plugin.class);
         Mockito.when(p.getDataFolder()).thenReturn(new File("."));

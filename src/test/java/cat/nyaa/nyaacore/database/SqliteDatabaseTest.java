@@ -23,12 +23,11 @@ import static org.mockito.Mockito.when;
 
 public class SqliteDatabaseTest {
     private RelationalDB db;
-    private RelationalDB db2;
 
     @Before
     public void prepareDatabase() {
-        SQLiteDatabase.executor = (p) -> Runnable::run;
-        SQLiteDatabase.logger = (p) -> Logger.getLogger("NyaaCoreTest");
+        SQLiteDatabase.executorSupplier = (p) -> Runnable::run;
+        SQLiteDatabase.loggerSupplier = (p) -> Logger.getLogger("NyaaCoreTest");
 
         Map<String, Object> conf = new HashMap<>();
         File file = new File("./testdb.db");
@@ -44,7 +43,6 @@ public class SqliteDatabaseTest {
         when(mockPlugin.getDataFolder()).thenReturn(new File("./"));
         when(mockPlugin.getLogger()).thenReturn(Logger.getGlobal());
         db = DatabaseUtils.get("sqlite", mockPlugin, conf, RelationalDB.class);
-        db2 = DatabaseUtils.get("sqlite", mockPlugin, conf, RelationalDB.class);
     }
 
     @Test
@@ -102,40 +100,6 @@ public class SqliteDatabaseTest {
         }
         assertEquals(2, db.query(TestTable.class).count());
     }
-
-    @Test
-    public void testTransInsertNotVisibleBeforeCommit() {
-        try (Query<TestTable> query = db.queryTransactional(TestTable.class)) {
-            query.insert(new TestTable(1L, "test", UUID.randomUUID(), UUID.randomUUID()));
-            query.insert(new TestTable(2L, "test", UUID.randomUUID(), UUID.randomUUID()));
-            assertEquals(0, db2.query(TestTable.class).count());
-            assertEquals(0, db.query(TestTable.class).count());
-            assertEquals(2, query.count());
-            query.commit();
-        }
-        try (Query<TestTable> query2 = db2.queryTransactional(TestTable.class)) {
-            query2.insert(new TestTable(3L, "test2", UUID.randomUUID(), UUID.randomUUID()));
-            query2.insert(new TestTable(4L, "test2", UUID.randomUUID(), UUID.randomUUID()));
-            assertEquals(2, db2.query(TestTable.class).count());
-            assertEquals(2, db.query(TestTable.class).count());
-            assertEquals(4, query2.count());
-            query2.commit();
-        }
-        try (Query<TestTable> query3 = db2.queryTransactional(TestTable.class)) {
-            query3.insert(new TestTable(5L, "test3", UUID.randomUUID(), UUID.randomUUID()));
-            query3.insert(new TestTable(6L, "test3", UUID.randomUUID(), UUID.randomUUID()));
-            assertEquals(2, query3.where("string", "=", "test3").count());
-            assertEquals(0, db.query(TestTable.class).where("string", "=", "test3").count());
-            assertEquals(4, db2.query(TestTable.class).count());
-            assertEquals(4, db.query(TestTable.class).count());
-            assertEquals(6, query3.reset().count());
-            throwException();
-            query3.commit();
-        } catch (Exception ignored) {
-        }
-        assertEquals(4, db.query(TestTable.class).count());
-        assertEquals(4, db2.query(TestTable.class).count());
-    }
     
     @Test
     public void testTransUpdateParallel() {
@@ -154,6 +118,9 @@ public class SqliteDatabaseTest {
         assertEquals("100", db.query(TestTable.class).selectUnique().string);
     }
 
+    /**
+     * SQLite database transactions are serializable
+     */
     @Test
     public void testTransUpdateParallelNotForUpdate() {
         assertEquals(0, db.query(TestTable.class).count());
@@ -171,10 +138,40 @@ public class SqliteDatabaseTest {
         assertEquals("100", db.query(TestTable.class).selectUnique().string);
     }
 
+    /**
+     * Leaked SQLiteQuery should will be picked up by FinalizableReferenceQueue and rollbacked
+     */
+    @Test
+    public void testTransUnclosed() {
+        assertEquals(0, db.query(TestTable.class).count());
+        db.query(TestTable.class).insert(new TestTable(1L, "0", UUID.randomUUID(), UUID.randomUUID()));
+        leakQuery();
+        IntStream.range(0, 100).parallel().forEach((i) -> {
+            System.gc();
+            try (Query<TestTable> query = db.queryTransactional(TestTable.class)) {
+                TestTable current = query.whereEq("id", 1L).selectUnique();
+                assertNotNull(current);
+                int currentInt = Integer.parseInt(current.string);
+                current.string = String.valueOf(currentInt + 1);
+                query.update(current, "string");
+                query.commit();
+            }
+        });
+        assertEquals("100", db.query(TestTable.class).selectUnique().string);
+    }
+
+    private void leakQuery() {
+        Query<TestTable> query = db.queryTransactional(TestTable.class);
+        TestTable current = query.whereEq("id", 1L).selectUnique();
+        assertNotNull(current);
+        int currentInt = Integer.parseInt(current.string);
+        current.string = String.valueOf(currentInt + 1);
+        query.update(current, "string");
+    }
+
     @After
     public void closeDatabase() {
         db.close();
-        db2.close();
         if (!new File("./testdb.db").delete()) {
             throw new IllegalStateException();
         }
