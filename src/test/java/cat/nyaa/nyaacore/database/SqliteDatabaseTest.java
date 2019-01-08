@@ -96,6 +96,7 @@ public class SqliteDatabaseTest {
             query.insert(new TestTable(2L, "test", UUID.randomUUID(), UUID.randomUUID()));
             //Throws SQLException because of comparator
             query.where("string", " throw ", "test").count();
+            fail();
         } catch (Exception e) {
             assertTrue(e.getCause() instanceof SQLException);
         }
@@ -143,6 +144,23 @@ public class SqliteDatabaseTest {
         IntStream.range(0, 100).parallel().forEach((i) -> {
             try (Query<TestTable> query = db.queryTransactional(TestTable.class)) {
                 TestTable current = query.whereEq("id", 1L).selectUniqueForUpdate();
+                assertNotNull(current);
+                int currentInt = Integer.parseInt(current.string);
+                current.string = String.valueOf(currentInt + 1);
+                query.update(current, "string");
+                query.commit();
+            }
+        });
+        assertEquals("100", db.query(TestTable.class).selectUnique().string);
+    }
+
+    @Test
+    public void testTransUpdateParallelNotForUpdate() {
+        assertEquals(0, db.query(TestTable.class).count());
+        db.query(TestTable.class).insert(new TestTable(1L, "0", UUID.randomUUID(), UUID.randomUUID()));
+        IntStream.range(0, 100).parallel().forEach((i) -> {
+            try (Query<TestTable> query = db.queryTransactional(TestTable.class)) {
+                TestTable current = query.whereEq("id", 1L).selectUnique();
                 assertNotNull(current);
                 int currentInt = Integer.parseInt(current.string);
                 current.string = String.valueOf(currentInt + 1);

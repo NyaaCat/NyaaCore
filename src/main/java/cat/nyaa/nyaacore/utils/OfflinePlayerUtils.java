@@ -8,6 +8,7 @@ import com.google.common.collect.ImmutableBiMap;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import io.netty.handler.codec.http.FullHttpResponse;
+import io.netty.util.ReferenceCountUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.event.EventHandler;
@@ -65,16 +66,20 @@ public class OfflinePlayerUtils {
         }
         CompletableFuture<FullHttpResponse> response = HttpClient.postJson("https://api.mojang.com/profiles/minecraft", Collections.emptyMap(), new Gson().toJson(Stream.of(names).collect(Collectors.toList())));
         return response.thenApply((r) -> {
-            NyaaCoreLoader.getInstance().getLogger().log(Level.FINER, "request name -> uuid api " + r.status().code());
-            if (r.status().code() > 299 || r.content() == null) {
-                return HashBiMap.<UUID, String>create();
+            try {
+                NyaaCoreLoader.getInstance().getLogger().log(Level.FINER, "request name -> uuid api " + r.status().code());
+                if (r.status().code() > 299 || r.content() == null) {
+                    return HashBiMap.<UUID, String>create();
+                }
+                List<Map<String, Object>> result = new Gson().fromJson(r.content().toString(UTF_8), typeTokenListMap.getType());
+                return result.stream().collect(ImmutableBiMap.toImmutableBiMap(m -> {
+                            m.get("id");
+                            return UUID.fromString(((String) m.get("id")).replaceAll(UNDASHED, DASHED));
+                        },
+                        m -> (String) m.get("name")));
+            } finally {
+                ReferenceCountUtil.release(r);
             }
-            List<Map<String, Object>> result = new Gson().fromJson(r.content().toString(UTF_8), typeTokenListMap.getType());
-            return result.stream().collect(ImmutableBiMap.toImmutableBiMap(m -> {
-                        m.get("id");
-                        return UUID.fromString(((String) m.get("id")).replaceAll(UNDASHED, DASHED));
-                    },
-                    m -> (String) m.get("name")));
         }).thenApply(u -> {
             nameCache.putAll(u);
             ret.putAll(u.inverse());
@@ -92,16 +97,20 @@ public class OfflinePlayerUtils {
         }
         CompletableFuture<FullHttpResponse> response = HttpClient.get("https://api.mojang.com/user/profiles/" + uuid.toString().toLowerCase().replace("-", "") + "/names", Collections.emptyMap());
         return response.thenApply((r) -> {
-            NyaaCoreLoader.getInstance().getLogger().log(Level.FINER, "request uuid -> name api " + r.status().code());
-            if (r.status().code() > 299 || r.content() == null) {
-                return null;
+            try {
+                NyaaCoreLoader.getInstance().getLogger().log(Level.FINER, "request uuid -> name api " + r.status().code());
+                if (r.status().code() > 299 || r.content() == null) {
+                    return null;
+                }
+                List<Map<String, Object>> nameMapsList = new Gson().fromJson(r.content().toString(UTF_8), typeTokenListMap.getType());
+                if (nameMapsList.isEmpty()) {
+                    return null;
+                }
+                nameCache.put(uuid, nameMapsList.get(nameMapsList.size() - 1).get("name").toString());
+                return nameCache.get(uuid);
+            } finally {
+                ReferenceCountUtil.release(r);
             }
-            List<Map<String, Object>> nameMapsList = new Gson().fromJson(r.content().toString(UTF_8), typeTokenListMap.getType());
-            if (nameMapsList.isEmpty()){
-                return null;
-            }
-            nameCache.put(uuid, nameMapsList.get(nameMapsList.size() - 1).get("name").toString());
-            return nameCache.get(uuid);
         }).exceptionally((e) -> {
             NyaaCoreLoader.getInstance().getLogger().log(Level.INFO, "failed to request uuid -> name api", e);
             return null;

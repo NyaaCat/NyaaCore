@@ -202,6 +202,7 @@ public class MysqlDatabaseTest {
             }
         });
         System.out.println(db.query(TestTable.class).selectUnique().string);
+        assertTrue(Integer.parseInt(db.query(TestTable.class).selectUnique().string) <= 100);
     }
 
     @After
