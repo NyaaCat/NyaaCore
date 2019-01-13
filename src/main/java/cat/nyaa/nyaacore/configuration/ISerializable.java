@@ -165,7 +165,9 @@ public interface ISerializable {
                     }
                     newValue = map;
                 } else if (UUID.class.isAssignableFrom(f.getType())) {
-                    newValue = UUID.fromString((String) newValue);
+                    if (newValue != null) {
+                        newValue = UUID.fromString((String) newValue);
+                    }
                 }
 
                 f.set(obj, newValue);
@@ -246,7 +248,9 @@ public interface ISerializable {
                 //} else if (List.class.isAssignableFrom(f.getType())) {
                 //    throw new RuntimeException("List serialization is not supported: " + f.toString());
                 } else if (UUID.class.isAssignableFrom(f.getType())) {
-                    config.set(cfgName, f.get(obj).toString());
+                    Object uuidString = f.get(obj);
+                    if (uuidString == null) continue;
+                    config.set(cfgName, uuidString.toString());
                 } else {
                     Object origValue = f.get(obj);
                     if (origValue == null) continue;
