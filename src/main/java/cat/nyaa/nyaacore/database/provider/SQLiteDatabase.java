@@ -96,7 +96,13 @@ public class SQLiteDatabase extends BaseDatabase {
     @Override
     @SuppressWarnings("rawtypes")
     public void createTable(Class<?> cls) {
-        mainConnLock.acquireUninterruptibly();
+        try {
+            if (!mainConnLock.tryAcquire(10, TimeUnit.SECONDS)) {
+                throw new IllegalStateException();
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
         try {
             Validate.notNull(cls);
             if (createdTableClasses.contains(cls)) return;
@@ -150,14 +156,7 @@ public class SQLiteDatabase extends BaseDatabase {
     @Override
     public <T> SynchronizedQuery.TransactionalQuery<T> queryTransactional(Class<T> tableClass) {
         Connection conn;
-        try {
-            createTable(tableClass);
-            conn = getConnection();
-            conn.setAutoCommit(false);
-        } catch (Throwable ex) {
-            mainConnLock.release();
-            throw new RuntimeException(ex);
-        }
+        createTable(tableClass);
         try {
             if (!mainConnLock.tryAcquire(10, TimeUnit.SECONDS)) {
                 throw new IllegalStateException();
@@ -165,12 +164,19 @@ public class SQLiteDatabase extends BaseDatabase {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+        try {
+            conn = getConnection();
+            conn.setAutoCommit(false);
+        } catch (Throwable ex) {
+            mainConnLock.release();
+            throw new RuntimeException(ex);
+        }
         SQLiteQuery<T> sqliteQuery = new SQLiteQuery<>(tableClass, conn, logger);
         FinalizablePhantomReference<SynchronizedQuery.TransactionalQuery<T>> reference = new FinalizablePhantomReference<SynchronizedQuery.TransactionalQuery<T>>(sqliteQuery, frq) {
             public void finalizeReferent() {
                 Semaphore lock = references.remove(this);
                 if (lock != null) {
-                    logger.severe("Unhandled TransactionalQuery found");
+                    logger.severe("Unhandled TransactionalQuery found: " + this);
                     try {
                         if (conn.isValid(1) && !conn.getAutoCommit()) {
                             conn.rollback();
@@ -180,7 +186,7 @@ public class SQLiteDatabase extends BaseDatabase {
                         logger.log(Level.SEVERE, "Bad connection!", e);
                     }
                     dbConn = null;
-                    dbConn = newConnection();
+                    dbConn = createConnection();
                     lock.release();
                 }
             }
