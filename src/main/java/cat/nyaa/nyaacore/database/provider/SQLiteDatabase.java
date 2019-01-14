@@ -19,6 +19,7 @@ import java.sql.Statement;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.logging.Level;
@@ -32,7 +33,7 @@ public class SQLiteDatabase extends BaseDatabase {
     public static Function<Plugin, Consumer<Runnable>> executorSupplier = (plugin) -> (runnable) -> Bukkit.getScheduler().runTaskAsynchronously(plugin, runnable);
     public static Function<Plugin, Logger> loggerSupplier = Plugin::getLogger;
     private final Semaphore mainConnLock = new Semaphore(1);
-
+    private final AtomicBoolean mainConnInTransaction = new AtomicBoolean(false);
     private static FinalizableReferenceQueue frq = new FinalizableReferenceQueue();
     private static final ConcurrentMap<Reference<?>, Semaphore> references = Maps.newConcurrentMap();
 
@@ -94,8 +95,9 @@ public class SQLiteDatabase extends BaseDatabase {
     }
 
     @Override
-    @SuppressWarnings("rawtypes")
     public void createTable(Class<?> cls) {
+        Validate.notNull(cls);
+        if (createdTableClasses.contains(cls)) return;
         try {
             if (!mainConnLock.tryAcquire(10, TimeUnit.SECONDS)) {
                 throw new IllegalStateException();
@@ -104,18 +106,22 @@ public class SQLiteDatabase extends BaseDatabase {
             throw new RuntimeException(e);
         }
         try {
-            Validate.notNull(cls);
-            if (createdTableClasses.contains(cls)) return;
-            TableStructure ts = TableStructure.fromClass(cls);
-            String sql = ts.getCreateTableSQL("sqlite");
-            try (Statement smt = getConnection().createStatement()) {
-                smt.executeUpdate(sql);
-                createdTableClasses.add(cls);
-            } catch (SQLException ex) {
-                throw new RuntimeException(sql, ex);
-            }
+            createTable(cls, getConnection());
         } finally {
             mainConnLock.release();
+        }
+    }
+
+    private void createTable(Class<?> cls, Connection conn) {
+        Validate.notNull(cls);
+        if (createdTableClasses.contains(cls)) return;
+        TableStructure ts = TableStructure.fromClass(cls);
+        String sql = ts.getCreateTableSQL("sqlite");
+        try (Statement smt = conn.createStatement()) {
+            smt.executeUpdate(sql);
+            createdTableClasses.add(cls);
+        } catch (SQLException ex) {
+            throw new RuntimeException(sql, ex);
         }
     }
 
@@ -129,34 +135,68 @@ public class SQLiteDatabase extends BaseDatabase {
         try {
             mainConnLock.acquireUninterruptibly();
             super.beginTransaction();
+            mainConnInTransaction.set(true);
         } catch (Throwable e) {
             mainConnLock.release();
+            mainConnInTransaction.set(false);
             throw e;
         }
     }
 
     @Override
     public void commitTransaction() {
+        if (!mainConnInTransaction.get()) {
+            throw new IllegalStateException();
+        }
         try {
             super.commitTransaction();
         } finally {
             mainConnLock.release();
+            mainConnInTransaction.set(false);
         }
     }
 
     @Override
     public void rollbackTransaction() {
+        if (!mainConnInTransaction.get()) {
+            throw new IllegalStateException();
+        }
         try {
             super.rollbackTransaction();
         } finally {
             mainConnLock.release();
+            mainConnInTransaction.set(false);
         }
+    }
+
+    /**
+     * Return the SynchronizedQuery object for specified table class.
+     *
+     * @return SynchronizedQuery object
+     */
+    @Override
+    public <T> SynchronizedQuery.NonTransactionalQuery<T> query(Class<T> tableClass) {
+        if (mainConnInTransaction.get()) {
+            createTable(tableClass, getConnection());
+        } else {
+            createTable(tableClass);
+        }
+        return new SynchronizedQuery.NonTransactionalQuery<T>(tableClass, this.getConnection()) {
+            @Override
+            public T selectUniqueForUpdate() {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public void close() {
+
+            }
+        };
     }
 
     @Override
     public <T> SynchronizedQuery.TransactionalQuery<T> queryTransactional(Class<T> tableClass) {
         Connection conn;
-        createTable(tableClass);
         try {
             if (!mainConnLock.tryAcquire(10, TimeUnit.SECONDS)) {
                 throw new IllegalStateException();
@@ -167,6 +207,7 @@ public class SQLiteDatabase extends BaseDatabase {
         try {
             conn = getConnection();
             conn.setAutoCommit(false);
+            createTable(tableClass, conn);
         } catch (Throwable ex) {
             mainConnLock.release();
             throw new RuntimeException(ex);
