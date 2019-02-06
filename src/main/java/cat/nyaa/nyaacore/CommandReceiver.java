@@ -1,7 +1,6 @@
 package cat.nyaa.nyaacore;
 
 import cat.nyaa.nyaacore.utils.OfflinePlayerUtils;
-import com.earth2me.essentials.I18n;
 import com.google.common.base.Strings;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -10,6 +9,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -175,7 +175,7 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
     // acceptCommand() will be called directly in subcommand classes
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        Arguments cmd = Arguments.parse(args);
+        Arguments cmd = Arguments.parse(args, sender);
         if (cmd == null) return false;
         acceptCommand(sender, cmd);
         return true;
@@ -244,7 +244,7 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         try {
-            Arguments cmd = Arguments.parse(args);
+            Arguments cmd = Arguments.parse(args, sender);
             if (cmd == null) return null;
             return acceptTabComplete(sender, cmd);
         } catch (Exception ex) {
@@ -361,12 +361,14 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
 
         private List<String> parsedArguments = new ArrayList<>();
         private int index = 0;
+        private CommandSender sender;
 
-        private Arguments() {
+        private Arguments(CommandSender sender) {
+            this.sender = sender;
         }
 
-        public static Arguments parse(String[] rawArg) {
-            if (rawArg.length == 0) return new Arguments();
+        public static Arguments parse(String[] rawArg, CommandSender sender) {
+            if (rawArg.length == 0) return new Arguments(sender);
             String cmd = rawArg[0];
             for (int i = 1; i < rawArg.length; i++)
                 cmd += " " + rawArg[i];
@@ -414,7 +416,7 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
             if (tmp.length() > 0) cmdList.add(tmp);
             if (escape || quote) return null;
 
-            Arguments ret = new Arguments();
+            Arguments ret = new Arguments(sender);
             ret.parsedArguments = cmdList;
             return ret;
         }
@@ -540,6 +542,11 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
             OfflinePlayer player = OfflinePlayerUtils.lookupPlayer(name);
             if (player == null) throw new BadCommandException("internal.error.player_not_found", name);
             return player;
+        }
+
+        public List<Entity> nextSelectorEntities() {
+            String name = next();
+            return Bukkit.selectEntities(sender, name);
         }
 
         public Arguments nextAssert(String string) {
