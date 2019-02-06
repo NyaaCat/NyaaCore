@@ -531,9 +531,46 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
         public Player nextPlayer() {
             String name = next();
             if (name == null) throw new BadCommandException("internal.error.no_more_player");
+            if (name.startsWith("@")) {
+                List<Entity> entities = Bukkit.selectEntities(sender, name);
+                if (entities.size() != 1) {
+                    throw new BadCommandException("internal.error.no_more_player"); // TODO: more descriptive msg
+                }
+                Entity entity = entities.get(0);
+                if (!(entity instanceof Player)) {
+                    throw new BadCommandException("internal.error.no_more_player"); // TODO: more descriptive msg
+                }
+                return (Player) entity;
+            }
+            try {
+                UUID uuid = UUID.fromString(name);
+                Player p = Bukkit.getPlayer(uuid);
+                if (p == null) throw new BadCommandException("internal.error.player_not_found", name);
+                return p;
+            } catch (IllegalArgumentException ignored) {
+            }
             Player p = Bukkit.getPlayer(name);
             if (p == null) throw new BadCommandException("internal.error.player_not_found", name);
             return p;
+        }
+
+        public Player nextPlayerByName() {
+            String name = next();
+            if (name == null) throw new BadCommandException("internal.error.no_more_player");
+            Player p = Bukkit.getPlayer(name);
+            if (p == null) throw new BadCommandException("internal.error.player_not_found", name);
+            return p;
+        }
+
+        public Player nextPlayerOrSender() {
+            try {
+                return nextPlayer();
+            } catch (BadCommandException e) {
+                if (sender instanceof Player) {
+                    return (Player) sender;
+                }
+                throw e;
+            }
         }
 
         public OfflinePlayer nextOfflinePlayer() {
