@@ -563,14 +563,39 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
         }
 
         public Player nextPlayerOrSender() {
-            try {
-                return nextPlayer();
-            } catch (BadCommandException e) {
-                if (sender instanceof Player) {
-                    return (Player) sender;
-                }
-                throw e;
+            if (top() == null && sender instanceof Player) {
+                return (Player) sender;
             }
+            return nextPlayer();
+        }
+
+        public Entity nextEntity() {
+            String name = next();
+            if (name == null) throw new BadCommandException("internal.error.no_more_entity");
+            if (name.startsWith("@")) {
+                List<Entity> entities = Bukkit.selectEntities(sender, name);
+                if (entities.size() != 1) {
+                    throw new BadCommandException("internal.error.no_more_entity"); // TODO: more descriptive msg
+                }
+                return entities.get(0);
+            }
+            try {
+                UUID uuid = UUID.fromString(name);
+                Entity p = Bukkit.getEntity(uuid);
+                if (p == null) throw new BadCommandException("internal.error.entity_not_found", name);
+                return p;
+            } catch (IllegalArgumentException ignored) {
+            }
+            Player p = Bukkit.getPlayer(name);
+            if (p == null) throw new BadCommandException("internal.error.entity_not_found", name);
+            return p;
+        }
+
+        public Entity nextEntityOrSender() {
+            if (top() == null && sender instanceof Player) {
+                return (Player) sender;
+            }
+            return nextEntity();
         }
 
         public OfflinePlayer nextOfflinePlayer() {
