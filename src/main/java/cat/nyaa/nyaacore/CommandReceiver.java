@@ -363,6 +363,9 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
         private int index = 0;
         private CommandSender sender;
 
+        private Arguments() {
+        }
+
         private Arguments(CommandSender sender) {
             this.sender = sender;
         }
