@@ -2,11 +2,13 @@ package cat.nyaa.nyaacore;
 
 import cat.nyaa.nyaacore.component.IMessageQueue;
 import cat.nyaa.nyaacore.component.NyaaComponent;
+import cat.nyaa.nyaacore.configuration.NbtItemStack;
 import cat.nyaa.nyaacore.http.client.HttpClient;
 import cat.nyaa.nyaacore.timer.TimerManager;
 import cat.nyaa.nyaacore.utils.ClickSelectionUtils;
 import cat.nyaa.nyaacore.utils.OfflinePlayerUtils;
 import org.bukkit.Bukkit;
+import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.craftbukkit.v1_13_R2.util.CraftMagicNumbers;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -19,6 +21,10 @@ public class NyaaCoreLoader extends JavaPlugin {
     }
 
     public static final String TARGET_MAPPING = "00ed8e5c39debc3ed194ad7c5645cc45";
+
+    static {
+        ConfigurationSerialization.registerClass(NbtItemStack.class);
+    }
 
     @Override
     public void onLoad() {
