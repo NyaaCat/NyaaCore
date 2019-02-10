@@ -8,7 +8,9 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public final class InventoryUtils {
 
@@ -29,57 +31,69 @@ public final class InventoryUtils {
     }
 
     private static boolean addItem(Inventory inventory, ItemStack item, int amount) {
-        ItemStack[] items = new ItemStack[inventory.getSize()];
+        ItemStack i = item.clone();
+        i.setAmount(amount);
+        return addItems(inventory, Collections.singletonList(i));
+    }
+
+    public static boolean addItems(Inventory inventory, List<ItemStack> items) {
+        return _addItems(inventory, items.stream().filter(i -> i != null && i.getType() != Material.AIR).map(ItemStack::clone).collect(Collectors.toList()));
+    }
+
+    private static boolean _addItems(Inventory inventory, List<ItemStack> items) {
+        ItemStack[] tmpInv = new ItemStack[inventory.getSize()];
         for (int i = 0; i < inventory.getSize(); i++) {
             if (i >= 36 && i <= 39 && inventory instanceof PlayerInventory) {
-                items[i] = null;
+                tmpInv[i] = null;
                 continue;
             }
             if (inventory.getItem(i) != null && inventory.getItem(i).getType() != Material.AIR) {
-                items[i] = inventory.getItem(i).clone();
+                tmpInv[i] = inventory.getItem(i).clone();
             } else {
-                items[i] = new ItemStack(Material.AIR);
+                tmpInv[i] = new ItemStack(Material.AIR);
             }
         }
-        boolean success = false;
-        for (int slot = 0; slot < items.length; slot++) {
-            ItemStack tmp = items[slot];
-            if (tmp == null) {
-                continue;
-            }
-            if (item.isSimilar(tmp) && tmp.getAmount() < item.getMaxStackSize()) {
-                if ((tmp.getAmount() + amount) <= item.getMaxStackSize()) {
-                    tmp.setAmount(amount + tmp.getAmount());
-                    items[slot] = tmp;
-                    success = true;
-                    break;
-                } else {
-                    amount = amount - (item.getMaxStackSize() - tmp.getAmount());
-                    tmp.setAmount(item.getMaxStackSize());
-                    items[slot] = tmp;
+        for (ItemStack item : items) {
+            int amount = item.getAmount();
+            for (int slot = 0; slot < tmpInv.length; slot++) {
+                ItemStack tmp = tmpInv[slot];
+                if (tmp == null) {
                     continue;
                 }
-            }
-        }
-        if (!success) {
-            for (int i = 0; i < items.length; i++) {
-                if (items[i] != null && items[i].getType() == Material.AIR) {
-                    item.setAmount(amount);
-                    items[i] = item;
-                    success = true;
-                    break;
+                if (tmp.getAmount() < item.getMaxStackSize() && item.isSimilar(tmp)) {
+                    if ((tmp.getAmount() + amount) <= item.getMaxStackSize()) {
+                        tmp.setAmount(amount + tmp.getAmount());
+                        amount = 0;
+                        tmpInv[slot] = tmp;
+                        break;
+                    } else {
+                        amount = amount - (item.getMaxStackSize() - tmp.getAmount());
+                        tmp.setAmount(item.getMaxStackSize());
+                        tmpInv[slot] = tmp;
+                        continue;
+                    }
                 }
             }
-        }
-        if (success) {
-            for (int i = 0; i < items.length; i++) {
-                if (items[i] != null && !items[i].equals(inventory.getItem(i))) {
-                    inventory.setItem(i, items[i]);
+            if (amount > 0) {
+                for (int i = 0; i < tmpInv.length; i++) {
+                    if (tmpInv[i] != null && tmpInv[i].getType() == Material.AIR) {
+                        item.setAmount(amount);
+                        tmpInv[i] = item.clone();
+                        amount = 0;
+                        break;
+                    }
                 }
             }
-            return true;
+            if (amount > 0) {
+                return false;
+            }
         }
-        return false;
+        for (int i = 0; i < tmpInv.length; i++) {
+            if (tmpInv[i] != null && !tmpInv[i].equals(inventory.getItem(i))) {
+                inventory.setItem(i, tmpInv[i]);
+            }
+        }
+        return true;
     }
 
     public static boolean removeItem(Player player, ItemStack item, int amount) {
