@@ -370,6 +370,10 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
             this.sender = sender;
         }
 
+        public static Arguments parse(String[] rawArg) {
+            return parse(rawArg, null);
+        }
+
         public static Arguments parse(String[] rawArg, CommandSender sender) {
             if (rawArg.length == 0) return new Arguments(sender);
             String cmd = rawArg[0];
