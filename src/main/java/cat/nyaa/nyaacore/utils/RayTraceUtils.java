@@ -12,7 +12,6 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
@@ -31,18 +30,7 @@ public class RayTraceUtils {
                 stopOnLiquid ? FluidCollisionOption.ALWAYS : FluidCollisionOption.NEVER, ignoreBlockWithoutBoundingBox, returnLastUncollidableBlock);
 
         if (mop != null) {
-            BlockPosition blockPos = null;
-            try {
-                blockPos = mop.getBlockPosition();
-            } catch (Exception e) {
-                try {
-                    blockPos = (BlockPosition) ReflectionUtils.getMethod(MovingObjectPosition.class, "a").invoke(mop);
-                } catch (IllegalAccessException e1) {
-                    e1.printStackTrace();
-                } catch (InvocationTargetException e1) {
-                    e1.printStackTrace();
-                }
-            }
+            BlockPosition blockPos = mop.getBlockPosition();
             return world.getBlockAt(blockPos.getX(), blockPos.getY(), blockPos.getZ());
         }
         return null;
