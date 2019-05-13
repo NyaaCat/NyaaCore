@@ -4,68 +4,68 @@ plugins {
     id 'com.github.johnrengelman.shadow' version '2.0.4'
 }
 
-configurations.all {
-    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
-}
-
-// Version strings used for CI
-// Note the spaces before and after the equals sign
 ext.majorVersion = 6
-ext.minorVersion = 3
-ext.minecraftVersion = "1.13.2"
-
+ext.minorVersion = 4
+ext.minecraftVersion = "1.14"
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
-repositories {
-    jcenter()
-    // mavenLocal()
+// Suppiled by Jenkins
+ext.buildNumber = System.env.BUILD_NUMBER == null ? "x"                : "$System.env.BUILD_NUMBER"
+ext.mavenDirectory = System.env.MAVEN_DIR == null ? "$projectDir/repo" : "$System.env.MAVEN_DIR"
 
-    maven {
-        name 'Spigot'
-        url 'https://hub.spigotmc.org/nexus/content/groups/public/'
-    }
-
-    maven {
-        name 'Sonatype'
-        url 'https://oss.sonatype.org/content/groups/public'
-    }
-
-    maven {
-        name 'vault-repo'
-        url 'http://nexus.hc.to/content/repositories/pub_releases'
-    }
-
-    maven {
-        name 'ess-repo'
-        url 'http://repo.ess3.net/content/groups/essentials'
-    }
-
-    maven {
-        name 'NyaaCentral'
-        url 'https://raw.githubusercontent.com/NyaaCat/NyaaCentral/maven-repo'
-    }
+// Search for spigot nms jar file
+String spigotNmsPath = "";
+if (new File("${projectDir}/lib/spigot-${minecraftVersion}.jar").exists()) {
+    spigotNmsPath = "${projectDir}/lib/spigot-${minecraftVersion}.jar"
+} else if (new File("${mavenDirectory}/spigot-${minecraftVersion}-latest.jar").exists()) {
+    spigotNmsPath = "${mavenDirectory}/spigot-${minecraftVersion}-latest.jar"
+} else {
+    spigotNmsPath = "${projectDir}/lib/spigot-${minecraftVersion}.jar"
+    def f = new File(spigotNmsPath)
+    println "Downloading spigot-${minecraftVersion}.jar"
+    f.getParentFile().mkdirs();
+    new URL("https://ci.nyaacat.com/maven/spigot-${minecraftVersion}-latest.jar").withInputStream{ i -> f.withOutputStream{ it << i }}
 }
 
-shadowJar {
-    configurations = [project.configurations.shadow]
+// Version used for distribution. Different from maven repo
+group = "cat.nyaa"
+archivesBaseName = "NyaaCore-mc$minecraftVersion"
+version = "$majorVersion.$minorVersion.$buildNumber"
+
+// extra compile warnings
+compileJava {
+    options.compilerArgs += ["-Xlint:deprecation,unchecked,rawtypes"]
+    options.encoding = 'UTF-8'
+}
+
+repositories {
+    jcenter()
+    maven { name 'Spigot';      url 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/' }
+    maven { name 'Sonatype';    url 'https://oss.sonatype.org/content/groups/public' }
+    maven { name 'vault-repo';  url 'http://nexus.hc.to/content/repositories/pub_releases' }
+    maven { name 'ess-repo';    url 'http://repo.ess3.net/content/groups/essentials' }
+    maven { name 'NyaaCat';     url 'https://ci.nyaacat.com/maven/' }
+    maven { name 'NyaaCentral'; url 'https://raw.githubusercontent.com/NyaaCat/NyaaCentral/maven-repo'}
 }
 
 dependencies {
     // spigot dependencies
     compileOnly "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT"
     compileOnly 'io.netty:netty-all:4.1.25.Final' // netty is shadowed inside spigot jar
-    compileOnly files('lib/spigot-1.13.2.jar')    // for NMS
+    compileOnly files(spigotNmsPath)    // for NMS
     // compileOnly files('lib/patched_1.13.2.jar')    // for Paper NMS
 
-    // other plugins
-    compileOnly('net.milkbowl.vault:VaultAPI:1.7') { transitive = false }
-    compileOnly('net.ess3:Essentials:2.13-SNAPSHOT') { transitive = false }
+    // Nyaa plugins
     if (gradle.hasProperty("useLocalDependencies") && gradle.useLocalDependencies) {
         compileOnly project(":LanguageUtils")
     } else {
-        compileOnly 'cat.nyaa:LangUtils:2.1-SNAPSHOT'
+        compileOnly('com.meowj:LangUtils:2.2-SNAPSHOT')
     }
+    
+    // other plugins
+    compileOnly('net.milkbowl.vault:VaultAPI:1.7') { transitive = false }
+    compileOnly('net.ess3:Essentials:2.13-SNAPSHOT') { transitive = false }
 
     // 3rd party packages to be shadowed
     api 'javax.persistence:javax.persistence-api:2.2'
@@ -80,12 +80,13 @@ dependencies {
 
     // Testing
     testImplementation 'junit:junit:4.12'
-    testImplementation files('lib/spigot-1.13.2.jar')
+    testImplementation files(spigotNmsPath)
     testImplementation 'org.mockito:mockito-core:2.18.3'
     testImplementation 'org.xerial:sqlite-jdbc:3.21.0.1'
     testImplementation 'ch.vorburger.mariaDB4j:mariaDB4j:2.2.3'
 }
 
+// Testing configurations
 import org.gradle.internal.os.OperatingSystem
 String tmpDir = new File(System.getProperty("java.io.tmpdir")).getCanonicalPath()
 if (tmpDir.contains(' ')) {
@@ -95,7 +96,6 @@ if (tmpDir.contains(' ')) {
         tmpDir = '/tmp/NyaaCore/'
     }
 }
-
 test {
     useJUnit()
     testLogging {
@@ -105,10 +105,7 @@ test {
     systemProperty 'java.io.tmpdir', tmpDir
 }
 
-compileJava {
-    options.compilerArgs += ["-Xplugin:NyaaUtilsLangAnnotationProcessor", "-Xlint:deprecation,unchecked,rawtypes"]
-}
-
+// artifacts
 task sourcesJar(type: Jar) {
     classifier = 'sources'
     from sourceSets.main.java.srcDirs
@@ -117,6 +114,12 @@ task sourcesJar(type: Jar) {
 task javadocJar(type: Jar, dependsOn: javadoc) {
     classifier = 'javadoc'
     from javadoc.destinationDir
+}
+
+processResources { // modify version string
+    filesMatching("**/plugin.yml") {
+        expand 'version': project.version
+    }
 }
 
 publishing {
@@ -132,7 +135,7 @@ publishing {
     }
     repositories {
         maven {
-            url "$buildDir/repo"
+            url "$mavenDirectory"
         }
     }
 }

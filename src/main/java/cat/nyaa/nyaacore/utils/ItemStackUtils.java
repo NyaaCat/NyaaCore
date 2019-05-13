@@ -7,9 +7,9 @@ import com.google.common.io.ByteStreams;
 import com.mojang.datafixers.DSL;
 import com.mojang.datafixers.DataFixer;
 import com.mojang.datafixers.Dynamic;
-import net.minecraft.server.v1_13_R2.*;
+import net.minecraft.server.v1_14_R1.*;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v1_13_R2.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_14_R1.inventory.CraftItemStack;
 import org.bukkit.inventory.ItemStack;
 
 import java.io.*;
@@ -41,7 +41,7 @@ public final class ItemStackUtils {
      * @return binary NBT representation of the item stack
      */
     public static byte[] itemToBinary(ItemStack itemStack) throws IOException {
-        net.minecraft.server.v1_13_R2.ItemStack nativeItemStack = CraftItemStack.asNMSCopy(itemStack);
+        net.minecraft.server.v1_14_R1.ItemStack nativeItemStack = CraftItemStack.asNMSCopy(itemStack);
         NBTTagCompound nbtTagCompound = new NBTTagCompound();
         nativeItemStack.save(nbtTagCompound);
         nbtTagCompound.setInt(NYAACORE_ITEMSTACK_DATAVERSION_KEY, currentDataVersion);
@@ -94,7 +94,7 @@ public final class ItemStackUtils {
             Dynamic<NBTBase> out = dataFixer_instance.update(dataConverterTypes_ITEM_STACK, dynamicInstance, dataVersion, currentDataVersion);
             reconstructedNBTTagCompound = (NBTTagCompound) out.getValue();
         }
-        net.minecraft.server.v1_13_R2.ItemStack reconstructedNativeItemStack = net.minecraft.server.v1_13_R2.ItemStack.a(reconstructedNBTTagCompound);
+        net.minecraft.server.v1_14_R1.ItemStack reconstructedNativeItemStack = net.minecraft.server.v1_14_R1.ItemStack.a(reconstructedNBTTagCompound);
         return CraftItemStack.asBukkitCopy(reconstructedNativeItemStack);
     }
 
@@ -208,7 +208,7 @@ public final class ItemStackUtils {
      */
     public static String itemToJson(ItemStack itemStack) throws RuntimeException {
         NBTTagCompound nmsNbtTagCompoundObj; // This will just be an empty NBTTagCompound instance to invoke the saveNms method
-        net.minecraft.server.v1_13_R2.ItemStack nmsItemStackObj; // This is the net.minecraft.server.ItemStack object received from the asNMSCopy method
+        net.minecraft.server.v1_14_R1.ItemStack nmsItemStackObj; // This is the net.minecraft.server.ItemStack object received from the asNMSCopy method
         NBTTagCompound itemAsJsonObject; // This is the net.minecraft.server.ItemStack after being put through saveNmsItem method
 
         try {
