@@ -1,76 +1,47 @@
 package cat.nyaa.nyaacore.utils;
 
-import net.minecraft.server.v1_14_R1.*;
+import net.minecraft.server.v1_14_R1.Vec3D;
+import org.bukkit.FluidCollisionMode;
 import org.bukkit.GameMode;
-import org.bukkit.World;
 import org.bukkit.block.Block;
-import org.bukkit.craftbukkit.v1_14_R1.CraftWorld;
 import org.bukkit.craftbukkit.v1_14_R1.entity.CraftEntity;
-import org.bukkit.craftbukkit.v1_14_R1.entity.CraftLivingEntity;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Predicate;
 
 public class RayTraceUtils {
     public static Block rayTraceBlock(Player player) {
         float distance = player.getGameMode() == GameMode.CREATIVE ? 5.0F : 4.5F;
-        Vector start = player.getEyeLocation().toVector();
-        Vector end = start.clone().add(player.getEyeLocation().getDirection().multiply(distance));
-        return rayTraceBlock(player.getWorld(), start, end, false, false, true);
-    }
-
-    public static Block rayTraceBlock(World world, Vector start, Vector end, boolean stopOnLiquid, boolean ignoreBlockWithoutBoundingBox, boolean returnLastUncollidableBlock) {
-//        WorldServer worldServer = ((CraftWorld) world).getHandle();
-//        MovingObjectPosition mop = worldServer.rayTrace(
-//                toVec3DInternal(start),
-//                toVec3DInternal(end),
-//                stopOnLiquid ?
-//                        RayTrace.FluidCollisionOption.ANY :
-//                        RayTrace.FluidCollisionOption.NONE,
-//                ignoreBlockWithoutBoundingBox,
-//                returnLastUncollidableBlock);
-//
-//        if (mop != null) {
-//            BlockPosition blockPos = mop.getBlockPosition();
-//            return world.getBlockAt(blockPos.getX(), blockPos.getY(), blockPos.getZ());
-//        }
-        // FIXME
+        RayTraceResult r = player.getWorld().rayTraceBlocks(player.getEyeLocation(), player.getEyeLocation().getDirection(), distance, FluidCollisionMode.NEVER, false);
+        if (r != null) {
+            return r.getHitBlock();
+        }
         return null;
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    public static List<LivingEntity> rayTraceEntites(Player player, float distance) {
-        return rayTraceEntites(player, distance, not(player).and(canInteract()));
+    public static List<LivingEntity> rayTraceEntities(Player player, float distance) {
+        return rayTraceEntities(player, distance, not(player).and(canInteract()));
     }
 
-    @SuppressWarnings("rawtypes")
-    public static List<LivingEntity> rayTraceEntites(Player player, float distance, Predicate predicate) {
+    public static List<LivingEntity> rayTraceEntities(LivingEntity player, float distance, Predicate<Entity> predicate) {
+        List<LivingEntity> result = new ArrayList<>();
         Vector start = player.getEyeLocation().toVector();
         Vector end = start.clone().add(player.getEyeLocation().getDirection().multiply(distance));
-        return rayTraceEntites(player.getWorld(), start, end, predicate);
-    }
-
-    public static List<LivingEntity> rayTraceEntites(World world, Vector start, Vector end) {
-        return rayTraceEntites(world, start, end, canInteract());
-    }
-
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    public static List<LivingEntity> rayTraceEntites(World world, Vector start, Vector end, Predicate predicate) {
-        WorldServer worldServer = ((CraftWorld) world).getHandle();
-        //FIXME List<EntityLiving> entityLivings = worldServer.a(EntityLiving.class, (Predicate<EntityLiving>) predicate);
-        List<EntityLiving> entityLivings = new ArrayList<>();
-        List<LivingEntity> result = new ArrayList<>();
-        for (EntityLiving e : entityLivings) {
-            AxisAlignedBB bb = e.getBoundingBox();
-            // MovingObjectPosition hit = bb.b(toVec3DInternal(start), toVec3DInternal(end));
-            MovingObjectPosition hit = null; // FIXME
-            if (hit != null) {
-                result.add((LivingEntity) e.getBukkitEntity());
+        for (Entity e : player.getWorld().getNearbyEntities(player.getEyeLocation(), distance, distance, distance, predicate)) {
+            if (e instanceof LivingEntity && e instanceof CraftEntity && e.isValid()) {
+                net.minecraft.server.v1_14_R1.Entity nmsEntity = ((CraftEntity) e).getHandle();
+                Optional<Vec3D> hit = nmsEntity.getBoundingBox().b(toVec3DInternal(start), toVec3DInternal(end));
+                if (hit.isPresent()) {
+                    result.add((LivingEntity) e);
+                }
             }
         }
         return result;
@@ -84,96 +55,51 @@ public class RayTraceUtils {
         return new Vec3D(v.getX(), v.getY(), v.getZ());
     }
 
-    @SuppressWarnings("rawtypes")
-    public static Predicate isAPlayer() {
-        return (Object entity) -> entity instanceof EntityPlayer;
+    public static Predicate<Entity> isAPlayer() {
+        return entity -> entity instanceof Player;
     }
 
-    @SuppressWarnings("rawtypes")
-    public static Predicate not(Entity e) {
-        return (Object entity) ->
-                !((EntityLiving) entity).getUniqueID().equals(e.getUniqueId());
+    public static Predicate<Entity> not(Entity e) {
+        return entity -> !entity.getUniqueId().equals(e.getUniqueId());
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    public static Predicate canInteract() {
-        return (Object input) -> {
-            if (input instanceof EntityPlayer && ((EntityPlayer) input).isSpectator()) {
+    public static Predicate<Entity> canInteract() {
+        return input -> {
+            if (input instanceof Player && ((Player) input).getGameMode() == GameMode.SPECTATOR) {
                 return false;
             }
-            return input != null && ((net.minecraft.server.v1_14_R1.Entity) input).isInteractable();//canBeCollidedWith
+            return input instanceof LivingEntity && ((LivingEntity) input).isCollidable();
         };
     }
 
     public static Entity getTargetEntity(Player p) {
-        Vector start = p.getEyeLocation().toVector();
-        Vector end = start.clone().add(p.getEyeLocation().getDirection().multiply(p.getGameMode() == GameMode.CREATIVE ? 6.0F : 4.5F));
-        return getTargetEntity(p, getDistanceToBlock(p.getWorld(), start, end, false, false, true));
+        return getTargetEntity(p, getDistanceToBlock(p, p.getGameMode() == GameMode.CREATIVE ? 6.0F : 4.5F));
     }
 
     public static Entity getTargetEntity(LivingEntity p, float maxDistance, boolean ignoreBlocks) {
-        Vector start = p.getEyeLocation().toVector();
-        Vector end = start.clone().add(p.getEyeLocation().getDirection().multiply(maxDistance));
         if (!ignoreBlocks) {
-            maxDistance = getDistanceToBlock(p.getWorld(), start, end, false, false, true);
+            maxDistance = getDistanceToBlock(p, maxDistance);
         }
         return getTargetEntity(p, maxDistance);
     }
 
-    public static float getDistanceToBlock(World world, Vector start, Vector end, boolean stopOnLiquid, boolean ignoreBlockWithoutBoundingBox, boolean returnLastUncollidableBlock) {
-//        WorldServer worldServer = ((CraftWorld) world).getHandle();
-//        MovingObjectPosition mop = worldServer.rayTrace((Vec3D) toVec3D(start), (Vec3D) toVec3D(end), stopOnLiquid ? FluidCollisionOption.ALWAYS : FluidCollisionOption.NEVER, ignoreBlockWithoutBoundingBox, returnLastUncollidableBlock);
-//        if (mop != null && mop.type == MovingObjectPosition.EnumMovingObjectType.BLOCK) {
-//            return (float) mop.pos.f((Vec3D) toVec3D(start));
-//        }
-//        return (float) start.distance(end);
-        return 0f; // FIXME
+    public static float getDistanceToBlock(LivingEntity entity, float maxDistance) {
+        RayTraceResult r = entity.getWorld().rayTraceBlocks(entity.getEyeLocation(), entity.getEyeLocation().getDirection(), maxDistance);
+        if (r != null) {
+            return (float) entity.getEyeLocation().distance(r.getHitPosition().toLocation(entity.getWorld()));
+        }
+        return maxDistance;
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
     public static Entity getTargetEntity(LivingEntity entity, float maxDistance) {
-        EntityLiving nmsEntityLiving = ((CraftLivingEntity) entity).getHandle();
-        net.minecraft.server.v1_14_R1.World world = nmsEntityLiving.world;
-        Vec3D eyePos = nmsEntityLiving.i(1.0f);//getPositionEyes
-        Vec3D start = nmsEntityLiving.f(1.0f);//getLook
-        Vec3D end = eyePos.add(start.x * maxDistance, start.y * maxDistance, start.z * maxDistance);
-        //getEntityBoundingBox().expand().expand()
-        List<net.minecraft.server.v1_14_R1.Entity> entities = world.getEntities(nmsEntityLiving, nmsEntityLiving.getBoundingBox().b(start.x * maxDistance, start.y * maxDistance, start.z * maxDistance).grow(1.0D, 1.0D, 1.0D),
-                (Predicate<? super net.minecraft.server.v1_14_R1.Entity>) canInteract()
-        );
-        net.minecraft.server.v1_14_R1.Entity targetEntity = null;
-        double d2 = maxDistance;
-        //Vec3D hitVec = null;
-//        for (net.minecraft.server.v1_14_R1.Entity entity1 : entities) {
-//            //getEntityBoundingBox().grow((double)entity1.getCollisionBorderSize());
-//            AxisAlignedBB axisAlignedBB = entity1.getBoundingBox().g((double) entity1.aM());
-//            MovingObjectPosition rayTraceResult = axisAlignedBB.b(eyePos, end);//calculateIntercept
-//            if (axisAlignedBB.b(eyePos)) {// contains
-//                if (d2 >= 0.0) {
-//                    targetEntity = entity1;
-//                    //hitVec = rayTraceResult == null ? eyePos : rayTraceResult.pos;
-//                    d2 = 0.0;
-//                }
-//            } else if (rayTraceResult != null) {
-//                double d3 = eyePos.f(rayTraceResult.getPos());//distanceTo
-//                if (d3 < d2 || d2 == 0.0D) {
-//                    if (entity1.getRootVehicle() == ((CraftEntity) entity).getHandle().getRootVehicle()) {//getLowestRidingEntity
-//                        if (d2 == 0.0D) {
-//                            targetEntity = entity1;
-//                            //hitVec = rayTraceResult.pos;
-//                        }
-//                    } else {
-//                        targetEntity = entity1;
-//                        //hitVec = rayTraceResult.pos;
-//                        d2 = d3;
-//                    }
-//                }
-//            }
-//        }
-        // FIXME
-        //EntityLivingBase
-        if (targetEntity instanceof EntityLiving || targetEntity instanceof EntityItemFrame) {
-            return targetEntity.getBukkitEntity();
+        RayTraceResult r = entity.getWorld().rayTraceEntities(entity.getEyeLocation(), entity.getEyeLocation().getDirection(), maxDistance,
+                e -> e != null &&
+                        (e instanceof LivingEntity || e.getType() == EntityType.ITEM_FRAME) &&
+                        !(e instanceof LivingEntity && !((LivingEntity) e).isCollidable()) &&
+                        e.getUniqueId() != entity.getUniqueId() &&
+                        !(e instanceof Player && ((Player) e).getGameMode() == GameMode.SPECTATOR));
+        if (r != null) {
+            return r.getHitEntity();
         }
         return null;
     }
