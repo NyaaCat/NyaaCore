@@ -20,7 +20,7 @@ public class NyaaCoreLoader extends JavaPlugin {
         return instance;
     }
 
-    public static final String TARGET_MAPPING = "7dd4b3ec31629620c41553e5c142e454";
+    public static final String TARGET_MAPPING = "48be70f51ffe914d865f175ed3bf992d";
 
     static {
         ConfigurationSerialization.registerClass(NbtItemStack.class);
