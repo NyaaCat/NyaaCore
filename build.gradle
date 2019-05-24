@@ -56,13 +56,6 @@ dependencies {
     compileOnly files(spigotNmsPath)    // for NMS
     // compileOnly files('lib/patched_1.13.2.jar')    // for Paper NMS
 
-    // Nyaa plugins
-    if (gradle.hasProperty("useLocalDependencies") && gradle.useLocalDependencies) {
-        compileOnly project(":LanguageUtils")
-    } else {
-        compileOnly('com.meowj:LangUtils:2.2-SNAPSHOT')
-    }
-
     // other plugins
     compileOnly('net.milkbowl.vault:VaultAPI:1.7') { transitive = false }
     compileOnly('net.ess3:Essentials:2.13-SNAPSHOT') { transitive = false }
