@@ -1,11 +1,11 @@
 package cat.nyaa.nyaacore.utils;
 
-import com.meowj.langutils.lang.LanguageHelper;
-import com.meowj.langutils.lang.convert.EnumItem;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.chat.TranslatableComponent;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
+import org.bukkit.craftbukkit.v1_14_R1.inventory.CraftItemStack;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
@@ -16,37 +16,36 @@ import org.bukkit.inventory.meta.SkullMeta;
 public final class LocaleUtils {
     public static String getUnlocalizedName(Material material) {
         if (material == null) throw new IllegalArgumentException();
-        EnumItem enumItem = EnumItem.get(material);
-        return enumItem != null ? enumItem.getUnlocalizedName() : material.toString();
+        return namespaceKeyToTranslationKey(material.isBlock() ? "block" : "item", material.getKey());
     }
 
     public static String getUnlocalizedName(ItemStack itemStack) {
         if (itemStack == null) throw new IllegalArgumentException();
-        return LanguageHelper.getItemUnlocalizedName(itemStack);
+        net.minecraft.server.v1_14_R1.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
+        return nmsItemStack.getItem().f(nmsItemStack);
     }
 
     public static BaseComponent getNameComponent(ItemStack item) {
         if (item == null) throw new IllegalArgumentException();
         if (item.hasItemMeta() && item.getItemMeta().hasDisplayName())
             return new TextComponent(item.getItemMeta().getDisplayName());
-        Material type = item.getType();
-        if (type == Material.PLAYER_HEAD) {
-            SkullMeta meta = (SkullMeta) item.getItemMeta();
-            if (meta.hasOwner()) {
-                return new TranslatableComponent("block.minecraft.player_head.named", meta.getOwningPlayer().getName());
-            } else {
-                return new TranslatableComponent("block.minecraft.player_head");
-            }
-        } else {
-            return new TranslatableComponent(getUnlocalizedName(item));
+        if (item.getItemMeta() instanceof SkullMeta && ((SkullMeta) item.getItemMeta()).hasOwner()) {
+            String key = getUnlocalizedName(item.getType()) + ".named";
+            return new TranslatableComponent(key, ((SkullMeta) item.getItemMeta()).getOwningPlayer().getName());
         }
+        net.minecraft.server.v1_14_R1.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(item);
+        return new TranslatableComponent(nmsItemStack.getItem().f(nmsItemStack));
     }
 
     public static String getUnlocalizedName(Enchantment ench) {
-        return LanguageHelper.getEnchantmentUnlocalizedName(ench);
+        return namespaceKeyToTranslationKey("enchantment", ench.getKey());
     }
 
     public static BaseComponent getNameComponent(Enchantment ench) {
         return new TranslatableComponent(getUnlocalizedName(ench));
+    }
+
+    public static String namespaceKeyToTranslationKey(String category, NamespacedKey namespacedKey) {
+        return category + "." + namespacedKey.getNamespace() + "." + namespacedKey.getKey();
     }
 }
