@@ -4,7 +4,6 @@ import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.librazy.nclangchecker.LangKey;
 
 import java.io.File;
 import java.io.IOException;
@@ -181,7 +180,7 @@ public abstract class LanguageRepository implements ILocalizer {
      * Get the language item then format with `para` by {@link String#format(String, Object...)}
      */
     @Override
-    public String getFormatted(@LangKey String key, Object... para) {
+    public String getFormatted(String key, Object... para) {
         String val = map.get(key);
         if (val == null && key.startsWith("internal.") && internalMap.containsKey(getLanguage())) {
             val = internalMap.get(getLanguage()).get(key);
@@ -219,7 +218,7 @@ public abstract class LanguageRepository implements ILocalizer {
      * {@link Object#toString()} will be called on non-string objects
      * `null` key-value pair will be ignored
      */
-    public String getSubstituted(@LangKey String key, Object... param) {
+    public String getSubstituted(String key, Object... param) {
         if (key == null || param == null || (param.length%2) != 0) throw new IllegalArgumentException();
         Map<Object, Object> map = new HashMap<>();
         for (int i = 0;i<param.length/2;i++) {
@@ -238,7 +237,7 @@ public abstract class LanguageRepository implements ILocalizer {
      * @param paraMap parameters map, no null key/value allowed
      * @return substituted language item
      */
-    public String getSubstituted(@LangKey String key, Map<?,?> paraMap) {
+    public String getSubstituted(String key, Map<?,?> paraMap) {
         String val = map.get(key);
         if (val == null && key.startsWith("internal.") && internalMap.containsKey(getLanguage())) {
             val = internalMap.get(getLanguage()).get(key);
@@ -294,7 +293,7 @@ public abstract class LanguageRepository implements ILocalizer {
         }
 
         @Override
-        public String getFormatted(@LangKey String key, Object... para) {
+        public String getFormatted(String key, Object... para) {
             if (!key.startsWith("internal.")) throw new IllegalArgumentException("Not an internal language key");
             return super.getFormatted(key, para);
         }

@@ -13,8 +13,6 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.librazy.nclangchecker.LangKey;
-import org.librazy.nclangchecker.LangKeyType;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -66,12 +64,12 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
          * @param msg_internal msg template key. e.g. `internal.warn.***'
          * @param args         arguments
          */
-        public BadCommandException(@LangKey String msg_internal, Object... args) {
+        public BadCommandException(String msg_internal, Object... args) {
             super(msg_internal);
             objs = args;
         }
 
-        public BadCommandException(@LangKey(varArgsPosition = 1) String msg_internal, Throwable cause, Object... args) {
+        public BadCommandException(String msg_internal, Throwable cause, Object... args) {
             super(msg_internal, cause);
             objs = args;
         }
@@ -221,7 +219,7 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
         } catch (NoItemInHandException ex) {
             msg(sender, ex.isOffHand ? "internal.error.no_item_offhand" : "internal.error.no_item_hand");
         } catch (BadCommandException ex) {
-            @LangKey(skipCheck = true) String msg = ex.getMessage();
+            String msg = ex.getMessage();
             if (msg != null && !msg.equals("")) {
                 if (ex.objs == null) {
                     msg(sender, msg);
@@ -282,8 +280,8 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
      */
     public abstract String getHelpPrefix();
 
-    private String getHelpContent(@LangKey(type = LangKeyType.SUFFIX, skipCheck = true) String type, String... subkeys) {
-        @LangKey(type = LangKeyType.PREFIX, skipCheck = true) String key = "manual";
+    private String getHelpContent(String type, String... subkeys) {
+        String key = "manual";
         for (String s : subkeys) {
             if (s.length() > 0)
                 key += "." + s;
@@ -322,7 +320,7 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
         }
     }
 
-    public void msg(CommandSender target, @LangKey String template, Object... args) {
+    public void msg(CommandSender target, String template, Object... args) {
         target.sendMessage(i18n.getFormatted(template, args));
     }
 

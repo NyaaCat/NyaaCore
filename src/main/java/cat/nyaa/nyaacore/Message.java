@@ -22,7 +22,6 @@ import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.permissions.Permission;
-import org.librazy.nclangchecker.LangKey;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -41,7 +40,7 @@ public class Message {
         return this;
     }
 
-    public Message appendFormat(LanguageRepository i18n, @LangKey String template, Object... obj) {
+    public Message appendFormat(LanguageRepository i18n, String template, Object... obj) {
         return append(i18n.getFormatted(template, obj));
     }
 
