@@ -1,6 +1,6 @@
 package cat.nyaa.nyaacore.database;
 
-import cat.nyaa.nyaacore.database.provider.SQLiteDatabase;
+import cat.nyaa.nyaacore.orm.backends.SQLiteDatabase;
 import cat.nyaa.nyaacore.database.relational.Query;
 import cat.nyaa.nyaacore.database.relational.RelationalDB;
 import org.bukkit.plugin.Plugin;

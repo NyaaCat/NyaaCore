@@ -1,6 +1,5 @@
-package cat.nyaa.nyaacore.database;
+package cat.nyaa.nyaacore.orm;
 
-import cat.nyaa.nyaacore.database.relational.TableStructure;
 import org.bukkit.plugin.Plugin;
 
 import java.io.BufferedInputStream;
@@ -53,7 +52,7 @@ public final class BundledSQLUtils {
     public static <T> List<T> parseResultSet(ResultSet rs, Class<T> cls) {
         try {
             if (rs == null) return new ArrayList<>();
-            TableStructure<T> table = TableStructure.fromClass(cls);
+            ObjectModifier<T> table = ObjectModifier.fromClass(cls);
             List<T> results = new ArrayList<T>();
             while (rs.next()) {
                 T obj = table.getObjectFromResultSet(rs);

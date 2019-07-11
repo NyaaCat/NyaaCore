@@ -1,25 +1,23 @@
-package cat.nyaa.nyaacore.database.relational;
+package cat.nyaa.nyaacore.orm;
 
+import cat.nyaa.nyaacore.orm.annotations.Column;
 import com.google.common.base.Strings;
 
-import javax.persistence.Column;
-import javax.persistence.Id;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
 /**
  * A java field is converted to a database column in two steps:
- *   1. determine the access method
- *   2. determine the SQL type decl and convertion rule by the object type
+ * 1. determine the access method
+ * 2. determine the SQL type decl and convertion rule by the object type
  * There are two access methods:
- *   1. directly get/set to a class field, the type is the field's type
- *   2. get/set through a pair of getter/setter with matching return/parameter type, the type is the return/parameter type.
+ * 1. directly get/set to a class field, the type is the field's type
+ * 2. get/set through a pair of getter/setter with matching return/parameter type, the type is the return/parameter type.
  * There are several accepted java types:
- *   {@link DataTypeMapping}
+ * {@link DataTypeMapping}
  */
-@SuppressWarnings("rawtypes")
-public class ColumnStructure {
+public class ObjectFieldModifier {
 
     public int getLength() {
         return length;
@@ -28,11 +26,9 @@ public class ColumnStructure {
     public enum AccessMethod {
         DIRECT_FIELD,  // directly get from field
         GETTER_SETTER  // use getter and setter
-        // TODO: GETTER_CTOR
     }
 
     public final String name;
-    public final TableStructure table;
     public final boolean nullable;
     public final boolean unique;
     public final boolean primary;
@@ -44,13 +40,12 @@ public class ColumnStructure {
     public final Method getter; // used if access method is GETTER_SETTER
 
     public final Class javaType;
-    public final DataTypeMapping.Types sqlType;
     public final DataTypeMapping.IDataTypeConverter typeConverter;
 
     /**
      * Constructor for field based table columns
      */
-    public ColumnStructure(TableStructure table, Field dataField, Column anno) {
+    public ObjectFieldModifier(ObjectModifier table, Field dataField, Column anno) {
         if (anno == null) throw new IllegalArgumentException();
         if (anno.name().isEmpty()) {
             name = dataField.getName();
@@ -59,8 +54,7 @@ public class ColumnStructure {
         }
         this.nullable = anno.nullable();
         this.unique = anno.unique();
-        this.primary = dataField.getDeclaredAnnotation(Id.class) != null;
-        this.table = table;
+        this.primary = anno.primary();
         accessMethod = AccessMethod.DIRECT_FIELD;
         field = dataField;
         field.setAccessible(true);
@@ -69,20 +63,18 @@ public class ColumnStructure {
 
         javaType = field.getType();
         typeConverter = DataTypeMapping.getDataTypeConverter(javaType);
-        sqlType = typeConverter.getSqlType();
-        this.columnDefinition = Strings.isNullOrEmpty(anno.columnDefinition()) ? sqlType.name() : anno.columnDefinition();
+        this.columnDefinition = anno.columnDefinition();
         this.length = anno.length();
     }
 
     /**
      * Constructor for method based table columns
      */
-    public ColumnStructure(TableStructure table, Method dataMethod, Column anno) {
+    public ObjectFieldModifier(ObjectModifier table, Method dataMethod, Column anno) {
         if (anno == null) throw new IllegalArgumentException();
-        this.table = table;
         this.nullable = anno.nullable();
         this.unique = anno.unique();
-        this.primary = dataMethod.getDeclaredAnnotation(Id.class) != null;
+        this.primary = anno.primary();
 
         String methodName = dataMethod.getName();
         if (!methodName.startsWith("get") && !methodName.startsWith("set"))
@@ -110,10 +102,6 @@ public class ColumnStructure {
                     (setter.getReturnType() != Void.class && setter.getReturnType() != Void.TYPE) ||
                     Modifier.isStatic(setter.getModifiers()))
                 throw new RuntimeException("setter signature mismatch");
-            Id primary = getter.getDeclaredAnnotation(Id.class);
-            if(primary == null){
-                primary = setter.getDeclaredAnnotation(Id.class);
-            }
             getter.setAccessible(true);
             setter.setAccessible(true);
         } catch (ReflectiveOperationException ex) {
@@ -130,8 +118,7 @@ public class ColumnStructure {
 
         this.javaType = methodType;
         this.typeConverter = DataTypeMapping.getDataTypeConverter(this.javaType);
-        this.sqlType = this.typeConverter.getSqlType();
-        this.columnDefinition = Strings.isNullOrEmpty(anno.columnDefinition()) ? sqlType.name() : anno.columnDefinition();
+        this.columnDefinition = Strings.isNullOrEmpty(anno.columnDefinition()) ? typeConverter.getSqlType().name() : anno.columnDefinition();
         this.length = anno.length();
     }
 
@@ -139,16 +126,13 @@ public class ColumnStructure {
         return name;
     }
 
-    public TableStructure getTable() {
-        return table;
-    }
-
-    public String getTableCreationScheme() {
-        String ret = name + " " + columnDefinition;
-        if (!nullable) ret += " NOT NULL";
-        if (unique) ret += "UNIQUE";
-        return ret;
-    }
+//    public String getTableCreationScheme() {
+//        String ret = name + " " + columnDefinition;
+//        if (!nullable) ret += " NOT NULL";
+//        if (unique) ret += "UNIQUE";
+//        return ret;
+//    }
+    // TODO move to somewhere else
 
     public Object getJavaObject(Object entityObj) {
         try {
@@ -174,7 +158,6 @@ public class ColumnStructure {
         }
     }
 
-    @SuppressWarnings("unchecked")
     public Object getSqlObject(Object entityObj) {
         Object javaObj = getJavaObject(entityObj);
         if (javaObj == null) {

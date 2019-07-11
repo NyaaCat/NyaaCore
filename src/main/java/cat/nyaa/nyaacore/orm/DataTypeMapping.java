@@ -1,13 +1,16 @@
-package cat.nyaa.nyaacore.database.relational;
+package cat.nyaa.nyaacore.orm;
 
 import cat.nyaa.nyaacore.utils.ItemStackUtils;
 import org.apache.commons.lang.NotImplementedException;
+import org.bukkit.Bukkit;
 import org.bukkit.inventory.ItemStack;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.HashMap;
+import java.util.Map;
 
-import static cat.nyaa.nyaacore.database.relational.DataTypeMapping.Types.*;
+import static cat.nyaa.nyaacore.orm.DataTypeMapping.Types.*;
 
 /*
  * There are all accepted java types:
@@ -38,6 +41,8 @@ public class DataTypeMapping {
     }
 
     /**
+     * Convert one particular type of java objects to/from the java representation of SQL type
+     *
      * @param <T> Java type
      */
     public interface IDataTypeConverter<T> {
@@ -52,6 +57,7 @@ public class DataTypeMapping {
 
     public static class BooleanConverter implements IDataTypeConverter<Boolean> {
         public static BooleanConverter INSTANCE = new BooleanConverter();
+
         @Override
         public Object toSqlType(Boolean obj) {
             return obj ? 1 : 0;
@@ -60,7 +66,7 @@ public class DataTypeMapping {
         @Override
         public Boolean toJavaType(Object obj) {
             if (obj instanceof Number) {
-                return ((Number)obj).intValue() == 1;
+                return ((Number) obj).intValue() == 1;
             } else {
                 throw new IllegalArgumentException("Expecting number but received " + obj.toString());
             }
@@ -74,10 +80,11 @@ public class DataTypeMapping {
 
     public static class IntegerConverter implements IDataTypeConverter<Integer> {
         public static IntegerConverter INSTANCE = new IntegerConverter();
+
         @Override
         public Integer toJavaType(Object obj) {
             if (obj instanceof Number) {
-                return ((Number)obj).intValue();
+                return ((Number) obj).intValue();
             } else {
                 throw new IllegalArgumentException("Expecting number but received " + obj.toString());
             }
@@ -91,10 +98,11 @@ public class DataTypeMapping {
 
     public static class LongConverter implements IDataTypeConverter<Long> {
         public static LongConverter INSTANCE = new LongConverter();
+
         @Override
         public Long toJavaType(Object obj) {
             if (obj instanceof Number) {
-                return ((Number)obj).longValue();
+                return ((Number) obj).longValue();
             } else {
                 throw new IllegalArgumentException("Expecting number but received " + obj.toString());
             }
@@ -108,10 +116,11 @@ public class DataTypeMapping {
 
     public static class FloatConverter implements IDataTypeConverter<Float> {
         public static FloatConverter INSTANCE = new FloatConverter();
+
         @Override
         public Float toJavaType(Object obj) {
             if (obj instanceof Number) {
-                return ((Number)obj).floatValue();
+                return ((Number) obj).floatValue();
             } else {
                 throw new IllegalArgumentException("Expecting number but received " + obj.toString());
             }
@@ -125,10 +134,11 @@ public class DataTypeMapping {
 
     public static class DoubleConverter implements IDataTypeConverter<Double> {
         public static DoubleConverter INSTANCE = new DoubleConverter();
+
         @Override
         public Double toJavaType(Object obj) {
             if (obj instanceof Number) {
-                return ((Number)obj).doubleValue();
+                return ((Number) obj).doubleValue();
             } else {
                 throw new IllegalArgumentException("Expecting number but received " + obj.toString());
             }
@@ -142,6 +152,7 @@ public class DataTypeMapping {
 
     public static class StringConverter implements IDataTypeConverter<String> {
         public static StringConverter INSTANCE = new StringConverter();
+
         @Override
         public String toJavaType(Object obj) {
             if (obj instanceof String) {
@@ -159,6 +170,7 @@ public class DataTypeMapping {
 
     public static class EnumConverter<E extends Enum<E>> implements IDataTypeConverter<E> {
         private Class<E> enumClass;
+
         public EnumConverter(Class<E> enumClass) {
             if (!enumClass.isEnum()) {
                 throw new IllegalArgumentException("Class is not an enum: " + enumClass);
@@ -174,7 +186,7 @@ public class DataTypeMapping {
         @Override
         public E toJavaType(Object obj) {
             if (obj instanceof String) {
-                return Enum.valueOf(enumClass, (String)obj);
+                return Enum.valueOf(enumClass, (String) obj);
             } else {
                 throw new IllegalArgumentException("Expecting string but received " + obj.toString());
             }
@@ -188,6 +200,7 @@ public class DataTypeMapping {
 
     public static class ItemStackConverter implements IDataTypeConverter<ItemStack> {
         public static ItemStackConverter INSTANCE = new ItemStackConverter();
+
         @Override
         public Object toSqlType(ItemStack obj) {
             return ItemStackUtils.itemToBase64(obj);
@@ -196,7 +209,11 @@ public class DataTypeMapping {
         @Override
         public ItemStack toJavaType(Object obj) {
             if (obj instanceof String) {
-                return ItemStackUtils.itemFromBase64((String)obj);
+                ItemStack result = ItemStackUtils.itemFromBase64((String) obj);
+                if (result == null) {
+                    Bukkit.getLogger().warning("not a valid itemstack value in database:" + (String) obj);
+                }
+                return result;
             } else {
                 throw new IllegalArgumentException("Expecting string but received " + obj.toString());
             }
@@ -230,6 +247,7 @@ public class DataTypeMapping {
             }
             throw new IllegalArgumentException("Cannot find valid parse/fromString method in class " + cls.getName());
         }
+
         @Override
         public Object toSqlType(T obj) {
             return obj.toString();
@@ -274,6 +292,8 @@ public class DataTypeMapping {
         return false;
     }
 
+    private static Map<Class, IDataTypeConverter> cached_converters = new HashMap<>();
+
     @SuppressWarnings({"rawtypes", "unchecked"})
     public static IDataTypeConverter getDataTypeConverter(Class cls) {
         if (cls == boolean.class || cls == Boolean.class) return BooleanConverter.INSTANCE;
@@ -282,9 +302,23 @@ public class DataTypeMapping {
         if (cls == float.class || cls == Float.class) return FloatConverter.INSTANCE;
         if (cls == double.class || cls == Double.class) return DoubleConverter.INSTANCE;
         if (cls == String.class) return StringConverter.INSTANCE;
-        if (cls.isEnum()) return new EnumConverter(cls);
+        if (cls.isEnum()) {
+            IDataTypeConverter cvt = cached_converters.get(cls);
+            if (cvt == null) {
+                cvt = new EnumConverter(cls);
+                cached_converters.put(cls, cvt);
+            }
+            return cvt;
+        }
         if (cls == ItemStack.class) return ItemStackConverter.INSTANCE;
-        if (isStaticParsingType(cls)) return new StaticParsingTypeConverter(cls);
+        if (isStaticParsingType(cls)) {
+            IDataTypeConverter cvt = cached_converters.get(cls);
+            if (cvt == null) {
+                cvt = new StaticParsingTypeConverter(cls);
+                cached_converters.put(cls, cvt);
+            }
+            return cvt;
+        }
         if (cls == byte[].class) throw new NotImplementedException();
         throw new IllegalArgumentException("Not an acceptable type: " + cls);
     }

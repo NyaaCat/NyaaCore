@@ -1,7 +1,5 @@
-package cat.nyaa.nyaacore.database.provider;
+package cat.nyaa.nyaacore.orm.backends;
 
-import cat.nyaa.nyaacore.database.relational.BaseDatabase;
-import cat.nyaa.nyaacore.database.relational.SynchronizedQuery;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 
@@ -12,7 +10,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.logging.Logger;
 
-public class MysqlDatabase extends BaseDatabase {
+public class MysqlDatabase implements IDatabase {
 
     private final Plugin plugin;
     private String dbUrl;
@@ -21,6 +19,10 @@ public class MysqlDatabase extends BaseDatabase {
     private Connection connection;
     public static Function<Plugin, Consumer<Runnable>> executorSupplier = (plugin) -> (runnable) -> Bukkit.getScheduler().runTaskAsynchronously(plugin, runnable);
     public static Function<Plugin, Logger> loggerSupplier = Plugin::getLogger;
+
+    public MysqlDatabase(Connection conn) {
+
+    }
 
     public MysqlDatabase(Plugin basePlugin, String jdbcDriver, String dbUrl, String user, String password) {
         super(loggerSupplier.apply(basePlugin), (runnable) -> executorSupplier.apply(basePlugin));
@@ -81,7 +83,7 @@ public class MysqlDatabase extends BaseDatabase {
 
     @SuppressWarnings("MagicConstant")
     @Override
-    public <T> SynchronizedQuery.TransactionalQuery<T> queryTransactional(Class<T> tableClass) {
+    public <T> BaseTypedTable.TransactionalQuery<T> queryTransactional(Class<T> tableClass) {
         createTable(tableClass);
         Connection conn = newConnection();
         int oldTransactionIsolation;
@@ -92,7 +94,7 @@ public class MysqlDatabase extends BaseDatabase {
         } catch (SQLException ex) {
             throw new RuntimeException(ex);
         }
-        return new SynchronizedQuery.TransactionalQuery<T>(tableClass, conn) {
+        return new BaseTypedTable.TransactionalQuery<T>(tableClass, conn) {
             @Override
             public T selectUniqueForUpdate() {
                 String sql = "SELECT " + table.getColumnNamesString() + " FROM " + table.tableName;

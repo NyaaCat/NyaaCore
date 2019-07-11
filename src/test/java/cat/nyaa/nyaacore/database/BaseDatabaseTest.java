@@ -1,6 +1,6 @@
 package cat.nyaa.nyaacore.database;
 
-import cat.nyaa.nyaacore.database.provider.SQLiteDatabase;
+import cat.nyaa.nyaacore.orm.backends.SQLiteDatabase;
 import org.bukkit.plugin.Plugin;
 import org.junit.After;
 import org.junit.Before;

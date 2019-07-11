@@ -1,6 +1,6 @@
 package cat.nyaa.nyaacore.database;
 
-import cat.nyaa.nyaacore.database.provider.MysqlDatabase;
+import cat.nyaa.nyaacore.orm.backends.MysqlDatabase;
 import cat.nyaa.nyaacore.database.relational.Query;
 import cat.nyaa.nyaacore.database.relational.RelationalDB;
 import ch.vorburger.exec.ManagedProcessException;
