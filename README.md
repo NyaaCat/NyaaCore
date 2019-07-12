@@ -2,7 +2,7 @@
 Common library used for all NyaaCat plugin.  
 Provides infrastructures to simplify plugin development.
 
-[![Build Status](https://travis-ci.org/NyaaCat/NyaaCore.svg?branch=master)](https://travis-ci.org/NyaaCat/NyaaCore)
+[![Build Status](https://ci.nyaacat.com/job/NyaaCore/badge/icon)](https://ci.nyaacat.com/job/NyaaCore/)
 ## Component List
 
 - Annotation based command dispatcher
@@ -18,12 +18,17 @@ Provides infrastructures to simplify plugin development.
 ```
 repositories {
     maven {
-        name 'NyaaCentral'
-        url 'https://raw.githubusercontent.com/NyaaCat/NyaaCentral/maven-repo'
+        name 'NyaaCat'
+        url 'https://ci.nyaacat.com/maven/'
     }
 }
 
 dependencies {
-    compile('cat.nyaa:nyaacore:6.2-SNAPSHOT')
+    compile('cat.nyaa:nyaacore:6.4-SNAPSHOT')
 }
 ```
+
+## Version History
+- 6.4.x: Minecraft 1.14.3
+
+Older versions can be found in [Github Release Page](https://github.com/NyaaCat/NyaaCore/releases)
