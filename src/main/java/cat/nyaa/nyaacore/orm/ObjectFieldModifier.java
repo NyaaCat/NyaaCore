@@ -32,8 +32,8 @@ public class ObjectFieldModifier {
     public final boolean nullable;
     public final boolean unique;
     public final boolean primary;
-    private final String columnDefinition;
-    private final int length;
+    public final String columnDefinition;
+    public final int length;
     public final AccessMethod accessMethod;
     public final Field field;   // used if access method is DIRECT_FIELD
     public final Method setter; // used if access method is GETTER_SETTER
@@ -118,21 +118,13 @@ public class ObjectFieldModifier {
 
         this.javaType = methodType;
         this.typeConverter = DataTypeMapping.getDataTypeConverter(this.javaType);
-        this.columnDefinition = Strings.isNullOrEmpty(anno.columnDefinition()) ? typeConverter.getSqlType().name() : anno.columnDefinition();
+        this.columnDefinition = Strings.isNullOrEmpty(anno.columnDefinition()) ? typeConverter.getSqlType().getName() : anno.columnDefinition();
         this.length = anno.length();
     }
 
     public String getName() {
         return name;
     }
-
-//    public String getTableCreationScheme() {
-//        String ret = name + " " + columnDefinition;
-//        if (!nullable) ret += " NOT NULL";
-//        if (unique) ret += "UNIQUE";
-//        return ret;
-//    }
-    // TODO move to somewhere else
 
     public Object getJavaObject(Object entityObj) {
         try {

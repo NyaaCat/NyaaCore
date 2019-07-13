@@ -1,7 +1,7 @@
 package cat.nyaa.nyaacore.orm;
 
 import cat.nyaa.nyaacore.orm.backends.BackendConfig;
-import cat.nyaa.nyaacore.orm.backends.IDatabase;
+import cat.nyaa.nyaacore.orm.backends.IConnectedDatabase;
 import cat.nyaa.nyaacore.orm.backends.MysqlDatabase;
 import cat.nyaa.nyaacore.orm.backends.SQLiteDatabase;
 import org.bukkit.plugin.Plugin;
@@ -15,7 +15,7 @@ public class DatabaseUtils {
      * @param cfg
      * @return
      */
-    public IDatabase connect(Plugin plugin, BackendConfig cfg) throws ClassNotFoundException, SQLException {
+    public IConnectedDatabase connect(Plugin plugin, BackendConfig cfg) throws ClassNotFoundException, SQLException {
         if ("sqlite".equalsIgnoreCase(cfg.provider)) {
             return new SQLiteDatabase(newJdbcConnection(plugin, cfg));
         } else if ("mysql".equalsIgnoreCase(cfg.provider)) {

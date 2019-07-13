@@ -7,10 +7,11 @@ import org.bukkit.inventory.ItemStack;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.sql.SQLType;
 import java.util.HashMap;
 import java.util.Map;
 
-import static cat.nyaa.nyaacore.orm.DataTypeMapping.Types.*;
+import static java.sql.JDBCType.*;
 
 /*
  * There are all accepted java types:
@@ -27,18 +28,6 @@ import static cat.nyaa.nyaacore.orm.DataTypeMapping.Types.*;
  *   10. byte[]        => LONGBLOB     [no conversion]
  */
 public class DataTypeMapping {
-    public enum Types {
-        INTEGER,
-        BIGINT,
-        FLOAT,
-        DOUBLE,
-        MEDIUMTEXT,
-        LONGBLOB;
-
-        public boolean isBlobOrText() {
-            return this == MEDIUMTEXT || this == LONGBLOB;
-        }
-    }
 
     /**
      * Convert one particular type of java objects to/from the java representation of SQL type
@@ -52,7 +41,7 @@ public class DataTypeMapping {
 
         T toJavaType(Object obj);
 
-        Types getSqlType();
+        SQLType getSqlType();
     }
 
     public static class BooleanConverter implements IDataTypeConverter<Boolean> {
@@ -73,7 +62,7 @@ public class DataTypeMapping {
         }
 
         @Override
-        public Types getSqlType() {
+        public SQLType getSqlType() {
             return INTEGER;
         }
     }
@@ -91,7 +80,7 @@ public class DataTypeMapping {
         }
 
         @Override
-        public Types getSqlType() {
+        public SQLType getSqlType() {
             return INTEGER;
         }
     }
@@ -109,7 +98,7 @@ public class DataTypeMapping {
         }
 
         @Override
-        public Types getSqlType() {
+        public SQLType getSqlType() {
             return BIGINT;
         }
     }
@@ -127,7 +116,7 @@ public class DataTypeMapping {
         }
 
         @Override
-        public Types getSqlType() {
+        public SQLType getSqlType() {
             return FLOAT;
         }
     }
@@ -145,7 +134,7 @@ public class DataTypeMapping {
         }
 
         @Override
-        public Types getSqlType() {
+        public SQLType getSqlType() {
             return DOUBLE;
         }
     }
@@ -163,8 +152,8 @@ public class DataTypeMapping {
         }
 
         @Override
-        public Types getSqlType() {
-            return MEDIUMTEXT;
+        public SQLType getSqlType() {
+            return VARCHAR;
         }
     }
 
@@ -193,8 +182,8 @@ public class DataTypeMapping {
         }
 
         @Override
-        public Types getSqlType() {
-            return MEDIUMTEXT;
+        public SQLType getSqlType() {
+            return VARCHAR;
         }
     }
 
@@ -220,8 +209,8 @@ public class DataTypeMapping {
         }
 
         @Override
-        public Types getSqlType() {
-            return MEDIUMTEXT;
+        public SQLType getSqlType() {
+            return VARCHAR;
         }
     }
 
@@ -268,8 +257,8 @@ public class DataTypeMapping {
         }
 
         @Override
-        public Types getSqlType() {
-            return MEDIUMTEXT;
+        public SQLType getSqlType() {
+            return VARCHAR;
         }
     }
 
