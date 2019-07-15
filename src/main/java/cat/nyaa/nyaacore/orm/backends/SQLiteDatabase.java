@@ -1,11 +1,14 @@
 package cat.nyaa.nyaacore.orm.backends;
 
+import cat.nyaa.nyaacore.orm.BundledSQLUtils;
 import cat.nyaa.nyaacore.orm.ObjectFieldModifier;
 import cat.nyaa.nyaacore.orm.ObjectModifier;
 import org.bukkit.Bukkit;
+import org.bukkit.plugin.Plugin;
 
 import java.sql.*;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
@@ -16,6 +19,11 @@ public class SQLiteDatabase implements IConnectedDatabase {
     public SQLiteDatabase(Connection sqlConnection) {
         if (sqlConnection == null) throw new IllegalArgumentException();
         dbConn = sqlConnection;
+        try {
+            dbConn.setAutoCommit(true);
+        } catch (SQLException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     @Override
@@ -45,9 +53,10 @@ public class SQLiteDatabase implements IConnectedDatabase {
                     matches = false;
                 } else {
                     JDBCType tableColType = JDBCType.valueOf(colType);
-                    if (!tmp.typeConverter.getSqlType().equals(tableColType)) {
+                    SQLType objColType = tmp.typeConverter.getSqlType().equals(JDBCType.BIGINT) && tmp.primary ? JDBCType.INTEGER : tmp.typeConverter.getSqlType();
+                    if (!objColType.equals(tableColType)) {
                         Bukkit.getLogger().info(String.format("table column %s.%s type mismatch. db:%s java:%s",
-                                tableName, colName, tableColType, tmp.typeConverter.getSqlType()));
+                                tableName, colName, tableColType, objColType));
                         matches = false;
                     } else if (nullable == 0 && tmp.nullable || nullable == 1 && !tmp.nullable) {
                         Bukkit.getLogger().info(String.format("table column %s.%s nullable mismatch db:%d java:%s",
@@ -91,6 +100,11 @@ public class SQLiteDatabase implements IConnectedDatabase {
         }
     }
 
+    @Override
+    public <T> List<T> queryBundledAs(Plugin plugin, String filename, Map<String, String> replacementMap, Class<T> cls, Object... parameters) {
+        return BundledSQLUtils.queryBundledAs(plugin, dbConn, filename, replacementMap, cls, parameters);
+    }
+
     private boolean tableExists(String tableName) throws SQLException {
         try (ResultSet rs = dbConn.getMetaData().getTables(null, null, tableName, new String[]{"TABLE"})) {
             return rs.next();
@@ -98,7 +112,7 @@ public class SQLiteDatabase implements IConnectedDatabase {
     }
 
     @Override
-    public <T> ITable<T> getTable(Class<T> recordClass) {
+    public <T> ITypedTable<T> getTable(Class<T> recordClass) {
         if (recordClass == null) throw new IllegalArgumentException();
         ObjectModifier<T> om = ObjectModifier.fromClass(recordClass);
 
@@ -132,7 +146,10 @@ public class SQLiteDatabase implements IConnectedDatabase {
             ObjectFieldModifier ct = objMod.columns.get(colName);
             if (ct.primary) {
                 if (ct.typeConverter.getSqlType().equals(JDBCType.INTEGER) || ct.typeConverter.getSqlType().equals(JDBCType.BIGINT)) {
-                    colStr.add(ct.getName() + " INTEGER PRIMARY KEY");
+                    colStr.add(ct.getName() + " INTEGER PRIMARY KEY"
+                            + (ct.nullable ? "" : " NOT NULL")
+                            + (ct.unique ? " UNIQUE" : "")
+                    );
                 } else {
                     colStr.add(getTableCreationScheme(ct) + " PRIMARY KEY");
                 }

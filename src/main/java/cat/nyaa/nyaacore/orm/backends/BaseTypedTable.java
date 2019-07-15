@@ -1,7 +1,7 @@
 package cat.nyaa.nyaacore.orm.backends;
 
+import cat.nyaa.nyaacore.orm.DataTypeMapping;
 import cat.nyaa.nyaacore.orm.NonUniqueResultException;
-import cat.nyaa.nyaacore.orm.ObjectModifier;
 import cat.nyaa.nyaacore.orm.WhereClause;
 
 import java.sql.*;
@@ -12,15 +12,17 @@ import java.util.Map;
 
 /**
  * A typed table is a table whose schema is determined by a Java type.
+ * Default JDBC-based implementations.
  *
  * @param <T> the table type
  */
-abstract class BaseTypedTable<T> implements ITable<T> {
+abstract class BaseTypedTable<T> implements ITypedTable<T> {
 
-    public abstract String getTableName();
-
-    public abstract ObjectModifier<T> getJavaTypeModifier();
-
+    /**
+     * Downstream plugins should *NEVER* use this. YOU'VE BEEN WARNED!
+     *
+     * @return underlying implementation-specific connection
+     */
     protected abstract Connection getConnection();
 
     @Override
@@ -176,6 +178,28 @@ abstract class BaseTypedTable<T> implements ITable<T> {
             stmt.execute();
         } catch (SQLException ex) {
             throw new RuntimeException(sql, ex);
+        }
+    }
+
+    @Override
+    public <R> R selectSingleton(String query, DataTypeMapping.IDataTypeConverter<R> resultTypeConverter) {
+        String sql = String.format("SELECT %s FROM %s", query, getTableName());
+        try (Statement st = getConnection().createStatement();
+             ResultSet rs = st.executeQuery(sql)) {
+            if (rs.getMetaData().getColumnCount() != 1) {
+                throw new RuntimeException("result has multiple columns");
+            }
+            if (rs.next()) {
+                R ret = resultTypeConverter.toJavaType(rs.getObject(1));
+                if (rs.next()) {
+                    throw new RuntimeException("result has multiple rows");
+                }
+                return ret;
+            } else {
+                return null;
+            }
+        } catch (SQLException ex) {
+            throw new RuntimeException(ex);
         }
     }
 }

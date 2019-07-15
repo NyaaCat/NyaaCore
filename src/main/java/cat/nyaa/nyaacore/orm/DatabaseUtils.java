@@ -6,6 +6,7 @@ import cat.nyaa.nyaacore.orm.backends.MysqlDatabase;
 import cat.nyaa.nyaacore.orm.backends.SQLiteDatabase;
 import org.bukkit.plugin.Plugin;
 
+import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -15,7 +16,7 @@ public class DatabaseUtils {
      * @param cfg
      * @return
      */
-    public IConnectedDatabase connect(Plugin plugin, BackendConfig cfg) throws ClassNotFoundException, SQLException {
+    public static IConnectedDatabase connect(Plugin plugin, BackendConfig cfg) throws ClassNotFoundException, SQLException {
         if ("sqlite".equalsIgnoreCase(cfg.provider)) {
             return new SQLiteDatabase(newJdbcConnection(plugin, cfg));
         } else if ("mysql".equalsIgnoreCase(cfg.provider)) {
@@ -34,12 +35,13 @@ public class DatabaseUtils {
      * @throws SQLException
      * @throws IllegalArgumentException
      */
-    Connection newJdbcConnection(Plugin plugin, BackendConfig cfg) throws ClassNotFoundException, SQLException, IllegalArgumentException {
+    public static Connection newJdbcConnection(Plugin plugin, BackendConfig cfg) throws ClassNotFoundException, SQLException, IllegalArgumentException {
         String provider = cfg.provider;
         if ("sqlite".equalsIgnoreCase(provider)) {
 
             Class.forName("org.sqlite.JDBC");
-            return DriverManager.getConnection("jdbc:sqlite:" + cfg.sqlite_file);
+            File f = new File(plugin.getDataFolder(), cfg.sqlite_file);
+            return DriverManager.getConnection("jdbc:sqlite:" + f.getAbsolutePath());
 
         } else if ("mysql".equalsIgnoreCase(provider)) {
 

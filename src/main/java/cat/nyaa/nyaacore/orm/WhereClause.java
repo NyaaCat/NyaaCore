@@ -4,11 +4,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class WhereClause {
+    public static final WhereClause EMPTY = new WhereClause();
+
     private final List<String> columns = new ArrayList<>();
     private final List<String> comparators = new ArrayList<>();
     private final List<Object> javaObjects = new ArrayList<>();
 
     public WhereClause() {
+    }
+
+    public WhereClause(String columnName, String comparator, Object obj) {
+        this.where(columnName, comparator, obj);
     }
 
     public static WhereClause EQ(String columnName, Object obj) {

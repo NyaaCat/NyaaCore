@@ -1,7 +1,11 @@
 package cat.nyaa.nyaacore.orm.backends;
 
+import org.bukkit.plugin.Plugin;
+
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.List;
+import java.util.Map;
 
 public class MysqlDatabase implements IConnectedDatabase {
 
@@ -10,13 +14,18 @@ public class MysqlDatabase implements IConnectedDatabase {
     }
 
     @Override
-    public <T> ITable<T> getTable(Class<T> recordClass) {
+    public <T> ITypedTable<T> getTable(Class<T> recordClass) {
         return null;
     }
 
     @Override
     public void close() throws SQLException {
 
+    }
+
+    @Override
+    public <T> List<T> queryBundledAs(Plugin plugin, String filename, Map<String, String> replacementMap, Class<T> cls, Object... parameters) {
+        return null;
     }
 
     @Override

@@ -9,7 +9,7 @@ import java.lang.annotation.Target;
  * A partial copy of javax.persistence.Column
  * because I don't like shadow whole JPA
  */
-@Target(ElementType.FIELD)
+@Target({ElementType.FIELD, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Column {
     String name() default ""; // column name, use field name if empty

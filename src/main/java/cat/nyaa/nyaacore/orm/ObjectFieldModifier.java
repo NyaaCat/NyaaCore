@@ -63,7 +63,7 @@ public class ObjectFieldModifier {
 
         javaType = field.getType();
         typeConverter = DataTypeMapping.getDataTypeConverter(javaType);
-        this.columnDefinition = anno.columnDefinition();
+        this.columnDefinition = Strings.isNullOrEmpty(anno.columnDefinition()) ? typeConverter.getSqlType().getName() : anno.columnDefinition();
         this.length = anno.length();
     }
 
