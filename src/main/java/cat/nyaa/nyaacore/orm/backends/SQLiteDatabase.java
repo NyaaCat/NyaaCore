@@ -53,7 +53,11 @@ public class SQLiteDatabase implements IConnectedDatabase {
                     matches = false;
                 } else {
                     JDBCType tableColType = JDBCType.valueOf(colType);
-                    SQLType objColType = tmp.typeConverter.getSqlType().equals(JDBCType.BIGINT) && tmp.primary ? JDBCType.INTEGER : tmp.typeConverter.getSqlType();
+                    SQLType objColType = tmp.typeConverter.getSqlType();
+                    if (objColType == JDBCType.BIGINT)
+                        objColType = JDBCType.INTEGER; // FIXME: it seems that SQLite returns INTEGER for BIGINT columns
+                    if (objColType == JDBCType.DOUBLE)
+                        objColType = JDBCType.FLOAT;   //     and returns FLOAT for DOUBLE columns
                     if (!objColType.equals(tableColType)) {
                         Bukkit.getLogger().info(String.format("table column %s.%s type mismatch. db:%s java:%s",
                                 tableName, colName, tableColType, objColType));
@@ -134,6 +138,7 @@ public class SQLiteDatabase implements IConnectedDatabase {
 
     private static String getTableCreationScheme(ObjectFieldModifier fm) {
         String ret = fm.name + " " + fm.columnDefinition;
+        if (fm.primary) ret += " PRIMARY KEY";
         if (!fm.nullable) ret += " NOT NULL";
         if (fm.unique) ret += " UNIQUE";
         return ret;
@@ -144,18 +149,7 @@ public class SQLiteDatabase implements IConnectedDatabase {
         StringJoiner colStr = new StringJoiner(",");
         for (String colName : objMod.getColNames()) {
             ObjectFieldModifier ct = objMod.columns.get(colName);
-            if (ct.primary) {
-                if (ct.typeConverter.getSqlType().equals(JDBCType.INTEGER) || ct.typeConverter.getSqlType().equals(JDBCType.BIGINT)) {
-                    colStr.add(ct.getName() + " INTEGER PRIMARY KEY"
-                            + (ct.nullable ? "" : " NOT NULL")
-                            + (ct.unique ? " UNIQUE" : "")
-                    );
-                } else {
-                    colStr.add(getTableCreationScheme(ct) + " PRIMARY KEY");
-                }
-            } else {
-                colStr.add(getTableCreationScheme(ct));
-            }
+            colStr.add(getTableCreationScheme(ct));
         }
         return String.format("CREATE TABLE IF NOT EXISTS %s(%s)", objMod.tableName, colStr.toString());
     }

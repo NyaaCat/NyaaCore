@@ -20,8 +20,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class SQLiteDatabaseTest {
 
@@ -196,6 +195,41 @@ public class SQLiteDatabaseTest {
         tb.delete(WhereClause.EMPTY);
         tb.insert(rec);
         assertEquals(rec, tb.selectUnique(WhereClause.EMPTY));
+    }
+
+    @Test
+    public void testSchemaVerification() {
+        Class[] tables = {
+                TableTest1.class,
+                TableTest2.class,
+                TableTest3.class,
+                TableTest4.class,
+                TableTest5.class,
+                TableTest6.class,
+                TableTest7.class,
+                TableAllTypes.class
+        };
+        for (Class c : tables) {
+            assertNotNull(db.getTable(c));
+            assertNotNull(db.getTable(c));
+        }
+    }
+
+    @Test
+    public void testAutoIncr() {
+        // mark an `Integer' field as `primary', then set it to null on insertion
+        ITypedTable<TableTest8> tb8 = db.getTable(TableTest8.class);
+
+        tb8.delete(WhereClause.EMPTY);
+        tb8.insert(new TableTest8(null, "A"));
+        tb8.insert(new TableTest8(null, "B"));
+        tb8.insert(new TableTest8(null, "C"));
+
+        List<TableTest8> r = tb8.select(WhereClause.EMPTY);
+        assertEquals(3, r.size());
+        assertEquals(new TableTest8(1, "A"), r.get(0));
+        assertEquals(new TableTest8(2, "B"), r.get(1));
+        assertEquals(new TableTest8(3, "C"), r.get(2));
     }
 
     @After
