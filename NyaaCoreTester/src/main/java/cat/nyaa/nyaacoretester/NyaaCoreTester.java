@@ -1,6 +1,5 @@
 package cat.nyaa.nyaacoretester;
 
-import cat.nyaa.nyaacore.orm.DatabaseUtils;
 import cat.nyaa.nyaacoretester.orm.SQLiteDatabaseTest;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.junit.internal.TextListener;

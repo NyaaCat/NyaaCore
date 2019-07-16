@@ -14,7 +14,9 @@ public class TableTest5 {
     @Column
     String group_name;
 
-    public TableTest5 () { }
+    public TableTest5() {
+    }
+
     public TableTest5(String playerName, int balance, String group) {
         this.player_name = playerName;
         this.balance = balance;
@@ -30,7 +32,9 @@ public class TableTest5 {
         @Column
         int head_count;
 
-        public CollectedReport() { }
+        public CollectedReport() {
+        }
+
         public CollectedReport(String group, int max_balance, int head_count) {
             this.group_name = group;
             this.max_balance = max_balance;

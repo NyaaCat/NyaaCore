@@ -9,7 +9,10 @@ import cat.nyaa.nyaacore.orm.backends.ITypedTable;
 import cat.nyaa.nyaacoretester.NyaaCoreTester;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
-import org.junit.*;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 import java.io.File;
 import java.sql.SQLException;
@@ -18,6 +21,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class SQLiteDatabaseTest {
 
@@ -114,19 +118,19 @@ public class SQLiteDatabaseTest {
         tb3.delete(WhereClause.EMPTY);
         tb4.delete(WhereClause.EMPTY);
 
-        for (long i=0;i<100;i++) {
-            db.queryBundledAs(NyaaCoreTester.instance, "table3_4_insert.sql", Collections.singletonMap("table_name", "test3"), null, i, i*2, i*3);
-            db.queryBundledAs(NyaaCoreTester.instance,"table3_4_insert.sql", Collections.singletonMap("table_name", "test4"), null,i, i*4, i*5);
+        for (long i = 0; i < 100; i++) {
+            db.queryBundledAs(NyaaCoreTester.instance, "table3_4_insert.sql", Collections.singletonMap("table_name", "test3"), null, i, i * 2, i * 3);
+            db.queryBundledAs(NyaaCoreTester.instance, "table3_4_insert.sql", Collections.singletonMap("table_name", "test4"), null, i, i * 4, i * 5);
         }
         db.queryBundledAs(NyaaCoreTester.instance, "table3_update.sql", Collections.emptyMap(), null);
 
         List<TableTest3> list = tb3.select(WhereClause.EMPTY);
         for (TableTest3 rr : list) {
-            assertEquals(rr.key*3, rr.data2);
+            assertEquals(rr.key * 3, rr.data2);
             if (rr.key % 4 == 0) {
-                assertEquals(rr.key*3/4, rr.data1);
+                assertEquals(rr.key * 3 / 4, rr.data1);
             } else {
-                assertEquals(rr.key*2, rr.data1);
+                assertEquals(rr.key * 2, rr.data1);
             }
         }
     }
@@ -148,6 +152,50 @@ public class SQLiteDatabaseTest {
         assertEquals(new TableTest5.CollectedReport("creator", 21, 1), result.get(1));
         assertEquals(new TableTest5.CollectedReport("dev", 16, 2), result.get(2));
         assertEquals(new TableTest5.CollectedReport("player", 22, 2), result.get(3));
+    }
+
+    @Test
+    public void testNullColumns() throws NonUniqueResultException {
+        ITypedTable<TableTest6> tb6 = db.getTable(TableTest6.class);
+
+        tb6.delete(WhereClause.EMPTY);
+        tb6.insert(new TableTest6("key1", "val1"));
+        tb6.insert(new TableTest6("key2", null));
+        assertEquals("val1", tb6.selectUnique(WhereClause.EQ("key", "key1")).value);
+        assertEquals(null, tb6.selectUnique(WhereClause.EQ("key", "key2")).value);
+        assertEquals("key1", tb6.selectUnique(WhereClause.EQ("value", "val1")).key);
+        assertEquals("key2", tb6.selectUnique(new WhereClause("value", " IS ", null)).key);
+    }
+
+    @Test
+    public void testUniqueColumns() throws NonUniqueResultException {
+        ITypedTable<TableTest7> tb7 = db.getTable(TableTest7.class);
+
+        tb7.delete(WhereClause.EMPTY);
+        tb7.insert(new TableTest7(1, 2L, 3L));
+        tb7.insert(new TableTest7(2, 2L, 4L));
+
+        boolean exceptionCaught = false;
+        try {
+            tb7.insert(new TableTest7(3, 2L, 4L));
+        } catch (RuntimeException ex) {
+            exceptionCaught = true;
+            SQLException sqlexp = (SQLException) ex.getCause();
+            assertTrue("UNIQUE ERROR", sqlexp.getMessage().contains("UNIQUE"));
+            assertTrue("UNIQUE COLUMN NAME", sqlexp.getMessage().contains("test7.val_uniq"));
+        }
+
+        assertTrue("Exception thrown", exceptionCaught);
+    }
+
+    @Test
+    public void testAllTypes() throws NonUniqueResultException {
+        ITypedTable<TableAllTypes> tb = db.getTable(TableAllTypes.class);
+
+        TableAllTypes rec = TableAllTypes.instance();
+        tb.delete(WhereClause.EMPTY);
+        tb.insert(rec);
+        assertEquals(rec, tb.selectUnique(WhereClause.EMPTY));
     }
 
     @After

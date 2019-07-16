@@ -3,8 +3,6 @@ package cat.nyaa.nyaacoretester.orm;
 import cat.nyaa.nyaacore.orm.annotations.Column;
 import cat.nyaa.nyaacore.orm.annotations.Table;
 
-import java.util.Objects;
-
 @Table("test3")
 public class TableTest3 {
     @Column(primary = true)
