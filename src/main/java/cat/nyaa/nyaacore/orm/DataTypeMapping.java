@@ -25,7 +25,6 @@ import static java.sql.JDBCType.*;
  *   8. ItemStack     => MEDIUMTEXT     [nbt(de)serializebase64()]
  *   9. Any type can be serialized/deserialized using toString() and fromString()/parse() (e.g. ZonedDateTime)
  *                    => MEDIUMTEXT     [toString() and fromString()/parse()]
- *   10. byte[]        => LONGBLOB     [no conversion]
  */
 public class DataTypeMapping {
 
@@ -49,11 +48,13 @@ public class DataTypeMapping {
 
         @Override
         public Object toSqlType(Boolean obj) {
+            if (obj == null) return null;
             return obj ? 1 : 0;
         }
 
         @Override
         public Boolean toJavaType(Object obj) {
+            if (obj == null) return null;
             if (obj instanceof Number) {
                 return ((Number) obj).intValue() == 1;
             } else {
@@ -72,6 +73,7 @@ public class DataTypeMapping {
 
         @Override
         public Integer toJavaType(Object obj) {
+            if (obj == null) return null;
             if (obj instanceof Number) {
                 return ((Number) obj).intValue();
             } else {
@@ -90,6 +92,7 @@ public class DataTypeMapping {
 
         @Override
         public Long toJavaType(Object obj) {
+            if (obj == null) return null;
             if (obj instanceof Number) {
                 return ((Number) obj).longValue();
             } else {
@@ -108,6 +111,7 @@ public class DataTypeMapping {
 
         @Override
         public Float toJavaType(Object obj) {
+            if (obj == null) return null;
             if (obj instanceof Number) {
                 return ((Number) obj).floatValue();
             } else {
@@ -126,6 +130,7 @@ public class DataTypeMapping {
 
         @Override
         public Double toJavaType(Object obj) {
+            if (obj == null) return null;
             if (obj instanceof Number) {
                 return ((Number) obj).doubleValue();
             } else {
@@ -144,6 +149,7 @@ public class DataTypeMapping {
 
         @Override
         public String toJavaType(Object obj) {
+            if (obj == null) return null;
             if (obj instanceof String) {
                 return (String) obj;
             } else {
@@ -169,11 +175,13 @@ public class DataTypeMapping {
 
         @Override
         public Object toSqlType(E obj) {
+            if (obj == null) return null;
             return obj.name();
         }
 
         @Override
         public E toJavaType(Object obj) {
+            if (obj == null) return null;
             if (obj instanceof String) {
                 return Enum.valueOf(enumClass, (String) obj);
             } else {
@@ -192,11 +200,13 @@ public class DataTypeMapping {
 
         @Override
         public Object toSqlType(ItemStack obj) {
+            if (obj == null) return null;
             return ItemStackUtils.itemToBase64(obj);
         }
 
         @Override
         public ItemStack toJavaType(Object obj) {
+            if (obj == null) return null;
             if (obj instanceof String) {
                 ItemStack result = ItemStackUtils.itemFromBase64((String) obj);
                 if (result == null) {
@@ -239,12 +249,14 @@ public class DataTypeMapping {
 
         @Override
         public Object toSqlType(T obj) {
+            if (obj == null) return null;
             return obj.toString();
         }
 
         @SuppressWarnings("unchecked")
         @Override
         public T toJavaType(Object obj) {
+            if (obj == null) return null;
             if (obj instanceof String) {
                 try {
                     return (T) parseMethod.invoke(null, obj);

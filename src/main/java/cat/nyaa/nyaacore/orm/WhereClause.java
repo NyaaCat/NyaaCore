@@ -22,15 +22,20 @@ public class WhereClause {
     }
 
     public WhereClause whereEq(String columnName, Object obj) {
+        if (obj == null) throw new IllegalArgumentException("please use `IS' to compare NULL value");
         return where(columnName, "=", obj);
     }
 
     /**
      * comparator can be any SQL comparator.
      * e.g. =, &gt;, &lt;
+     *
+     * @param columnName
+     * @param comparator if it's a keyword, you need to add spaces before and after, e.g. " LIKE ", if obj is null, this should use " IS " instead of "="
+     * @param obj the java object, can be null
      */
     public WhereClause where(String columnName, String comparator, Object obj) {
-        if (columnName == null || comparator == null || obj == null) throw new IllegalArgumentException();
+        if (columnName == null || comparator == null) throw new IllegalArgumentException();
         columns.add(columnName);
         comparators.add(comparator);
         javaObjects.add(obj);
