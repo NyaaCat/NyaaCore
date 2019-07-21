@@ -21,6 +21,7 @@ public class SQLiteDatabase implements IConnectedDatabase {
         dbConn = sqlConnection;
         try {
             dbConn.setAutoCommit(true);
+            dbConn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
         } catch (SQLException ex) {
             throw new RuntimeException(ex);
         }
@@ -112,6 +113,23 @@ public class SQLiteDatabase implements IConnectedDatabase {
     private boolean tableExists(String tableName) throws SQLException {
         try (ResultSet rs = dbConn.getMetaData().getTables(null, null, tableName, new String[]{"TABLE"})) {
             return rs.next();
+        }
+    }
+
+    @Override
+    public <T> ITypedTable<T> getUnverifiedTable(Class<T> recordClass) {
+        if (recordClass == null) throw new IllegalArgumentException();
+        ObjectModifier<T> om = ObjectModifier.fromClass(recordClass);
+
+        try {
+            if (tableExists(om.tableName)) {
+                return this.new SQLiteTypedTable<>(om);
+            } else {
+                createTable(recordClass);
+                return this.new SQLiteTypedTable<>(om);
+            }
+        } catch (SQLException ex) {
+            throw new RuntimeException(ex);
         }
     }
 

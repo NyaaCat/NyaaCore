@@ -19,6 +19,11 @@ public class MysqlDatabase implements IConnectedDatabase {
     }
 
     @Override
+    public <T> ITypedTable<T> getUnverifiedTable(Class<T> recordClass) {
+        return null;
+    }
+
+    @Override
     public void close() throws SQLException {
 
     }

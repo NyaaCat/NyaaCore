@@ -6,6 +6,7 @@ import cat.nyaa.nyaacore.orm.WhereClause;
 import cat.nyaa.nyaacore.orm.backends.BackendConfig;
 import cat.nyaa.nyaacore.orm.backends.IConnectedDatabase;
 import cat.nyaa.nyaacore.orm.backends.ITypedTable;
+import cat.nyaa.nyaacore.orm.backends.SQLiteDatabase;
 import cat.nyaa.nyaacoretester.NyaaCoreTester;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
@@ -15,7 +16,10 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
+import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -65,6 +69,75 @@ public class SQLiteDatabaseTest {
         List<TableTest1> ret = tableTest1.select(WhereClause.EMPTY);
         assertEquals(1, ret.size());
         assertEquals(record, ret.get(0));
+    }
+
+    @Test
+    public void testDelete() throws NonUniqueResultException {
+        ITypedTable<TableTest1> tableTest1 = db.getTable(TableTest1.class);
+        tableTest1.delete(WhereClause.EMPTY);
+        UUID uuid1 = UUID.randomUUID();
+        UUID uuid2 = UUID.randomUUID();
+        TableTest1 record = new TableTest1(42L, "test", uuid1, uuid2);
+        tableTest1.insert(record);
+        tableTest1.insert(new TableTest1(2L, "test", UUID.randomUUID(), UUID.randomUUID()));
+        assertEquals(2, tableTest1.count(WhereClause.EMPTY));
+        tableTest1.delete(WhereClause.EQ("id", 2));
+        assertEquals(record, tableTest1.selectUnique(WhereClause.EMPTY));
+    }
+
+    @Test
+    public void testUpdate() throws NonUniqueResultException {
+        ITypedTable<TableTest1> tableTest1 = db.getTable(TableTest1.class);
+        tableTest1.delete(WhereClause.EMPTY);
+        TableTest1 record1 = new TableTest1(42L, "test", UUID.randomUUID(), UUID.randomUUID());
+        TableTest1 record2 = new TableTest1(43L, "test2", UUID.randomUUID(), UUID.randomUUID());
+        TableTest1 record1_5 = new TableTest1(42L, "test", record2.uuid, record2.uuid_indirect);
+
+        tableTest1.insert(record1);
+        assertEquals(record1, tableTest1.selectUnique(WhereClause.EMPTY));
+        tableTest1.update(record2, WhereClause.EQ("id", 42), "uuid", "uuid_indirect");
+        assertEquals(record1_5, tableTest1.selectUnique(WhereClause.EMPTY));
+        tableTest1.update(record2, WhereClause.EQ("id", 42));
+        assertEquals(record2, tableTest1.selectUnique(WhereClause.EMPTY));
+    }
+
+    @Test
+    public void testTransactional() throws Exception {
+        ITypedTable<TableTest1> tableTest1 = db.getTable(TableTest1.class);
+        tableTest1.delete(WhereClause.EMPTY);
+        TableTest1 record = new TableTest1(1L, "test", UUID.randomUUID(), UUID.randomUUID());
+        tableTest1.insert(record);
+
+        // Create new connection if you want transactional stuff
+        // And never forget to close it
+        try (Connection conn = DatabaseUtils.newJdbcConnection(NyaaCoreTester.instance, BackendConfig.sqliteBackend("testdb.db"))) {
+            conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
+            conn.setAutoCommit(false);
+            Statement st = conn.createStatement();
+            ResultSet rs = st.executeQuery("SELECT string FROM test1");
+            rs.next();
+            String old_text = rs.getString(1);
+            rs.close();
+            st.close();
+
+            // Modify before transaction commit
+            Thread t = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    String s = tableTest1.selectUniqueUnchecked(WhereClause.EMPTY).string; // this select will be blocked until conn.commit()
+                    assertEquals("test_suffix_transaction", s);
+                    record.string = s + "_suffix_thread";
+                    tableTest1.update(record, WhereClause.EMPTY, "string");
+                }
+            });
+            t.start();
+
+            // continue transaction
+            conn.createStatement().executeUpdate(String.format("UPDATE test1 SET string='%s'", old_text + "_suffix_transaction")); // don't use string.format in production
+            conn.commit(); // thread will be blocked until here
+            t.join();
+        }
+        assertEquals("test_suffix_transaction_suffix_thread", tableTest1.selectUnique(WhereClause.EMPTY).string);
     }
 
     @Test
@@ -207,6 +280,7 @@ public class SQLiteDatabaseTest {
                 TableTest5.class,
                 TableTest6.class,
                 TableTest7.class,
+                TableTest8.class,
                 TableAllTypes.class
         };
         for (Class c : tables) {

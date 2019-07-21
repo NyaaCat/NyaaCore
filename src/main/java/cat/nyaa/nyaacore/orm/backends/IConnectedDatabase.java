@@ -23,6 +23,17 @@ import java.util.Map;
 public interface IConnectedDatabase extends AutoCloseable {
     <T> ITypedTable<T> getTable(Class<T> recordClass);
 
+    /**
+     *
+     * @param recordClass
+     * @param <T>
+     * @return
+     * @deprecated function exists because {@link IConnectedDatabase#verifySchema(String, Class)} are not well implemented.
+     *             will be removed once it's done.
+     */
+    @Deprecated
+    <T> ITypedTable<T> getUnverifiedTable(Class<T> recordClass);
+
     @Override
     void close() throws SQLException;
 
