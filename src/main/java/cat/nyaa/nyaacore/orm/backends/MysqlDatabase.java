@@ -14,6 +14,11 @@ public class MysqlDatabase implements IConnectedDatabase {
     }
 
     @Override
+    public Connection getConnection() {
+        return null;
+    }
+
+    @Override
     public <T> ITypedTable<T> getTable(Class<T> recordClass) {
         return null;
     }

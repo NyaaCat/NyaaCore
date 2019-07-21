@@ -2,11 +2,11 @@ package cat.nyaa.nyaacoretester.orm;
 
 import cat.nyaa.nyaacore.orm.DatabaseUtils;
 import cat.nyaa.nyaacore.orm.NonUniqueResultException;
+import cat.nyaa.nyaacore.orm.RollbackGuard;
 import cat.nyaa.nyaacore.orm.WhereClause;
 import cat.nyaa.nyaacore.orm.backends.BackendConfig;
 import cat.nyaa.nyaacore.orm.backends.IConnectedDatabase;
 import cat.nyaa.nyaacore.orm.backends.ITypedTable;
-import cat.nyaa.nyaacore.orm.backends.SQLiteDatabase;
 import cat.nyaa.nyaacoretester.NyaaCoreTester;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
@@ -16,10 +16,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
-import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -99,45 +96,6 @@ public class SQLiteDatabaseTest {
         assertEquals(record1_5, tableTest1.selectUnique(WhereClause.EMPTY));
         tableTest1.update(record2, WhereClause.EQ("id", 42));
         assertEquals(record2, tableTest1.selectUnique(WhereClause.EMPTY));
-    }
-
-    @Test
-    public void testTransactional() throws Exception {
-        ITypedTable<TableTest1> tableTest1 = db.getTable(TableTest1.class);
-        tableTest1.delete(WhereClause.EMPTY);
-        TableTest1 record = new TableTest1(1L, "test", UUID.randomUUID(), UUID.randomUUID());
-        tableTest1.insert(record);
-
-        // Create new connection if you want transactional stuff
-        // And never forget to close it
-        try (Connection conn = DatabaseUtils.newJdbcConnection(NyaaCoreTester.instance, BackendConfig.sqliteBackend("testdb.db"))) {
-            conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
-            conn.setAutoCommit(false);
-            Statement st = conn.createStatement();
-            ResultSet rs = st.executeQuery("SELECT string FROM test1");
-            rs.next();
-            String old_text = rs.getString(1);
-            rs.close();
-            st.close();
-
-            // Modify before transaction commit
-            Thread t = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    String s = tableTest1.selectUniqueUnchecked(WhereClause.EMPTY).string; // this select will be blocked until conn.commit()
-                    assertEquals("test_suffix_transaction", s);
-                    record.string = s + "_suffix_thread";
-                    tableTest1.update(record, WhereClause.EMPTY, "string");
-                }
-            });
-            t.start();
-
-            // continue transaction
-            conn.createStatement().executeUpdate(String.format("UPDATE test1 SET string='%s'", old_text + "_suffix_transaction")); // don't use string.format in production
-            conn.commit(); // thread will be blocked until here
-            t.join();
-        }
-        assertEquals("test_suffix_transaction_suffix_thread", tableTest1.selectUnique(WhereClause.EMPTY).string);
     }
 
     @Test
@@ -304,6 +262,39 @@ public class SQLiteDatabaseTest {
         assertEquals(new TableTest8(1, "A"), r.get(0));
         assertEquals(new TableTest8(2, "B"), r.get(1));
         assertEquals(new TableTest8(3, "C"), r.get(2));
+    }
+
+    @Test
+    public void testRollbackGuard() throws Exception {
+        ITypedTable<TableTest1> tableTest1 = db.getTable(TableTest1.class);
+        tableTest1.delete(WhereClause.EMPTY);
+        TableTest1 record = new TableTest1(1L, "test", UUID.randomUUID(), UUID.randomUUID());
+        tableTest1.insert(record);
+
+        try (RollbackGuard guard1 = new RollbackGuard(db)) {
+            TableTest1 r1 = tableTest1.selectUnique(WhereClause.EMPTY);
+            r1.string += "_suffix_transaction";
+            tableTest1.update(r1, WhereClause.EMPTY, "string");
+            guard1.commit();
+        }
+
+        assertEquals("test_suffix_transaction", tableTest1.selectUnique(WhereClause.EMPTY).string);
+    }
+
+    @Test
+    public void testRollbackGuard2() throws Exception {
+        ITypedTable<TableTest1> tableTest1 = db.getTable(TableTest1.class);
+        tableTest1.delete(WhereClause.EMPTY);
+        TableTest1 record = new TableTest1(1L, "test", UUID.randomUUID(), UUID.randomUUID());
+        tableTest1.insert(record);
+
+        try (RollbackGuard guard1 = new RollbackGuard(db)) {
+            TableTest1 r1 = tableTest1.selectUnique(WhereClause.EMPTY);
+            r1.string += "_suffix_transaction";
+            tableTest1.update(r1, WhereClause.EMPTY, "string");
+        }
+
+        assertEquals("test", tableTest1.selectUnique(WhereClause.EMPTY).string);
     }
 
     @After

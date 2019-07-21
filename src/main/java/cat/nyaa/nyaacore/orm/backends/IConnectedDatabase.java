@@ -2,6 +2,7 @@ package cat.nyaa.nyaacore.orm.backends;
 
 import org.bukkit.plugin.Plugin;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +22,13 @@ import java.util.Map;
  * when in double, use {@link cat.nyaa.nyaacore.orm.DatabaseUtils#connect(Plugin, BackendConfig)} to get a new connection
  */
 public interface IConnectedDatabase extends AutoCloseable {
+    /**
+     * Get underlying JDBC connection. Easily gets messed up. Avoid if you can.
+     *
+     * @return
+     */
+    Connection getConnection();
+
     <T> ITypedTable<T> getTable(Class<T> recordClass);
 
     /**

@@ -28,6 +28,11 @@ public class SQLiteDatabase implements IConnectedDatabase {
     }
 
     @Override
+    public Connection getConnection() {
+        return dbConn;
+    }
+
+    @Override
     public void close() throws SQLException {
         dbConn.close();
     }
