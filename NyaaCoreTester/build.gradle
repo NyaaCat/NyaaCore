@@ -1,0 +1,22 @@
+apply plugin: 'java-library'
+apply plugin: 'com.github.johnrengelman.shadow'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+repositories {
+    jcenter()
+    maven { name 'Spigot';      url 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/' }
+    maven { name 'Sonatype';    url 'https://oss.sonatype.org/content/groups/public' }
+}
+
+dependencies {
+    compileOnly 'org.spigotmc:spigot-api:1.14.3-R0.1-SNAPSHOT'
+    compileOnly project(":NyaaCore")
+
+    // shadow JUnit into the production jar
+    api 'junit:junit:4.12'
+    api 'org.mockito:mockito-core:2.18.3'
+    shadow 'junit:junit:4.12'
+    shadow 'org.mockito:mockito-core:2.18.3'
+}

@@ -1,0 +1,1 @@
+SELECT group_name, COUNT(player_name) AS head_count, MAX(balance) AS max_balance FROM test5 GROUP BY group_name ORDER BY group_name ASC

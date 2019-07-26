@@ -71,9 +71,7 @@ dependencies {
     compileOnly('net.ess3:EssentialsX:2.16.0') { transitive = false }
 
     // 3rd party packages to be shadowed
-    api 'javax.persistence:javax.persistence-api:2.2'
     api 'com.udojava:EvalEx:2.1'
-    shadow 'javax.persistence:javax.persistence-api:2.2'
     shadow 'com.udojava:EvalEx:2.1'
 
     // Testing
