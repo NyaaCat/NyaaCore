@@ -8,6 +8,9 @@ import cat.nyaa.nyaacoretester.NyaaCoreTester;
 import org.bukkit.command.CommandSender;
 import org.junit.Assert;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class CmdSub2A extends CommandReceiver {
     public CmdSub2A(NyaaCoreTester plugin, ILocalizer i18n) {
         super(plugin, i18n);
@@ -25,14 +28,23 @@ public class CmdSub2A extends CommandReceiver {
     }
 
     // call with: nct sub2 c {...}
-    @SubCommand("c")
+    @SubCommand(value = "c", tabCompleter = "ctc")
     public void sub2AC(CommandSender sender, Arguments args) {
         CommandReceiverTest.touchMark("nct-sub2-a-c", args);
     }
 
     // no way to call this sub command
-    @SubCommand("b")
+    @SubCommand(value = "b")
     public void sub2AB(CommandSender sender, Arguments args) {
         Assert.fail("should not be able to be called");
+    }
+
+    public List<String> ctc(CommandSender sender, Arguments args) {
+        CommandReceiverTest.touchMark("nct-sub2a-ctc", args);
+        String s = args.next();
+        while (args.top() != null) s = args.next();
+        List<String> ret = new ArrayList<>();
+        ret.add(s + "_s1");
+        return ret;
     }
 }

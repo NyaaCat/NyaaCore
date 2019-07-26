@@ -7,6 +7,9 @@ import cat.nyaa.nyaacore.cmdreceiver.SubCommand;
 import cat.nyaa.nyaacoretester.NyaaCoreTester;
 import org.bukkit.command.CommandSender;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class CmdSub1 extends CommandReceiver {
     public CmdSub1(NyaaCoreTester plugin, ILocalizer i18n) {
         super(plugin, i18n);
@@ -24,8 +27,17 @@ public class CmdSub1 extends CommandReceiver {
     }
 
     // call with: nct sub1 {[anything except "a"] ...}
-    @SubCommand(isDefaultCommand = true)
+    @SubCommand(isDefaultCommand = true, tabCompleter = "deftc")
     public void sub1Def(CommandSender sender, Arguments args) {
         CommandReceiverTest.touchMark("nct-sub1-<def>", args);
+    }
+
+    public List<String> deftc(CommandSender sender, Arguments args) {
+        CommandReceiverTest.touchMark("nct-sub1tc", args);
+        String s = args.next();
+        while (args.top() != null) s = args.next();
+        List<String> ret = new ArrayList<>();
+        ret.add(s + "_s1");
+        return ret;
     }
 }

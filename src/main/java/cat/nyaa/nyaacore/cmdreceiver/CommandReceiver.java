@@ -127,6 +127,7 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
                 tabm = m.getDeclaringClass().getDeclaredMethod(scAnno.tabCompleter(), CommandSender.class, Arguments.class);
                 tabm.setAccessible(true);
             } catch (NoSuchMethodException ex) {
+                ex.printStackTrace();
                 plugin.getLogger().warning(i18n.getFormatted("internal.error.bad_subcommand", m.toString()));
                 return null;
             }
@@ -164,6 +165,11 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
         if (!CommandReceiver.class.isAssignableFrom(f.getType())) {
             plugin.getLogger().warning(i18n.getFormatted("internal.error.bad_subcommand", f.toString()));
             return null; // incorrect field type
+        }
+
+        if (!scAnno.tabCompleter().isEmpty()) {
+            plugin.getLogger().warning(i18n.getFormatted("internal.error.bad_subcommand", f.toString()));
+            return null; // field-based subcommand does not need method-based tabcompletion
         }
 
         // try to instantiate sub command receiver
