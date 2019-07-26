@@ -3,7 +3,6 @@ package cat.nyaa.nyaacoretester.cmdreceiver;
 import cat.nyaa.nyaacore.ILocalizer;
 import cat.nyaa.nyaacore.cmdreceiver.Arguments;
 import cat.nyaa.nyaacore.cmdreceiver.CommandReceiver;
-import cat.nyaa.nyaacore.cmdreceiver.DefaultCommand;
 import cat.nyaa.nyaacore.cmdreceiver.SubCommand;
 import cat.nyaa.nyaacoretester.NyaaCoreTester;
 import org.bukkit.command.CommandSender;
@@ -18,7 +17,7 @@ public class CmdSub2 extends CommandReceiver {
         return "sub2";
     }
 
-    @DefaultCommand
+    @SubCommand(isDefaultCommand = true)
     public CmdSub2A sub2a;
 
     // call with: nct sub2 b {...}

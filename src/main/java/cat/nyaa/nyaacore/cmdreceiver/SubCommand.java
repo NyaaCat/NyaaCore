@@ -11,7 +11,9 @@ import java.lang.annotation.Target;
 @Target({ElementType.METHOD, ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface SubCommand {
-    String value();
+    String value() default "";
+
+    boolean isDefaultCommand() default false;
 
     String permission() default "";
 

@@ -3,7 +3,6 @@ package cat.nyaa.nyaacoretester.cmdreceiver;
 import cat.nyaa.nyaacore.ILocalizer;
 import cat.nyaa.nyaacore.cmdreceiver.Arguments;
 import cat.nyaa.nyaacore.cmdreceiver.CommandReceiver;
-import cat.nyaa.nyaacore.cmdreceiver.DefaultCommand;
 import cat.nyaa.nyaacore.cmdreceiver.SubCommand;
 import cat.nyaa.nyaacoretester.NyaaCoreTester;
 import org.bukkit.command.CommandSender;
@@ -25,7 +24,7 @@ public class CmdSub1 extends CommandReceiver {
     }
 
     // call with: nct sub1 {[anything except "a"] ...}
-    @DefaultCommand
+    @SubCommand(isDefaultCommand = true)
     public void sub1Def(CommandSender sender, Arguments args) {
         CommandReceiverTest.touchMark("nct-sub1-<def>", args);
     }

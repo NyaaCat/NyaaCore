@@ -1,18 +1,16 @@
 package cat.nyaa.nyaacoretester.cmdreceiver;
 
-import cat.nyaa.nyaacore.ILocalizer;
 import cat.nyaa.nyaacore.cmdreceiver.Arguments;
 import cat.nyaa.nyaacore.cmdreceiver.CommandReceiver;
-import cat.nyaa.nyaacore.cmdreceiver.DefaultCommand;
 import cat.nyaa.nyaacore.cmdreceiver.SubCommand;
 import cat.nyaa.nyaacoretester.NyaaCoreTester;
 import org.bukkit.command.CommandSender;
-import org.bukkit.plugin.Plugin;
 
 public class CmdRoot extends CommandReceiver {
     public CmdRoot() {
         super(NyaaCoreTester.instance, null);
     }
+
 
     @Override
     public String getHelpPrefix() {
@@ -31,7 +29,7 @@ public class CmdRoot extends CommandReceiver {
     }
 
     // call with: nct {[anything except sub123] ...}
-    @DefaultCommand
+    @SubCommand(isDefaultCommand = true)
     public void defCmd(CommandSender sender, Arguments args) {
         CommandReceiverTest.touchMark("nct-<def>", args);
     }

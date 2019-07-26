@@ -2,6 +2,7 @@ package cat.nyaa.nyaacore.cmdreceiver;
 
 import cat.nyaa.nyaacore.ILocalizer;
 import cat.nyaa.nyaacore.LanguageRepository;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -41,19 +42,22 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
     private class SubCommandInfo {
         final String name; // default command can have this be null
         final String permission; // if none then no permission required
-        final Method tabCompleter = null; // TODO
+        final Method tabCompleter;
         final boolean isField; // isField? field : method;
         final Method method;
         final Field field;
         final CommandReceiver fieldValue;
         final boolean isDefault;
 
-        SubCommandInfo(String name, String permission, boolean isField, Method method, Field field, CommandReceiver fieldValue, boolean isDefault) {
+        SubCommandInfo(String name, String permission, boolean isField, Method method, Field field, CommandReceiver fieldValue, boolean isDefault, Method tabCompleter) {
             if (name == null && !isDefault) throw new IllegalArgumentException();
             if (isField && !(method == null && field != null && fieldValue != null))
                 throw new IllegalArgumentException();
             if (!isField && !(method != null && field == null && fieldValue == null))
                 throw new IllegalArgumentException();
+            if (isField && tabCompleter != null) {
+                throw new IllegalArgumentException();
+            }
             this.name = name;
             this.permission = permission;
             this.isField = isField;
@@ -61,6 +65,7 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
             this.field = field;
             this.fieldValue = fieldValue;
             this.isDefault = isDefault;
+            this.tabCompleter = tabCompleter;
         }
 
         void callCommand(CommandSender sender, Arguments args) throws IllegalAccessException, InvocationTargetException {
@@ -105,10 +110,8 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
      */
     private SubCommandInfo parseSubCommandAnnotation(Plugin plugin, Method m) {
         SubCommand scAnno = m.getAnnotation(SubCommand.class);
-        DefaultCommand dcAnno = m.getAnnotation(DefaultCommand.class);
-        if (scAnno == null && dcAnno == null) return null;
+        if (scAnno == null) return null;
 
-        // has at least one annotation
         Class<?>[] params = m.getParameterTypes();
         if (!(params.length == 2 &&
                 params[0] == CommandSender.class &&
@@ -118,29 +121,34 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
         }
         m.setAccessible(true);
 
-        if (scAnno != null && dcAnno != null) { // both annotations
-            String scPerm = scAnno.permission().isEmpty() ? null : scAnno.permission();
-            String dcPerm = dcAnno.permission().isEmpty() ? null : dcAnno.permission();
-            String subCommandName = scAnno.value();
-            String perm = null;
-            if (scPerm != null && dcPerm != null) {
-                // You cannot have both permission set
+        Method tabm = null;
+        if (!scAnno.tabCompleter().isEmpty()) {
+            try {
+                tabm = m.getDeclaringClass().getDeclaredMethod(scAnno.tabCompleter(), CommandSender.class, Arguments.class);
+                tabm.setAccessible(true);
+            } catch (NoSuchMethodException ex) {
                 plugin.getLogger().warning(i18n.getFormatted("internal.error.bad_subcommand", m.toString()));
-            } else if (scPerm != null) {
-                perm = scPerm;
-            } else {
-                perm = dcPerm;
+                return null;
             }
-            return new SubCommandInfo(subCommandName, perm, false, m, null, null, true);
-        } else if (scAnno != null) {
-            // only has @SubCommand
+        }
+
+        if (!scAnno.value().isEmpty() && scAnno.isDefaultCommand()) {
+            // cannot be both subcommand and default command
+            plugin.getLogger().warning(i18n.getFormatted("internal.error.bad_subcommand", m.toString()));
+            return null;
+        } else if (!scAnno.value().isEmpty()) {
+            // subcommand
             String subCommandName = scAnno.value();
             String perm = scAnno.permission().isEmpty() ? null : scAnno.permission();
-            return new SubCommandInfo(subCommandName, perm, false, m, null, null, false);
+            return new SubCommandInfo(subCommandName, perm, false, m, null, null, false, tabm);
+        } else if (scAnno.isDefaultCommand()) {
+            // default command
+            String perm = scAnno.permission().isEmpty() ? null : scAnno.permission();
+            return new SubCommandInfo(null, perm, false, m, null, null, true, tabm);
         } else {
-            // only has @DefaultCommand
-            String perm = dcAnno.permission().isEmpty() ? null : dcAnno.permission();
-            return new SubCommandInfo(null, perm, false, m, null, null, true);
+            // not subcommand nor default command, remove the annotation
+            plugin.getLogger().warning(i18n.getFormatted("internal.error.bad_subcommand", m.toString()));
+            return null;
         }
     }
 
@@ -151,10 +159,8 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
      */
     private SubCommandInfo parseSubCommandAnnotation(Plugin plugin, Field f) {
         SubCommand scAnno = f.getAnnotation(SubCommand.class);
-        DefaultCommand dcAnno = f.getAnnotation(DefaultCommand.class);
-        if (scAnno == null && dcAnno == null) return null;
+        if (scAnno == null) return null;
 
-        // has at least one annotation
         if (!CommandReceiver.class.isAssignableFrom(f.getType())) {
             plugin.getLogger().warning(i18n.getFormatted("internal.error.bad_subcommand", f.toString()));
             return null; // incorrect field type
@@ -172,29 +178,23 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
             return null;
         }
 
-        if (scAnno != null && dcAnno != null) { // both annotations
-            String scPerm = scAnno.permission().isEmpty() ? null : scAnno.permission();
-            String dcPerm = dcAnno.permission().isEmpty() ? null : dcAnno.permission();
-            String subCommandName = scAnno.value();
-            String perm = null;
-            if (scPerm != null && dcPerm != null) {
-                // You cannot have both permission set
-                plugin.getLogger().warning(i18n.getFormatted("internal.error.bad_subcommand", f.toString()));
-            } else if (scPerm != null) {
-                perm = scPerm;
-            } else {
-                perm = dcPerm;
-            }
-            return new SubCommandInfo(subCommandName, perm, true, null, f, obj, true);
-        } else if (scAnno != null) {
-            // only has @SubCommand
+        if (!scAnno.value().isEmpty() && scAnno.isDefaultCommand()) {
+            // cannot be both subcommand and default command
+            plugin.getLogger().warning(i18n.getFormatted("internal.error.bad_subcommand", f.toString()));
+            return null;
+        } else if (!scAnno.value().isEmpty()) {
+            // subcommand
             String subCommandName = scAnno.value();
             String perm = scAnno.permission().isEmpty() ? null : scAnno.permission();
-            return new SubCommandInfo(subCommandName, perm, true, null, f, obj, false);
+            return new SubCommandInfo(subCommandName, perm, true, null, f, obj, false, null);
+        } else if (scAnno.isDefaultCommand()) {
+            // default command
+            String perm = scAnno.permission().isEmpty() ? null : scAnno.permission();
+            return new SubCommandInfo(null, perm, true, null, f, obj, true, null);
         } else {
-            // only has @DefaultCommand
-            String perm = dcAnno.permission().isEmpty() ? null : dcAnno.permission();
-            return new SubCommandInfo(null, perm, true, null, f, obj, true);
+            // not subcommand nor default command, remove the annotation
+            plugin.getLogger().warning(i18n.getFormatted("internal.error.bad_subcommand", f.toString()));
+            return null;
         }
     }
 
@@ -361,7 +361,7 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
     @Override
     public final List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         try {
-            Arguments cmd = Arguments.parse(args, sender);
+            Arguments cmd = Arguments.parsePreserveLastBlank(args, sender);
             if (cmd == null) return null;
             return acceptTabComplete(sender, cmd);
         } catch (Exception ex) {
@@ -385,16 +385,31 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
      * @return tab completion candidates
      */
     public List<String> acceptTabComplete(CommandSender sender, Arguments args) {
-        String cmd = args.next();
-        if (cmd == null) cmd = "";
+        String cmd = args.top();
+        if (cmd == null) return null;
+        boolean isPartial = args.remains() == 1;
 
-        if (subCommands.containsKey(cmd)) {
-            return subCommands.get(cmd).callTabComplete(sender, args);
-        } else if (defaultSubCommand != null) {
-            return defaultSubCommand.callTabComplete(sender, args);
-        } else {
+        if (isPartial) {
+            // ask default command
+            // list all matching subcommands
+            List<String> ret = null;
+            if (defaultSubCommand != null) ret = defaultSubCommand.callTabComplete(sender, args);
+            if (ret == null) ret = new ArrayList<>();
             final String cmd_prefix = cmd;
-            return subCommands.keySet().stream().filter(s -> s.startsWith(cmd_prefix)).sorted().collect(Collectors.toList());
+            List<String> subcommands = subCommands.keySet().stream().filter(s -> s.startsWith(cmd_prefix)).sorted().collect(Collectors.toList());
+            ret.addAll(subcommands);
+            return ret;
+        } else {
+            // goto subcommand if exact match found
+            // otherwise ask default command
+            if (subCommands.containsKey(cmd)) {
+                args.next();
+                return subCommands.get(cmd).callTabComplete(sender, args);
+            } else if (defaultSubCommand != null) {
+                return defaultSubCommand.callTabComplete(sender, args);
+            } else {
+                return null;
+            }
         }
     }
 
@@ -415,14 +430,19 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
     @SubCommand("help")
     public void printHelp(CommandSender sender, Arguments args) {
         List<String> cmds = new ArrayList<>(subCommands.keySet());
-        if (defaultSubCommand != null && defaultSubCommand.name == null) cmds.add("<default>");
         cmds.sort(Comparator.naturalOrder());
 
         String tmp = "";
         for (String cmd : cmds) {
             if (!subCommands.get(cmd).hasPermission(sender)) continue;
-            tmp += "\n    " + cmd + ":  " + getHelpContent("description", getHelpPrefix(), cmd);
-            tmp += "\n    " + cmd + ":  " + getHelpContent("usage", getHelpPrefix(), cmd);
+            tmp += "\n    " + cmd + ":  " + getHelpContent("description", getHelpPrefix(), cmd) + ChatColor.RESET;
+            tmp += "\n    " + cmd + ":  " + getHelpContent("usage", getHelpPrefix(), cmd) + ChatColor.RESET;
+        }
+
+        if (defaultSubCommand != null && defaultSubCommand.hasPermission(sender)) {
+            String cmd = "<default>";
+            tmp += "\n    " + cmd + ":  " + getHelpContent("description", getHelpPrefix(), cmd) + ChatColor.RESET;
+            tmp += "\n    " + cmd + ":  " + getHelpContent("usage", getHelpPrefix(), cmd) + ChatColor.RESET;
         }
         sender.sendMessage(tmp);
     }

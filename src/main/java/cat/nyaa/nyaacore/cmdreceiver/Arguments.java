@@ -31,6 +31,16 @@ public class Arguments {
         return parse(rawArg, null);
     }
 
+    public static Arguments parsePreserveLastBlank(String[] rawArg, CommandSender sender) {
+        if (rawArg[rawArg.length - 1].isEmpty()) {
+            Arguments arg = parse(rawArg, sender);
+            arg.parsedArguments.add("");
+            return arg;
+        } else {
+            return parse(rawArg, sender);
+        }
+    }
+
     public static Arguments parse(String[] rawArg, CommandSender sender) {
         if (rawArg.length == 0) return new Arguments(sender);
         String cmd = rawArg[0];
@@ -91,6 +101,13 @@ public class Arguments {
     @Deprecated
     public String at(int index) {
         return parsedArguments.get(index);
+    }
+
+    /**
+     * how many times you can call {@link Arguments#next()} before you get an null.
+     */
+    public int remains() {
+        return parsedArguments.size() - index;
     }
 
     public String next() {
