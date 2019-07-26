@@ -14,10 +14,7 @@ public final class TeleportUtils {
         if (!player.isOnline() || loc == null || loc.getWorld() == null) {
             return false;
         }
-        Essentials ess = null;
-        if (Bukkit.getServer().getPluginManager().getPlugin("Essentials") != null) {
-            ess = (Essentials) Bukkit.getServer().getPluginManager().getPlugin("Essentials");
-        }
+        Essentials ess = (Essentials) Bukkit.getServer().getPluginManager().getPlugin("Essentials");
         if (ess != null) {
             try {
                 ess.getUser(player).getTeleport().now(loc, false, PlayerTeleportEvent.TeleportCause.PLUGIN);

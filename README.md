@@ -28,6 +28,10 @@ dependencies {
 }
 ```
 
+## Dependencies
+- EssentialsX: soft depend. Used by `TeleportUtils`, with Essentials install, players can use `/back` command to return to the position before teleportion.
+- Vault: soft depend. It's fine as long as you don't touch `VaultUtils`. If any downstream plugins what to use that, that plugin **MUST** list `Vault` as a required dependency.
+
 ## Version History
 - 6.4.x: Minecraft 1.14.3
 - 7.0.x: Minecraft 1.14.4
