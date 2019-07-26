@@ -48,7 +48,7 @@ version = "$majorVersion.$minorVersion.$buildNumber"
 
 // extra compile warnings
 compileJava {
-    options.compilerArgs += ["-Xlint:deprecation,unchecked,rawtypes"]
+    options.compilerArgs += ["-Xlint:deprecation"]
     options.encoding = 'UTF-8'
 }
 
@@ -136,6 +136,7 @@ javadoc {
         encoding 'UTF-8'
         docEncoding 'UTF-8'
         addBooleanOption('keywords', true)
+        addStringOption('Xdoclint:none', '-quiet')
 
         if (JavaVersion.current() > JavaVersion.VERSION_1_9) {
             options.addBooleanOption('html5', true)
