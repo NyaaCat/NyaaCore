@@ -1,6 +1,6 @@
 package cat.nyaa.nyaacore.cmdreceiver;
 
-class BadCommandException extends RuntimeException {
+public class BadCommandException extends RuntimeException {
     public final Object[] objs;
 
     public BadCommandException() {
