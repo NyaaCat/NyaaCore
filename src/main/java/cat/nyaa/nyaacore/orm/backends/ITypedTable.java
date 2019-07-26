@@ -65,7 +65,7 @@ public interface ITypedTable<T> extends ITable {
      *
      * @param where
      * @return
-     * @implNote has small performance advantage over {@link ITypedTable#select(WhereClause)} because it does not convert all records to java objects
+     * implNote: has small performance advantage over {@link ITypedTable#select(WhereClause)} because it does not convert all records to java objects
      */
     T selectUniqueUnchecked(WhereClause where);
 
@@ -73,7 +73,7 @@ public interface ITypedTable<T> extends ITable {
      * A short hand for select().size();
      *
      * @return number of records to be selected.
-     * @implNote has small performance advantage over {@link ITypedTable#select(WhereClause)}.size() because it "SELECT COUNT(*)"
+     * implNote: has small performance advantage over {@link ITypedTable#select(WhereClause)}.size() because it "SELECT COUNT(*)"
      */
     int count(WhereClause where);
 }

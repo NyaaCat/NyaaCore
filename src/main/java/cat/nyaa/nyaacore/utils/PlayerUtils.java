@@ -13,7 +13,7 @@ public class PlayerUtils {
     public static void openWrittenBook(Player player, ItemStack book) {
         if (book != null && book.getType() == Material.WRITTEN_BOOK) {
             sendFakeItemStack(player, player.getInventory().getHeldItemSlot(), book);
-            ((CraftPlayer) player).getHandle().a(CraftItemStack.asNMSCopy(book), EnumHand.MAIN_HAND);
+            ((CraftPlayer) player).getHandle().openBook(CraftItemStack.asNMSCopy(book), EnumHand.MAIN_HAND);
             player.updateInventory();
         }
     }

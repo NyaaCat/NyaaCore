@@ -6,3 +6,8 @@ depend: [NyaaCore]
 authors: [RecursiveG]
 website: "https://github.com/NyaaCat/NyaaCoreTester"
 api-version: 1.13
+
+commands:
+  nyaacoretester:
+    description: The command for NyaaCoreTester
+    aliases: nct

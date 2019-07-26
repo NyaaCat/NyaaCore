@@ -24,11 +24,12 @@ repositories {
 }
 
 dependencies {
-    compile('cat.nyaa:nyaacore:6.4-SNAPSHOT')
+    compile('cat.nyaa:nyaacore:7.0-SNAPSHOT')
 }
 ```
 
 ## Version History
 - 6.4.x: Minecraft 1.14.3
+- 7.0.x: Minecraft 1.14.4
 
 Older versions can be found in [Github Release Page](https://github.com/NyaaCat/NyaaCore/releases)

@@ -4,15 +4,16 @@ plugins {
     id 'com.github.johnrengelman.shadow' version '2.0.4'
 }
 
-ext.majorVersion = 6
-ext.minorVersion = 4
-ext.minecraftVersion = "1.14.3"
+ext.majorVersion = 7
+ext.minorVersion = 0
+ext.minecraftVersion = "1.14.4"
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 // Suppiled by Jenkins
 ext.buildNumber = System.env.BUILD_NUMBER == null ? "x"                : "$System.env.BUILD_NUMBER"
 ext.mavenDirectory = System.env.MAVEN_DIR == null ? "$projectDir/repo" : "$System.env.MAVEN_DIR"
+ext.jdDirectory = System.env.JAVADOCS_DIR == null ? null               : "$System.env.JAVADOCS_DIR"
 
 // Search for spigot nms jar file
 String spigotNmsPath = "";
@@ -82,25 +83,6 @@ dependencies {
     testImplementation 'ch.vorburger.mariaDB4j:mariaDB4j:2.2.3'
 }
 
-// Testing configurations
-import org.gradle.internal.os.OperatingSystem
-String tmpDir = new File(System.getProperty("java.io.tmpdir")).getCanonicalPath()
-if (tmpDir.contains(' ')) {
-    if (OperatingSystem.current().isWindows()) {
-        tmpDir = 'C:\\ProgramData\\NyaaCore\\'
-    } else if (OperatingSystem.current().isLinux()) {
-        tmpDir = '/tmp/NyaaCore/'
-    }
-}
-test {
-    useJUnit()
-    testLogging {
-        exceptionFormat = 'full'
-        showStandardStreams = true
-    }
-    systemProperty 'java.io.tmpdir', tmpDir
-}
-
 // artifacts
 shadowJar {
     archiveName = "${archivesBaseName}-${version}-shadowed.${extension}"
@@ -110,7 +92,10 @@ task sourcesJar(type: Jar) {
     classifier = 'sources'
     from sourceSets.main.java.srcDirs
 }
-
+// write javadocs to an external folder which can be served via nginx
+if (ext.jdDirectory != null) {
+    javadoc.destinationDir = file("${jdDirectory}/nyaacore-${version}")
+}
 task javadocJar(type: Jar, dependsOn: javadoc) {
     classifier = 'javadoc'
     from javadoc.destinationDir
@@ -142,30 +127,21 @@ publishing {
 
 javadoc {
     (options as StandardJavadocDocletOptions).with {
-        links 'https://nyaacat.github.io/NyaaCentral/LangUtils/2.1-mc1.13.1/javadoc/'
-
         links 'https://docs.oracle.com/javase/8/docs/api/'
         links 'https://hub.spigotmc.org/javadocs/spigot/'
         links 'https://google.github.io/guava/releases/21.0/api/docs/'
         links 'https://ci.md-5.net/job/BungeeCord/ws/chat/target/apidocs/'
-        links 'https://netty.io/4.1/api/index.html'
 
         locale 'en_US'
         encoding 'UTF-8'
         docEncoding 'UTF-8'
         addBooleanOption('keywords', true)
 
-        def currentJavaVersion = JavaVersion.current()
-        if (currentJavaVersion > JavaVersion.VERSION_1_9) {
+        if (JavaVersion.current() > JavaVersion.VERSION_1_9) {
             options.addBooleanOption('html5', true)
         }
 
         windowTitle = "NyaaCore Javadoc"
-        String fullVersion = System.getenv("FULL_VERSION_STRING")
-        if (fullVersion != null) {
-            docTitle = "<b>NyaaCore</b> " + System.getenv("FULL_VERSION_STRING")
-        } else {
-            docTitle = "<b>NyaaCore</b>"
-        }
+        docTitle = "NyaaCore (mc$minecraftVersion-${project.version})"
     }
 }

@@ -293,7 +293,7 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
         return true;
     }
 
-    /**
+    /*
      * Code path looks like this:
      * - Bukkit => CmdRecv:onCommand => CmdRecv:acceptCommand => SubCmdRecv:acceptCommand => SubCmdRecv:commandMethod
      * <p>
@@ -304,7 +304,8 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
      * 1. {@link CommandReceiver#subCommands}
      * 2. {@link CommandReceiver#defaultSubCommand}
      * 3. {@link CommandReceiver#printHelp(CommandSender, Arguments)}
-     *
+     */
+    /**
      * @param sender who run the command
      * @param cmd    the command, or part of the command
      */
@@ -375,7 +376,7 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
         }
     }
 
-    /**
+    /*
      * The code path looks like this:
      * - Bukkit => CmdRecv:onTabComplete => CmdRecv:acceptTabComplete => SubCmdRecv:acceptTabComplete => SubCmdRecv:tabCompleteMethod
      * <p>
@@ -384,8 +385,8 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
      * 2. {@link CommandReceiver#defaultSubCommand}.callTabCompletion
      * 3. default builtin completion logic
      * <p>
-     * FIXME: cannot have a default tab completion handler without a default subcommand handler
-     *
+     */
+    /**
      * @param sender who run the command
      * @param args   the command, or part of the command
      * @return tab completion candidates
