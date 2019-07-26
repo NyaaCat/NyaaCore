@@ -10,7 +10,6 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.java.JavaPlugin;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -216,7 +215,7 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
     public CommandReceiver(Plugin plugin, ILocalizer _i18n) {
         if (plugin == null) throw new IllegalArgumentException();
         if (_i18n == null)
-            _i18n = new LanguageRepository.InternalOnlyRepository((JavaPlugin) plugin); // TODO revise LangRepo & remove the cast
+            _i18n = new LanguageRepository.InternalOnlyRepository(plugin);
         this.i18n = _i18n;
 
         // Collect all methods

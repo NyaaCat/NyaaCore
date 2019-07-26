@@ -3,7 +3,7 @@ package cat.nyaa.nyaacore;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.plugin.Plugin;
 
 import java.io.File;
 import java.io.IOException;
@@ -62,7 +62,7 @@ public abstract class LanguageRepository implements ILocalizer {
      *
      * @return the plugin class instance
      */
-    protected abstract JavaPlugin getPlugin();
+    protected abstract Plugin getPlugin();
 
     /**
      * @return the language to be loaded into {@link #map}
@@ -72,7 +72,7 @@ public abstract class LanguageRepository implements ILocalizer {
     private static NyaaCoreLoader corePlugin = null;
 
     // helper function to load language map
-    private static void loadResourceMap(JavaPlugin plugin, String codeName,
+    private static void loadResourceMap(Plugin plugin, String codeName,
                                         Map<String, String> targetMap, boolean ignoreInternal, boolean ignoreNormal) {
         if (plugin == null || codeName == null || targetMap == null) throw new IllegalArgumentException();
         InputStream stream = plugin.getResource("lang/" + codeName + ".yml");
@@ -83,8 +83,8 @@ public abstract class LanguageRepository implements ILocalizer {
     }
 
     // helper function to load language map
-    private static void loadLocalMap(JavaPlugin plugin, String codeName,
-                                        Map<String, String> targetMap, boolean ignoreInternal, boolean ignoreNormal) {
+    private static void loadLocalMap(Plugin plugin, String codeName,
+                                     Map<String, String> targetMap, boolean ignoreInternal, boolean ignoreNormal) {
         if (plugin == null || codeName == null || targetMap == null) throw new IllegalArgumentException();
         if (Boolean.parseBoolean(System.getProperty("nyaautils.i18n.refreshLangFiles", "false"))) return;
         File langFile = new File(plugin.getDataFolder(), codeName + ".yml");
@@ -123,7 +123,7 @@ public abstract class LanguageRepository implements ILocalizer {
      */
     public void load() {
         String codeName = getLanguage();
-        JavaPlugin plugin = getPlugin();
+        Plugin plugin = getPlugin();
         if (codeName == null) codeName = DEFAULT_LANGUAGE;
         map.clear();
         // load languages
@@ -269,21 +269,21 @@ public abstract class LanguageRepository implements ILocalizer {
 
     public static class InternalOnlyRepository extends LanguageRepository{
 
-        private final JavaPlugin plugin;
+        private final Plugin plugin;
         private final String lang;
 
-        public InternalOnlyRepository(JavaPlugin plugin, String lang) {
+        public InternalOnlyRepository(Plugin plugin, String lang) {
             this.plugin = plugin;
             this.lang = lang;
         }
 
-        public InternalOnlyRepository(JavaPlugin plugin) {
+        public InternalOnlyRepository(Plugin plugin) {
             this.plugin = plugin;
             this.lang = DEFAULT_LANGUAGE;
         }
 
         @Override
-        protected JavaPlugin getPlugin() {
+        protected Plugin getPlugin() {
             return plugin;
         }
 
