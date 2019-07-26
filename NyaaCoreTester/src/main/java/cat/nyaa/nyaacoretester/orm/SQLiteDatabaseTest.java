@@ -17,6 +17,7 @@ import org.junit.Test;
 
 import java.io.File;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -295,6 +296,59 @@ public class SQLiteDatabaseTest {
         }
 
         assertEquals("test", tableTest1.selectUnique(WhereClause.EMPTY).string);
+    }
+
+    private static Integer test_councurrency_try_count = 0;
+
+    /**
+     * You can do concurrency+transaction, but that's very discouraged.
+     * You have to deal with locking and error recovery on your own.
+     */
+    @Test
+    public void testConcurrency() throws Exception {
+        List<Thread> threads = new ArrayList<>(200);
+        ITypedTable<TableTest8> tb8 = db.getTable(TableTest8.class);
+        tb8.delete(WhereClause.EMPTY);
+        tb8.insert(new TableTest8(0, ""));
+        test_councurrency_try_count = 0;
+
+        for (int thread_no = 1; thread_no <= 100; thread_no++) {
+            final int tn = thread_no;
+            Thread t = new Thread(() -> {
+                try {
+                    IConnectedDatabase db = DatabaseUtils.connect(NyaaCoreTester.instance, BackendConfig.sqliteBackend("testdb.db"));
+                    try {
+                        ITypedTable<TableTest8> tb = db.getTable(TableTest8.class);
+                        do {
+                            synchronized (SQLiteDatabaseTest.this) {
+                                test_councurrency_try_count++;
+                            }
+
+                            try (RollbackGuard guard = new RollbackGuard(db)) { // guard begins a transaction
+                                TableTest8 record = tb.selectUnique(WhereClause.EMPTY);
+                                record.x += tn;  // nth thread inc the value by n
+                                tb.update(record, WhereClause.EMPTY);
+                                guard.commit();
+                                return; // return if update success
+                            } catch (Exception ex) {
+
+                            }
+                            Thread.sleep(tn); // don't retry that fast.
+                        } while (true); // retry if transaction failed, FIXME check if it's actually a transaction failure
+                    } finally {  //never forget to close db connection
+                        db.close();
+                    }
+                } catch (Exception ex) {  // "catch 'em all" try-block
+                    throw new RuntimeException(ex);
+                }
+            });
+            threads.add(t);
+            t.start();
+        }
+
+        for (Thread t : threads) t.join();
+        NyaaCoreTester.instance.getLogger().info(String.format("testConcurrency: try count: %d", test_councurrency_try_count));
+        assertEquals(5050, (Object) tb8.selectUnique(WhereClause.EMPTY).x);  // Sigma{i=1..100}{i} == 5050
     }
 
     @After
