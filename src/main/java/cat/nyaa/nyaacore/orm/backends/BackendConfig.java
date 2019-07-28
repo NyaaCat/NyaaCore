@@ -28,6 +28,9 @@ public class BackendConfig implements ISerializable {
     @Serializable
     public String mysql_jdbc_driver;
 
+    public BackendConfig() {
+    }
+
     public BackendConfig(String provider, String sqlite_file, String mysql_url, String mysql_username, String mysql_password, String mysql_jdbc_driver) {
         this.provider = provider;
         this.sqlite_file = sqlite_file;
