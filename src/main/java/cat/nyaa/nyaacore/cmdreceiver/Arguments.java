@@ -19,6 +19,7 @@ public class Arguments {
     private List<String> parsedArguments = new ArrayList<>();
     private int index = 0;
     private CommandSender sender;
+    private String[] rawArgs;
 
     private Arguments() {
     }
@@ -35,6 +36,7 @@ public class Arguments {
         if (rawArg[rawArg.length - 1].isEmpty()) {
             Arguments arg = parse(rawArg, sender);
             arg.parsedArguments.add("");
+            arg.rawArgs = rawArg;
             return arg;
         } else {
             return parse(rawArg, sender);
@@ -92,6 +94,7 @@ public class Arguments {
 
         Arguments ret = new Arguments(sender);
         ret.parsedArguments = cmdList;
+        ret.rawArgs = rawArg;
         return ret;
     }
 
@@ -108,6 +111,14 @@ public class Arguments {
      */
     public int remains() {
         return parsedArguments.size() - index;
+    }
+
+    public boolean isSuggestion() {
+        return parsedArguments.get(parsedArguments.size() - 1).isEmpty();
+    }
+
+    public String[] getRawArgs() {
+        return rawArgs;
     }
 
     public String next() {

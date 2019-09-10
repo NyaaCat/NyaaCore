@@ -30,6 +30,7 @@ public final class ItemStackUtils {
                                                                                       .maximumWeight(100L * 1024 * 1024).build(); // Hard Coded 100M
 
     static {
+        //noinspection deprecation
         currentDataVersion = Bukkit.getUnsafe().getDataVersion();
     }
 

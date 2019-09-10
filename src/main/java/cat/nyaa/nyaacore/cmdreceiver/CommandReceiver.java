@@ -261,8 +261,12 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
         });
     }
 
+    protected Set<String> getSubCommands(){
+        return Collections.unmodifiableSet(subCommands.keySet());
+    }
+
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private CommandReceiver newInstance(Class cls, Object arg1, Object arg2) throws ReflectiveOperationException {
+    private static CommandReceiver newInstance(Class cls, Object arg1, Object arg2) throws ReflectiveOperationException {
         for (Constructor c : cls.getConstructors()) {
             if (c.getParameterCount() == 2 &&
                     c.getParameterTypes()[0].isAssignableFrom(arg1.getClass()) &&
