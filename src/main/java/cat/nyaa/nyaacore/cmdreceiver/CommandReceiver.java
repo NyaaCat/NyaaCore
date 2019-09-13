@@ -427,7 +427,7 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
     private String getHelpContent(String type, String... subkeys) {
         String key = "manual";
         for (String s : subkeys) {
-            if (s.length() > 0)
+            if (s != null && s.length() > 0)
                 key += "." + s;
         }
         key += "." + type;
