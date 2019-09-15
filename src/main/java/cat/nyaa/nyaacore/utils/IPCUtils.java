@@ -15,7 +15,10 @@ import java.util.Map;
  * If one plugin register events or methods here,
  * other plugins can emit the event or call the method
  * without directly depends on the plugin.
+ *
+ * @deprecated magic strings and magic argument list
  */
+@Deprecated
 public final class IPCUtils {
     private static final Map<String, Constructor<? extends Event>> eventMap = new HashMap<>();
     private static final Map<String, Method> methodMap = new HashMap<>();

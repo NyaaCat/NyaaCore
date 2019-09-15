@@ -224,6 +224,10 @@ public final class ItemStackUtils {
         return itemAsJsonObject.toString();
     }
 
+    /**
+     * @deprecated caller should use {@link CraftItemStack#asNMSCopy(ItemStack)} directly
+     */
+    @Deprecated
     public static Object asNMSCopy(ItemStack itemStack) {
         return CraftItemStack.asNMSCopy(itemStack);
     }

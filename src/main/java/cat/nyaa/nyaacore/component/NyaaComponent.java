@@ -23,7 +23,7 @@ public final class NyaaComponent {
             registeredComponents.put(componentClass, component);
         } else {
             IComponent old_component = registeredComponents.get(componentClass);
-            if (old_component.unload(component)) {
+            if (old_component.canReplaceMe(component)) {
                 registeredComponents.put(componentClass, component);
             } else {
                 throw new ComponentDuplicatedException(componentClass, old_component, component);

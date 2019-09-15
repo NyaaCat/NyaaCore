@@ -37,12 +37,13 @@ public interface IMessageQueue extends IComponent {
      */
     void send(OfflinePlayer player, Message message, long time);
 
+    /** Default in-memory message queue, which does not persist across reboot. */
     class DefaultMessageQueue implements IMessageQueue, Listener {
-
+        /* Map[Recipient, Pairs[SystemMilliTimeWhenTheMessageIsSent, TheMessage]] */
         static final Map<OfflinePlayer, Multimap<Long, Message>> messageStorage = new HashMap<>();
 
         @Override
-        public boolean unload(IComponent successor) {
+        public boolean canReplaceMe(IComponent successor) {
             HandlerList.unregisterAll(this);
             messageStorage.forEach(
                     (player, msgs) -> msgs.forEach(

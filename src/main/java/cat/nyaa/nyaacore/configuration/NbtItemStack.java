@@ -7,6 +7,9 @@ import org.bukkit.inventory.ItemStack;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Store NBT-represented ItemStacks in config file, rather than default yaml-representation.
+ */
 public class NbtItemStack implements ConfigurationSerializable {
     public ItemStack it;
 
