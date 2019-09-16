@@ -2,6 +2,7 @@ package cat.nyaa.nyaacore.cmdreceiver;
 
 import cat.nyaa.nyaacore.ILocalizer;
 import cat.nyaa.nyaacore.LanguageRepository;
+import cat.nyaa.nyaacore.Pair;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
@@ -114,8 +115,8 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
 
         Class<?>[] params = m.getParameterTypes();
         if (!(params.length == 2 &&
-                params[0] == CommandSender.class &&
-                params[1] == Arguments.class)) {
+                      params[0] == CommandSender.class &&
+                      params[1] == Arguments.class)) {
             plugin.getLogger().warning(i18n.getFormatted("internal.error.bad_subcommand", m.toString()));
             return null; // incorrect method signature
         }
@@ -261,16 +262,20 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
         });
     }
 
-    protected Set<String> getSubCommands(){
+    protected Set<String> getSubCommands() {
         return Collections.unmodifiableSet(subCommands.keySet());
+    }
+
+    protected Map<String, Method> getSubCommandMethods() {
+        return Collections.unmodifiableMap(subCommands.entrySet().stream().map(e -> new Pair<>(e.getKey(), e.getValue().method)).collect(Collectors.toMap(Pair::getKey, Pair::getValue)));
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private static CommandReceiver newInstance(Class cls, Object arg1, Object arg2) throws ReflectiveOperationException {
         for (Constructor c : cls.getConstructors()) {
             if (c.getParameterCount() == 2 &&
-                    c.getParameterTypes()[0].isAssignableFrom(arg1.getClass()) &&
-                    c.getParameterTypes()[1].isAssignableFrom(arg2.getClass())) {
+                        c.getParameterTypes()[0].isAssignableFrom(arg1.getClass()) &&
+                        c.getParameterTypes()[1].isAssignableFrom(arg2.getClass())) {
                 return (CommandReceiver) c.newInstance(arg1, arg2);
             }
         }
@@ -309,6 +314,7 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
      * 2. {@link CommandReceiver#defaultSubCommand}
      * 3. {@link CommandReceiver#printHelp(CommandSender, Arguments)}
      */
+
     /**
      * @param sender who run the command
      * @param cmd    the command, or part of the command
@@ -390,6 +396,7 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
      * 3. default builtin completion logic
      * <p>
      */
+
     /**
      * @param sender who run the command
      * @param args   the command, or part of the command
