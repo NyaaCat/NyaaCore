@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.IllegalFormatConversionException;
 import java.util.Map;
@@ -73,18 +72,18 @@ public abstract class LanguageRepository implements ILocalizer {
     private static NyaaCoreLoader corePlugin = null;
 
     // helper function to load language map
-    protected static void loadResourceMap(Plugin plugin, String codeName,
+    private static void loadResourceMap(Plugin plugin, String codeName,
                                         Map<String, String> targetMap, boolean ignoreInternal, boolean ignoreNormal) {
         if (plugin == null || codeName == null || targetMap == null) throw new IllegalArgumentException();
         InputStream stream = plugin.getResource("lang/" + codeName + ".yml");
         if (stream != null) {
-            YamlConfiguration section = YamlConfiguration.loadConfiguration(new InputStreamReader(stream, StandardCharsets.UTF_8));
+            YamlConfiguration section = YamlConfiguration.loadConfiguration(new InputStreamReader(stream, Charset.forName("UTF8")));
             loadLanguageSection(targetMap, section, "", ignoreInternal, ignoreNormal);
         }
     }
 
     // helper function to load language map
-    protected static void loadLocalMap(Plugin plugin, String codeName,
+    private static void loadLocalMap(Plugin plugin, String codeName,
                                      Map<String, String> targetMap, boolean ignoreInternal, boolean ignoreNormal) {
         if (plugin == null || codeName == null || targetMap == null) throw new IllegalArgumentException();
         if (Boolean.parseBoolean(System.getProperty("nyaautils.i18n.refreshLangFiles", "false"))) return;
@@ -119,81 +118,27 @@ public abstract class LanguageRepository implements ILocalizer {
     }
 
     /**
-     * Load specified local language map
-     *
-     * @param fileName
-     */
-    protected void loadLocalLanguage(String fileName) {
-        loadLocalMap(corePlugin, fileName, map, true, false);
-        loadLocalMap(getPlugin(), fileName, map, false, false);
-    }
-
-    /**
-     * Load specified resource language map
-     *
-     * @param fileName
-     */
-    protected void loadResourceLanguage(String fileName) {
-        loadResourceMap(corePlugin, fileName, map, true, false);
-        loadResourceMap(getPlugin(), fileName, map, false, false);
-    }
-
-    /**
-     * Load specified language map
-     *
-     * @param fileName
-     */
-    protected void loadLanguage(String fileName) {
-        loadResourceLanguage(fileName);
-        loadLocalLanguage(fileName);
-    }
-
-    /**
      * Reset then load per-plugin language map
      * Based on {@link #getPlugin()} and {@link #getLanguage()}
-     *
-     * @param saveMap whether save loaded map to disk
      */
-    public void load(boolean saveMap) {
+    public void load() {
         String codeName = getLanguage();
         Plugin plugin = getPlugin();
         if (codeName == null) codeName = DEFAULT_LANGUAGE;
         map.clear();
         // load languages
+        loadResourceMap(corePlugin, DEFAULT_LANGUAGE, map, true, false);
+        loadLocalMap(corePlugin, DEFAULT_LANGUAGE, map, true, false);
+        loadResourceMap(corePlugin, codeName, map, true, false);
+        loadLocalMap(corePlugin, codeName, map, true, false);
 
-        loadLanguage(DEFAULT_LANGUAGE);
-        loadLanguage(codeName);
+        loadResourceMap(getPlugin(), DEFAULT_LANGUAGE, map, false, false);
+        loadLocalMap(getPlugin(), DEFAULT_LANGUAGE, map, false, false);
+        loadResourceMap(getPlugin(), codeName, map, false, false);
+        loadLocalMap(getPlugin(), codeName, map, false, false);
 
         // save (probably) modified language file back to disk
-        if (saveMap) {
-            save();
-        }
-
-        plugin.getLogger().info(getFormatted("internal.info.using_language", codeName));
-    }
-
-    /**
-     * Reset then load per-plugin language map
-     * Always save modified language file back to disk
-     */
-    public void load() {
-        load(true);
-    }
-
-    /**
-     * Save language file back to disk using the language code name as file name
-     */
-    public void save() {
-        String codeName = getLanguage();
-        save(codeName);
-    }
-
-    /**
-     * Save language file back to disk using given file name
-     */
-    public void save(String fileName) {
-        Plugin plugin = getPlugin();
-        File localLangFile = new File(plugin.getDataFolder(), fileName + ".yml");
+        File localLangFile = new File(plugin.getDataFolder(), codeName + ".yml");
         try {
             YamlConfiguration yaml = new YamlConfiguration();
             for (String key : map.keySet()) {
@@ -201,8 +146,10 @@ public abstract class LanguageRepository implements ILocalizer {
             }
             yaml.save(localLangFile);
         } catch (IOException ex) {
-            plugin.getLogger().warning("Cannot save language file: " + fileName + ".yml");
+            plugin.getLogger().warning("Cannot save language file: " + codeName + ".yml");
         }
+
+        plugin.getLogger().info(getFormatted("internal.info.using_language", codeName));
     }
 
     /**

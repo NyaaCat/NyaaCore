@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 public class Arguments {
 
@@ -120,22 +119,6 @@ public class Arguments {
 
     public String[] getRawArgs() {
         return rawArgs;
-    }
-
-    public String consume() {
-        if (index < parsedArguments.size()) {
-            String ret = parsedArguments.stream().skip(index).collect(Collectors.joining(" "));
-            index = parsedArguments.size();
-            return ret;
-        } else
-            return null;
-    }
-
-    // throw exception if no string found
-    public String consumeString() {
-        String str = consume();
-        if (str == null) throw new BadCommandException("internal.error.no_more_string");
-        return str;
     }
 
     public String next() {
