@@ -1,13 +1,13 @@
 package cat.nyaa.nyaacore.utils;
 
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import net.minecraft.server.v1_14_R1.*;
+import net.minecraft.server.v1_15_R1.*;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
-import org.bukkit.craftbukkit.v1_14_R1.CraftWorld;
-import org.bukkit.craftbukkit.v1_14_R1.entity.CraftEntity;
-import org.bukkit.craftbukkit.v1_14_R1.entity.CraftLivingEntity;
+import org.bukkit.craftbukkit.v1_15_R1.CraftWorld;
+import org.bukkit.craftbukkit.v1_15_R1.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_15_R1.entity.CraftLivingEntity;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 
@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 public final class NmsUtils {
     /* see CommandEntityData.java */
     public static void setEntityTag(Entity e, String tag) {
-        net.minecraft.server.v1_14_R1.Entity nmsEntity = ((CraftEntity) e).getHandle();
+        net.minecraft.server.v1_15_R1.Entity nmsEntity = ((CraftEntity) e).getHandle();
 
         if (nmsEntity instanceof EntityHuman) {
             throw new IllegalArgumentException("Player NBT cannot be edited");
