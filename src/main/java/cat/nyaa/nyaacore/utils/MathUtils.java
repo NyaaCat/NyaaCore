@@ -21,7 +21,7 @@ public final class MathUtils {
     }
 
     /**
-     * Select n from candidates. Return all candidates if n > candidates.size()
+     * Select n from candidates. Return all candidates if n &gt; candidates.size()
      * Order is not preserved.
      */
     public static <T> ImmutableList<T> randomSelect(List<T> candidates, int n) {

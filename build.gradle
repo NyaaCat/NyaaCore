@@ -5,8 +5,8 @@ plugins {
 }
 
 ext.majorVersion = 7
-ext.minorVersion = 0
-ext.minecraftVersion = "1.15"
+ext.minorVersion = 1
+ext.minecraftVersion = "1.15.1"
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
@@ -17,7 +17,7 @@ ext.jdDirectory = System.env.JAVADOCS_DIR == null ? null               : "$Syste
 
 // Search for spigot nms jar file
 String spigotNmsPath = "";
-if (System.env.NMS_JAR != null) { 
+if (System.env.NMS_JAR != null) {
     // use NMS_JAR if it's explicitly specified
     spigotNmsPath = "$System.env.NMS_JAR"
     if (new File(spigotNmsPath).exists()) {
@@ -69,7 +69,7 @@ dependencies {
 
     // other plugins
     compileOnly('net.milkbowl.vault:VaultAPI:1.7') { transitive = false }  // soft dep
-    compileOnly('net.ess3:EssentialsX:2.17.0') { transitive = false }      // soft dep
+    compileOnly('net.ess3:EssentialsX:2.17.1') { transitive = false }      // soft dep
 
     // 3rd party packages to be shadowed
     api 'com.udojava:EvalEx:2.1'

@@ -75,8 +75,7 @@ public final class ItemStackUtils {
         //Constructor<?> constructNativeItemStackFromNBTTagCompound = classNativeItemStack.getConstructor(classNBTTagCompound);
         ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(nbt, offset, len);
         DataInputStream dataInputStream = new DataInputStream(byteArrayInputStream);
-        NBTTagCompound reconstructedNBTTagCompound = new NBTTagCompound();
-        reconstructedNBTTagCompound.load(dataInputStream, 0, unlimitedNBTReadLimiter);
+        NBTTagCompound reconstructedNBTTagCompound = NBTTagCompound.a.b(dataInputStream, 0, unlimitedNBTReadLimiter);
         dataInputStream.close();
         byteArrayInputStream.close();
         int dataVersion = reconstructedNBTTagCompound.getInt(NYAACORE_ITEMSTACK_DATAVERSION_KEY);

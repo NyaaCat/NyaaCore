@@ -68,10 +68,13 @@ public final class BundledSQLUtils {
     /**
      * Execute a SQL file bundled with the plugin
      *
+     * @param plugin         java plugin object, for resource access
+     * @param conn           connected database
      * @param filename       full file name, including extension, in resources/sql folder
      * @param replacementMap {{key}} in the file will be replaced by value. Ignored if null. NOTE: sql injection will happen
      * @param cls            class of desired object
      * @param parameters     JDBC's positional parametrized query. Java type.
+     * @param <T>            Type of record object
      * @return the result set, null if cls is null.
      */
     public static <T> List<T> queryBundledAs(Plugin plugin, Connection conn, String filename, Map<String, String> replacementMap, Class<T> cls, Object... parameters) {
