@@ -17,7 +17,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.zip.Deflater;
 import java.util.zip.DeflaterInputStream;
+import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
 
 public final class ItemStackUtils {
@@ -98,11 +100,14 @@ public final class ItemStackUtils {
         return CraftItemStack.asBukkitCopy(reconstructedNativeItemStack);
     }
 
+    private static final Inflater NYAA_INFLATER = new Inflater();
+    private static final Deflater NYAA_DEFLATER = new Deflater();
+
     private static byte[] compress(byte[] data) {
         byte[] ret;
         try (ByteArrayInputStream bis = new ByteArrayInputStream(data);
              ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
-            ByteStreams.copy(new DeflaterInputStream(bis), bos);
+            ByteStreams.copy(new DeflaterInputStream(bis, NYAA_DEFLATER), bos);
             ret = bos.toByteArray();
         } catch (IOException ex) {
             throw new RuntimeException(ex);
@@ -114,7 +119,7 @@ public final class ItemStackUtils {
         byte[] ret;
         try (ByteArrayInputStream bis = new ByteArrayInputStream(data);
              ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
-            ByteStreams.copy(new InflaterInputStream(bis), bos);
+            ByteStreams.copy(new InflaterInputStream(bis, NYAA_INFLATER), bos);
             ret = bos.toByteArray();
         } catch (IOException ex) {
             throw new RuntimeException(ex);
