@@ -59,6 +59,7 @@ repositories {
     maven { name 'vault-repo';  url 'http://nexus.hc.to/content/repositories/pub_releases' }
     maven { name 'EssentialsX'; url 'https://ci.ender.zone/plugin/repository/everything' }
     maven { name 'NyaaCat';     url 'https://ci.nyaacat.com/maven/' }
+    maven { name 'aikar';     url 'https://repo.aikar.co/content/groups/aikar/' }
 }
 
 dependencies {
@@ -70,10 +71,11 @@ dependencies {
     // other plugins
     compileOnly('net.milkbowl.vault:VaultAPI:1.7') { transitive = false }  // soft dep
     compileOnly('net.ess3:EssentialsX:2.17.0') { transitive = false }      // soft dep
-
     // 3rd party packages to be shadowed
     api 'com.udojava:EvalEx:2.1'
     shadow 'com.udojava:EvalEx:2.1'
+    api 'co.aikar:taskchain-bukkit:3.7.2'
+    shadow "co.aikar:taskchain-bukkit:3.7.2"
 
     // Testing
     testImplementation 'junit:junit:4.12'
