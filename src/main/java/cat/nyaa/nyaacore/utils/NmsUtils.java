@@ -55,13 +55,18 @@ public final class NmsUtils {
         return !((CraftWorld) world).getHandle().createExplosion(((CraftEntity) entity).getHandle(), x, y, z, power, setFire, breakBlocks ? Explosion.Effect.BREAK : Explosion.Effect.NONE).wasCanceled;
     }
 
+    //**
+    //*  fromMobSpawner is removed in 1.15.2 Spigot
+    //*  use {Mob.isAware} instead.
+    @Deprecated
     public static boolean isFromMobSpawner(Entity entity) {
-        return entity instanceof CraftEntity && ((CraftEntity) entity).getHandle().fromMobSpawner;
+        return false;
     }
 
+    @Deprecated
     public static void setFromMobSpawner(Entity entity, boolean fromMobSpawner) {
         if (entity instanceof CraftEntity) {
-            ((CraftEntity) entity).getHandle().fromMobSpawner = fromMobSpawner;
+//            ((CraftEntity) entity).getHandle().fromMobSpawner = fromMobSpawner;
         }
     }
 
