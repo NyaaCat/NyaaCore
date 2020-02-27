@@ -105,6 +105,7 @@ public final class ItemStackUtils {
 
     private static byte[] compress(byte[] data) {
         byte[] ret;
+        NYAA_DEFLATER.reset();
         try (ByteArrayInputStream bis = new ByteArrayInputStream(data);
              ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
             ByteStreams.copy(new DeflaterInputStream(bis, NYAA_DEFLATER), bos);
@@ -117,6 +118,7 @@ public final class ItemStackUtils {
 
     private static byte[] decompress(byte[] data) {
         byte[] ret;
+        NYAA_INFLATER.reset();
         try (ByteArrayInputStream bis = new ByteArrayInputStream(data);
              ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
             ByteStreams.copy(new InflaterInputStream(bis, NYAA_INFLATER), bos);
