@@ -21,6 +21,10 @@ repositories {
         name 'NyaaCat'
         url 'https://ci.nyaacat.com/maven/'
     }
+    maven { 
+        name 'aikar';     
+        url 'https://repo.aikar.co/content/groups/aikar/' 
+    }
 }
 
 dependencies {
