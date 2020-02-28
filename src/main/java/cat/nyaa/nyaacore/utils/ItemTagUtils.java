@@ -31,7 +31,7 @@ public class ItemTagUtils {
         if (tag == null) return Optional.empty();
         return !tag.hasKeyOfType(key, TYPE_NUMBER) ? Optional.empty() : Optional.of(tag.getInt(key));
     }
-    public static Optional<Integer> setString(ItemStack item, String key, int value){
+    public static Optional<Integer> setInt(ItemStack item, String key, int value){
         NBTTagCompound tag = CraftItemStack.asNMSCopy(item).getOrCreateTag();
         if (tag == null) return Optional.empty();
         tag.setInt(key, value);
@@ -44,7 +44,7 @@ public class ItemTagUtils {
         if (tag == null) return Optional.empty();
         return !tag.hasKeyOfType(key, TYPE_NUMBER) ? Optional.empty() : Optional.of(tag.getDouble(key));
     }
-    public static Optional<Double> setString(ItemStack item, String key, double value){
+    public static Optional<Double> setDouble(ItemStack item, String key, double value){
         NBTTagCompound tag = CraftItemStack.asNMSCopy(item).getOrCreateTag();
         if (tag == null) return Optional.empty();
         tag.setDouble(key, value);
