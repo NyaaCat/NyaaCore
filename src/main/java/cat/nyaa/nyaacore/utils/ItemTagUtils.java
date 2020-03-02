@@ -8,18 +8,18 @@ import java.lang.reflect.Field;
 import java.util.Optional;
 
 public class ItemTagUtils {
-    private static final int TYPE_NUMBER = 99;
-    private static final int TYPE_STRING = 8;
-    private static final int TYPE_BYTE_ARRAY = 7;
-    private static final int TYPE_INT_ARRAY = 11;
-    private static final int TYPE_LONG_ARRAY = 12;
-    private static final int TYPE_TAG_COMPOUND = 12;
-
 
     public static Optional<String> getString(ItemStack item, String key) {
-        NBTTagCompound tag = CraftItemStack.asNMSCopy(item).getTag();
+        Optional<net.minecraft.server.v1_15_R1.ItemStack> item1 = null ;
+        try {
+            item1 = getItem(item);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            return Optional.empty();
+        }
+        if (!item1.isPresent()) return Optional.empty();
+        NBTTagCompound tag = item1.get().getTag();
         if (tag == null) return Optional.empty();
-        return !tag.hasKeyOfType(key, TYPE_STRING) ? Optional.empty() : Optional.of(tag.getString(key));
+        return !tag.hasKey(key) ? Optional.empty() : Optional.of(tag.getString(key));
     }
     public static Optional<String> setString(ItemStack item, String key, String value) throws NoSuchFieldException, IllegalAccessException {
         Optional<net.minecraft.server.v1_15_R1.ItemStack> is = getItem(item);
@@ -34,9 +34,16 @@ public class ItemTagUtils {
     }
 
     public static Optional<Integer> getInt(ItemStack item, String key) {
-        NBTTagCompound tag = CraftItemStack.asNMSCopy(item).getTag();
+        Optional<net.minecraft.server.v1_15_R1.ItemStack> item1 = null ;
+        try {
+            item1 = getItem(item);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            return Optional.empty();
+        }
+        if (!item1.isPresent()) return Optional.empty();
+        NBTTagCompound tag = item1.get().getTag();
         if (tag == null) return Optional.empty();
-        return !tag.hasKeyOfType(key, TYPE_NUMBER) ? Optional.empty() : Optional.of(tag.getInt(key));
+        return !tag.hasKey(key) ? Optional.empty() : Optional.of(tag.getInt(key));
     }
     public static Optional<Integer> setInt(ItemStack item, String key, int value) throws NoSuchFieldException, IllegalAccessException {
         Optional<net.minecraft.server.v1_15_R1.ItemStack> is = getItem(item);
@@ -53,9 +60,16 @@ public class ItemTagUtils {
 
 
     public static Optional<Double> getDouble(ItemStack item, String key) {
-        NBTTagCompound tag = CraftItemStack.asNMSCopy(item).getTag();
+        Optional<net.minecraft.server.v1_15_R1.ItemStack> item1 = null ;
+        try {
+            item1 = getItem(item);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            return Optional.empty();
+        }
+        if (!item1.isPresent()) return Optional.empty();
+        NBTTagCompound tag = item1.get().getTag();
         if (tag == null) return Optional.empty();
-        return !tag.hasKeyOfType(key, TYPE_NUMBER) ? Optional.empty() : Optional.of(tag.getDouble(key));
+        return !tag.hasKey(key) ? Optional.empty() : Optional.of(tag.getDouble(key));
     }
     public static Optional<Double> setDouble(ItemStack item, String key, double value) throws NoSuchFieldException, IllegalAccessException {
         Optional<net.minecraft.server.v1_15_R1.ItemStack> is = getItem(item);
@@ -72,9 +86,16 @@ public class ItemTagUtils {
 
 
     public static Optional<Short> getShort(ItemStack item, String key) {
-        NBTTagCompound tag = CraftItemStack.asNMSCopy(item).getTag();
+        Optional<net.minecraft.server.v1_15_R1.ItemStack> item1 = null ;
+        try {
+            item1 = getItem(item);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            return Optional.empty();
+        }
+        if (!item1.isPresent()) return Optional.empty();
+        NBTTagCompound tag = item1.get().getTag();
         if (tag == null) return Optional.empty();
-        return !tag.hasKeyOfType(key, TYPE_NUMBER) ? Optional.empty() : Optional.of(tag.getShort(key));
+        return !tag.hasKey(key) ? Optional.empty() : Optional.of(tag.getShort(key));
     }
     public static Optional<Short> setShort(ItemStack item, String key, short value) throws NoSuchFieldException, IllegalAccessException {
         Optional<net.minecraft.server.v1_15_R1.ItemStack> is = getItem(item);
@@ -91,9 +112,16 @@ public class ItemTagUtils {
 
 
     public static Optional<Byte> getByte(ItemStack item, String key) {
-        NBTTagCompound tag = CraftItemStack.asNMSCopy(item).getTag();
+        Optional<net.minecraft.server.v1_15_R1.ItemStack> item1 = null ;
+        try {
+            item1 = getItem(item);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            return Optional.empty();
+        }
+        if (!item1.isPresent()) return Optional.empty();
+        NBTTagCompound tag = item1.get().getTag();
         if (tag == null) return Optional.empty();
-        return !tag.hasKeyOfType(key, TYPE_NUMBER) ? Optional.empty() : Optional.of(tag.getByte(key));
+        return !tag.hasKey(key) ? Optional.empty() : Optional.of(tag.getByte(key));
     }
     public static Optional<Byte> setByte(ItemStack item, String key, byte value) throws NoSuchFieldException, IllegalAccessException {
         Optional<net.minecraft.server.v1_15_R1.ItemStack> is = getItem(item);
@@ -110,9 +138,16 @@ public class ItemTagUtils {
 
 
     public static Optional<Long> getLong(ItemStack item, String key){
-        NBTTagCompound tag = CraftItemStack.asNMSCopy(item).getTag();
+        Optional<net.minecraft.server.v1_15_R1.ItemStack> item1 = null ;
+        try {
+            item1 = getItem(item);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            return Optional.empty();
+        }
+        if (!item1.isPresent()) return Optional.empty();
+        NBTTagCompound tag = item1.get().getTag();
         if (tag == null)return Optional.empty();
-        return !tag.hasKeyOfType(key, TYPE_NUMBER) ? Optional.empty() : Optional.of(tag.getLong(key));
+        return !tag.hasKey(key) ? Optional.empty() : Optional.of(tag.getLong(key));
     }
     public static Optional<Long> setLong(ItemStack item, String key, long value) throws NoSuchFieldException, IllegalAccessException {
         Optional<net.minecraft.server.v1_15_R1.ItemStack> is = getItem(item);
@@ -129,9 +164,16 @@ public class ItemTagUtils {
 
 
     public static Optional<long[]> getLongArray(ItemStack item, String key) {
-        NBTTagCompound tag = CraftItemStack.asNMSCopy(item).getTag();
+        Optional<net.minecraft.server.v1_15_R1.ItemStack> item1 = null ;
+        try {
+            item1 = getItem(item);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            return Optional.empty();
+        }
+        if (!item1.isPresent()) return Optional.empty();
+        NBTTagCompound tag = item1.get().getTag();
         if (tag == null) return Optional.empty();
-        return !tag.hasKeyOfType(key, TYPE_LONG_ARRAY) ? Optional.empty() : Optional.of(tag.getLongArray(key));
+        return !tag.hasKey(key) ? Optional.empty() : Optional.of(tag.getLongArray(key));
     }
     public static Optional<long[]> setLongArray(ItemStack item, String key, long[] value) throws NoSuchFieldException, IllegalAccessException {
         Optional<net.minecraft.server.v1_15_R1.ItemStack> is = getItem(item);
@@ -148,9 +190,16 @@ public class ItemTagUtils {
 
 
     public static Optional<int[]> getIntArray(ItemStack item, String key){
-        NBTTagCompound tag = CraftItemStack.asNMSCopy(item).getTag();
+        Optional<net.minecraft.server.v1_15_R1.ItemStack> item1 = null ;
+        try {
+            item1 = getItem(item);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            return Optional.empty();
+        }
+        if (!item1.isPresent()) return Optional.empty();
+        NBTTagCompound tag = item1.get().getTag();
         if (tag == null)return Optional.empty();
-        return !tag.hasKeyOfType(key, TYPE_INT_ARRAY) ? Optional.empty() : Optional.of(tag.getIntArray(key));
+        return !tag.hasKey(key) ? Optional.empty() : Optional.of(tag.getIntArray(key));
     }
     public static Optional<int[]> setIntArray(ItemStack item, String key, int[] value) throws NoSuchFieldException, IllegalAccessException {
         Optional<net.minecraft.server.v1_15_R1.ItemStack> is = getItem(item);
@@ -167,9 +216,16 @@ public class ItemTagUtils {
 
 
     public static Optional<byte[]> getByteArray(ItemStack item, String key){
-        NBTTagCompound tag = CraftItemStack.asNMSCopy(item).getTag();
+        Optional<net.minecraft.server.v1_15_R1.ItemStack> item1 = null ;
+        try {
+            item1 = getItem(item);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            return Optional.empty();
+        }
+        if (!item1.isPresent()) return Optional.empty();
+        NBTTagCompound tag = item1.get().getTag();
         if (tag == null)return Optional.empty();
-        return !tag.hasKeyOfType(key, TYPE_BYTE_ARRAY) ? Optional.empty() : Optional.of(tag.getByteArray(key));
+        return !tag.hasKey(key) ? Optional.empty() : Optional.of(tag.getByteArray(key));
     }
     public static Optional<byte[]> setByteArray(ItemStack item, String key, byte[] value) throws NoSuchFieldException, IllegalAccessException {
         Optional<net.minecraft.server.v1_15_R1.ItemStack> is = getItem(item);
@@ -186,9 +242,16 @@ public class ItemTagUtils {
 
 
     public static Optional<Boolean> getBoolean(ItemStack item, String key){
-        NBTTagCompound tag = CraftItemStack.asNMSCopy(item).getTag();
+        Optional<net.minecraft.server.v1_15_R1.ItemStack> item1 = null ;
+        try {
+            item1 = getItem(item);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            return Optional.empty();
+        }
+        if (!item1.isPresent()) return Optional.empty();
+        NBTTagCompound tag = item1.get().getTag();
         if (tag == null)return Optional.empty();
-        return !tag.hasKeyOfType(key, TYPE_NUMBER) ? Optional.empty() : Optional.of(tag.getBoolean(key));
+        return !tag.hasKey(key) ? Optional.empty() : Optional.of(tag.getBoolean(key));
     }
     public static Optional<Boolean> setBoolean(ItemStack item, String key, boolean value) throws NoSuchFieldException, IllegalAccessException {
         Optional<net.minecraft.server.v1_15_R1.ItemStack> is = getItem(item);
@@ -205,9 +268,16 @@ public class ItemTagUtils {
 
 
     public static Optional<Float> getFloat(ItemStack item, String key){
-        NBTTagCompound tag = CraftItemStack.asNMSCopy(item).getTag();
+        Optional<net.minecraft.server.v1_15_R1.ItemStack> item1 = null ;
+        try {
+            item1 = getItem(item);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            return Optional.empty();
+        }
+        if (!item1.isPresent()) return Optional.empty();
+        NBTTagCompound tag = item1.get().getTag();
         if (tag == null)return Optional.empty();
-        return !tag.hasKeyOfType(key, TYPE_NUMBER) ? Optional.empty() : Optional.of(tag.getFloat(key));
+        return !tag.hasKey(key) ? Optional.empty() : Optional.of(tag.getFloat(key));
     }
 
     public static Optional<Float> setFloat(ItemStack item, String key, float value) throws NoSuchFieldException, IllegalAccessException {
@@ -223,11 +293,15 @@ public class ItemTagUtils {
         return Optional.of(value);
     }
 
+    static Field handle;
+
     private static Optional<net.minecraft.server.v1_15_R1.ItemStack> getItem(ItemStack itemStack) throws NoSuchFieldException, IllegalAccessException {
         if (!(itemStack instanceof CraftItemStack)){
             return Optional.empty();
         }
-        Field handle = CraftItemStack.class.getDeclaredField("handle");
+        if (handle == null) {
+            handle = CraftItemStack.class.getDeclaredField("handle");
+        }
         handle.setAccessible(true);
         return Optional.of((net.minecraft.server.v1_15_R1.ItemStack) handle.get(itemStack));
     }
