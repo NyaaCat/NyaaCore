@@ -303,6 +303,6 @@ public class ItemTagUtils {
             handle = CraftItemStack.class.getDeclaredField("handle");
         }
         handle.setAccessible(true);
-        return Optional.of((net.minecraft.server.v1_15_R1.ItemStack) handle.get(itemStack));
+        return Optional.ofNullable((net.minecraft.server.v1_15_R1.ItemStack) handle.get(itemStack));
     }
 }
