@@ -8,7 +8,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Field;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -80,7 +82,8 @@ public interface ISerializable {
     @SuppressWarnings({"unchecked", "rawtypes"})
     static void deserialize(ConfigurationSection config, Object obj) {
         Class<?> clz = obj.getClass();
-        for (Field f : clz.getDeclaredFields()) {
+        List<Field> fields = getFields(clz);
+        for (Field f : fields) {
             // standalone config
             StandaloneConfig standaloneAnno = f.getAnnotation(StandaloneConfig.class);
             if (standaloneAnno != null && !standaloneAnno.manualSerialization()) {
@@ -149,7 +152,7 @@ public interface ISerializable {
                 } else if (Map.class.isAssignableFrom(f.getType())) {
                     if (!(newValue instanceof ConfigurationSection)) throw new RuntimeException("Map object require ConfigSection: " + f.toString());
                     ConfigurationSection sec = (ConfigurationSection) newValue;
-                    Map<String, Object> map = new HashMap<>();
+                    Map<String, Object> map = new LinkedHashMap<>();
                     for (String key : sec.getKeys(false)) {
                         if (sec.isConfigurationSection(key)) {
                             ConfigurationSection newSec = sec.getConfigurationSection(key);
@@ -177,11 +180,11 @@ public interface ISerializable {
         }
     }
 
-
     @SuppressWarnings("rawtypes")
     static void serialize(ConfigurationSection config, Object obj) {
         Class<?> clz = obj.getClass();
-        for (Field f : clz.getDeclaredFields()) {
+        List<Field> fields = getFields(clz);
+        for (Field f : fields) {
             // standalone config
             StandaloneConfig standaloneAnno = f.getAnnotation(StandaloneConfig.class);
             if (standaloneAnno != null && !standaloneAnno.manualSerialization()) {
@@ -261,4 +264,21 @@ public interface ISerializable {
             }
         }
     }
+
+    static List<Field> getFields(Class<?> clz){
+        List<Field> fields = new ArrayList<>();
+        return getFields(clz, fields);
+    }
+
+    static List<Field> getFields(Class<?> clz, List<Field> list){
+        Collections.addAll(list, clz.getDeclaredFields());
+
+        Class<?> supClz = clz.getSuperclass();
+        if (supClz == null){
+            return list;
+        }else {
+            return getFields(supClz, list);
+        }
+    }
+
 }
