@@ -6,6 +6,7 @@ import org.junit.Test;
 
 import java.io.StringReader;
 import java.util.*;
+import java.util.function.BiConsumer;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -195,6 +196,8 @@ public class ISerializableTest {
         List<String> s;
         @Serializable(name = "list.numbers")
         List<Integer> i;
+        @Serializable(name = "map.testMap")
+        Map<String, String> stringMap;
 
         public Test7Class fill() {
             this.s = new ArrayList<>();
@@ -217,6 +220,46 @@ public class ISerializableTest {
     @Test
     public void test7() throws Exception {
         process(new Test7Class().fill()).verify();
+    }
+
+    static class Test8Class extends Test7Class {
+        @Serializable
+        String name;
+
+        @Override
+        public Test8Class fill() {
+            super.fill();
+            name = "tester";
+            stringMap = new LinkedHashMap<>();
+            for (int j = 99, i = 0; j >= 0; j--,i++) {
+                stringMap.put(String.valueOf(j), String.valueOf(i));
+            }
+            return this;
+        }
+
+        @Override
+        public void verify() {
+            super.verify();
+            assertEquals(this.name, "tester");
+            int i = 0, j = 99;
+            for (Map.Entry<String, String> entry : stringMap.entrySet()) {
+                String key = entry.getKey();
+                String s2 = entry.getValue();
+                assertEquals(key, String.valueOf(j));
+                assertEquals(s2, String.valueOf(i));
+                i++;
+                j--;
+            }
+        }
+    }
+
+    //test extend and LinkedHashMap.
+    @Test
+    public void test8() throws Exception {
+        Test8Class obj = new Test8Class();
+        obj.fill();
+        Test8Class fill = process(obj);
+        fill.verify();
     }
 }
 
