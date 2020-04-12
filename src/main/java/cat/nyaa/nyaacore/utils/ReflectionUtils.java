@@ -21,9 +21,9 @@ package cat.nyaa.nyaacore.utils;
 
 import org.bukkit.Bukkit;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public final class ReflectionUtils {
 
@@ -142,6 +142,29 @@ public final class ReflectionUtils {
             methods.put(methodName, null);
             loadedMethods.put(clazz, methods);
             return null;
+        }
+    }
+
+
+    /**
+     * get all declared fields in a class and its' super class.
+     * @param clz target class
+     * @return a List of Field objects declared by clz.
+     * @since 7.2
+     */
+    public static List<Field> getAllFields(Class<?> clz){
+        List<Field> fields = new ArrayList<>();
+        return getAllFields(clz, fields);
+    }
+
+    private static List<Field> getAllFields(Class<?> clz, List<Field> list){
+        Collections.addAll(list, clz.getDeclaredFields());
+
+        Class<?> supClz = clz.getSuperclass();
+        if (supClz == null){
+            return list;
+        }else {
+            return getAllFields(supClz, list);
         }
     }
 }

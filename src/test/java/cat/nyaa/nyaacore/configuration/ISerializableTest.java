@@ -1,12 +1,14 @@
 package cat.nyaa.nyaacore.configuration;
 
+import org.bukkit.Difficulty;
+import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.EntityType;
 import org.junit.Test;
 
 import java.io.StringReader;
 import java.util.*;
-import java.util.function.BiConsumer;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -261,5 +263,74 @@ public class ISerializableTest {
         Test8Class fill = process(obj);
         fill.verify();
     }
+
+    static class Test9Class implements ISerializable{
+        @Serializable
+        public String str = "";
+        @Serializable
+        public int in = 0;
+        @Serializable
+        public Material material = Material.AIR;
+        @Serializable
+        public List<EntityType> entityTypes = new ArrayList<>();
+        @Serializable
+        public Map<String, Difficulty> difficultyMap = new LinkedHashMap<>();
+        {
+            entityTypes.add(EntityType.BAT);
+            difficultyMap.put("100", Difficulty.EASY);
+        }
+
+        public void fill(){
+            str = "laji";
+            in = 100;
+            material = Material.ARROW;
+            entityTypes.clear();
+            entityTypes.add(EntityType.BLAZE);
+            difficultyMap.put("10", Difficulty.HARD);
+        }
+
+        public void verify() {
+            assertEquals(str, "laji");
+            assertEquals(in, 100);
+            assertEquals(entityTypes.size(), 1);
+            assertEquals(entityTypes.get(0), EntityType.BLAZE);
+            assertEquals(difficultyMap.size(), 2);
+            Set<Map.Entry<String, Difficulty>> entries = difficultyMap.entrySet();
+            Iterator<Map.Entry<String, Difficulty>> iterator = entries.iterator();
+            assertEquals(iterator.next().getKey(), "100");
+            assertEquals(iterator.next().getKey(), "10");
+        }
+    }
+
+//    @Test
+    public void test9() throws ReflectiveOperationException {
+        Test9Class test9Class = new Test9Class();
+        test9Class.fill();
+        process(test9Class).verify();
+    }
+
+    static class Test10Class implements ISerializable{
+        @Serializable
+        Test7Class test7Class = new Test7Class();
+        @Serializable
+        Test10InnerClass innerClass = new Test10InnerClass();
+
+        static class Test10InnerClass implements ISerializable{
+            @Serializable
+            Test8Class test8Class = new Test8Class();
+        }
+
+    }
+
+    @Test
+    public void test10() throws ReflectiveOperationException {
+        Test10Class test10Class = new Test10Class();
+        test10Class.test7Class.fill();
+        test10Class.innerClass.test8Class.fill();
+        process(test10Class);
+        test10Class.test7Class.verify();
+        test10Class.test7Class.verify();
+    }
+
 }
 
