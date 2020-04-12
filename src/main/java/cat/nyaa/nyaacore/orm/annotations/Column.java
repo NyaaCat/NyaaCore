@@ -22,5 +22,7 @@ public @interface Column {
 
     boolean primary() default false;
 
+    boolean autoIncrement() default false;
+
     int length() default -1;
 }

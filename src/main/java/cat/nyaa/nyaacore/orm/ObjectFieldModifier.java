@@ -32,6 +32,7 @@ public class ObjectFieldModifier {
     public final boolean nullable;
     public final boolean unique;
     public final boolean primary;
+    public final boolean autoIncrement;
     public final String columnDefinition;
     public final int length;
     public final AccessMethod accessMethod;
@@ -55,6 +56,7 @@ public class ObjectFieldModifier {
         this.nullable = anno.nullable();
         this.unique = anno.unique();
         this.primary = anno.primary();
+        this.autoIncrement = anno.autoIncrement();
         accessMethod = AccessMethod.DIRECT_FIELD;
         field = dataField;
         field.setAccessible(true);
@@ -75,6 +77,7 @@ public class ObjectFieldModifier {
         this.nullable = anno.nullable();
         this.unique = anno.unique();
         this.primary = anno.primary();
+        this.autoIncrement = anno.autoIncrement();
 
         String methodName = dataMethod.getName();
         if (!methodName.startsWith("get") && !methodName.startsWith("set"))
