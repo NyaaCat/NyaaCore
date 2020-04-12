@@ -1,5 +1,7 @@
 package cat.nyaa.nyaacore.configuration;
 
+import cat.nyaa.nyaacore.configuration.annotation.Deserializer;
+import cat.nyaa.nyaacore.utils.ReflectionUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 
@@ -8,8 +10,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -82,7 +82,7 @@ public interface ISerializable {
     @SuppressWarnings({"unchecked", "rawtypes"})
     static void deserialize(ConfigurationSection config, Object obj) {
         Class<?> clz = obj.getClass();
-        List<Field> fields = getFields(clz);
+        List<Field> fields = ReflectionUtils.getAllFields(clz);
         for (Field f : fields) {
             // standalone config
             StandaloneConfig standaloneAnno = f.getAnnotation(StandaloneConfig.class);
@@ -106,6 +106,9 @@ public interface ISerializable {
             // Normal fields
             Serializable anno = f.getAnnotation(Serializable.class);
             if (anno == null || anno.manualSerialization()) continue;
+            Deserializer deserializer = f.getAnnotation(Deserializer.class);
+
+
             f.setAccessible(true);
             String cfgName = anno.name().equals("") ? f.getName() : anno.name();
             try {
@@ -129,6 +132,10 @@ public interface ISerializable {
                 }
                 if (!hasValue) {
                     continue;
+                }
+
+                if (deserializer != null && obj instanceof ISerializable) {
+                    Setter.from((ISerializable)obj, deserializer.value()).set(newValue);
                 }
 
                 if (f.getType().isEnum()) {
@@ -183,7 +190,7 @@ public interface ISerializable {
     @SuppressWarnings("rawtypes")
     static void serialize(ConfigurationSection config, Object obj) {
         Class<?> clz = obj.getClass();
-        List<Field> fields = getFields(clz);
+        List<Field> fields = ReflectionUtils.getAllFields(clz);
         for (Field f : fields) {
             // standalone config
             StandaloneConfig standaloneAnno = f.getAnnotation(StandaloneConfig.class);
@@ -262,22 +269,6 @@ public interface ISerializable {
             } catch (ReflectiveOperationException ex) {
                 Bukkit.getLogger().log(Level.SEVERE, "Failed to serialize object", ex);
             }
-        }
-    }
-
-    static List<Field> getFields(Class<?> clz){
-        List<Field> fields = new ArrayList<>();
-        return getFields(clz, fields);
-    }
-
-    static List<Field> getFields(Class<?> clz, List<Field> list){
-        Collections.addAll(list, clz.getDeclaredFields());
-
-        Class<?> supClz = clz.getSuperclass();
-        if (supClz == null){
-            return list;
-        }else {
-            return getFields(supClz, list);
         }
     }
 
