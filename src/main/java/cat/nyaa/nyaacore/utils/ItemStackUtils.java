@@ -100,15 +100,16 @@ public final class ItemStackUtils {
         return CraftItemStack.asBukkitCopy(reconstructedNativeItemStack);
     }
 
-    private static final Inflater NYAA_INFLATER = new Inflater();
-    private static final Deflater NYAA_DEFLATER = new Deflater();
+    private static final ThreadLocal<Inflater> NYAA_INFLATER = ThreadLocal.withInitial(Inflater::new);
+    private static final ThreadLocal<Deflater> NYAA_DEFLATER = ThreadLocal.withInitial(Deflater::new);
 
     private static byte[] compress(byte[] data) {
         byte[] ret;
-        NYAA_DEFLATER.reset();
+        Deflater deflater = NYAA_DEFLATER.get();
+        deflater.reset();
         try (ByteArrayInputStream bis = new ByteArrayInputStream(data);
              ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
-            ByteStreams.copy(new DeflaterInputStream(bis, NYAA_DEFLATER), bos);
+            ByteStreams.copy(new DeflaterInputStream(bis, deflater), bos);
             ret = bos.toByteArray();
         } catch (IOException ex) {
             throw new RuntimeException(ex);
@@ -118,10 +119,11 @@ public final class ItemStackUtils {
 
     private static byte[] decompress(byte[] data) {
         byte[] ret;
-        NYAA_INFLATER.reset();
+        Inflater inflater = NYAA_INFLATER.get();
+        inflater.reset();
         try (ByteArrayInputStream bis = new ByteArrayInputStream(data);
              ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
-            ByteStreams.copy(new InflaterInputStream(bis, NYAA_INFLATER), bos);
+            ByteStreams.copy(new InflaterInputStream(bis, inflater), bos);
             ret = bos.toByteArray();
         } catch (IOException ex) {
             throw new RuntimeException(ex);
