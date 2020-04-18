@@ -185,7 +185,7 @@ public class Message {
             }
         }
         Bukkit.getConsoleSender().sendMessage(inner.toLegacyText());
-        Bukkit.getConsoleSender().sendMessage("broadcast to players with permission:" + permission.getName());
+//        Bukkit.getConsoleSender().sendMessage("broadcast to players with permission:" + permission.getName());
         return this;
     }
 
@@ -196,7 +196,7 @@ public class Message {
             }
         }
         Bukkit.getConsoleSender().sendMessage(inner.toLegacyText());
-        Bukkit.getConsoleSender().sendMessage("broadcast to world:" + world.getName());
+//        Bukkit.getConsoleSender().sendMessage("broadcast to world:" + world.getName());
         return this;
     }
 
@@ -207,7 +207,7 @@ public class Message {
             }
         }
         Bukkit.getConsoleSender().sendMessage(inner.toLegacyText());
-        Bukkit.getConsoleSender().sendMessage("broadcast with filter:" + playerFilter.toString());
+//        Bukkit.getConsoleSender().sendMessage("broadcast with filter:" + playerFilter.toString());
         return this;
     }
 
