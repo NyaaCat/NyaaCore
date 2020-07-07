@@ -1,13 +1,13 @@
 package cat.nyaa.nyaacore.utils;
 
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import net.minecraft.server.v1_15_R1.*;
+import net.minecraft.server.v1_16_R1.*;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
-import org.bukkit.craftbukkit.v1_15_R1.CraftWorld;
-import org.bukkit.craftbukkit.v1_15_R1.entity.CraftEntity;
-import org.bukkit.craftbukkit.v1_15_R1.entity.CraftLivingEntity;
+import org.bukkit.craftbukkit.v1_16_R1.CraftWorld;
+import org.bukkit.craftbukkit.v1_16_R1.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_16_R1.entity.CraftLivingEntity;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 
@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 public final class NmsUtils {
     /* see CommandEntityData.java */
     public static void setEntityTag(Entity e, String tag) {
-        net.minecraft.server.v1_15_R1.Entity nmsEntity = ((CraftEntity) e).getHandle();
+        net.minecraft.server.v1_16_R1.Entity nmsEntity = ((CraftEntity) e).getHandle();
 
         if (nmsEntity instanceof EntityHuman) {
             throw new IllegalArgumentException("Player NBT cannot be edited");
@@ -45,8 +45,8 @@ public final class NmsUtils {
                 return;
             } else {
                 UUID uuid = nmsEntity.getUniqueID(); // store UUID
-                nmsEntity.f(nmsClonedNBT); // set nbt
-                nmsEntity.a(uuid); // set uuid
+                nmsEntity.load(nmsClonedNBT); // set nbt
+                nmsEntity.a_(uuid); // set uuid
             }
         }
     }
@@ -103,7 +103,7 @@ public final class NmsUtils {
     public static void setEntityOnGround(Entity e, boolean isOnGround) {
         if (e == null) throw new IllegalArgumentException();
         CraftEntity nmsEntity = (CraftEntity) e;
-        nmsEntity.getHandle().onGround = isOnGround;
+        nmsEntity.getHandle().c(isOnGround);
     }
 
     public static List<Block> getTileEntities(World world){

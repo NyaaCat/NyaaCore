@@ -1,10 +1,10 @@
 package cat.nyaa.nyaacore.utils;
 
-import net.minecraft.server.v1_15_R1.Vec3D;
+import net.minecraft.server.v1_16_R1.Vec3D;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.GameMode;
 import org.bukkit.block.Block;
-import org.bukkit.craftbukkit.v1_15_R1.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_16_R1.entity.CraftEntity;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
@@ -37,7 +37,7 @@ public class RayTraceUtils {
         Vector end = start.clone().add(player.getEyeLocation().getDirection().multiply(distance));
         for (Entity e : player.getWorld().getNearbyEntities(player.getEyeLocation(), distance, distance, distance, predicate)) {
             if (e instanceof LivingEntity && e instanceof CraftEntity && e.isValid()) {
-                net.minecraft.server.v1_15_R1.Entity nmsEntity = ((CraftEntity) e).getHandle();
+                net.minecraft.server.v1_16_R1.Entity nmsEntity = ((CraftEntity) e).getHandle();
                 Optional<Vec3D> hit = nmsEntity.getBoundingBox().b(toVec3DInternal(start), toVec3DInternal(end));
                 if (hit.isPresent()) {
                     result.add((LivingEntity) e);
