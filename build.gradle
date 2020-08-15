@@ -4,8 +4,8 @@ plugins {
     id 'com.github.johnrengelman.shadow' version '2.0.4'
 }
 
-ext.majorVersion = 7
-ext.minorVersion = 2
+ext.majorVersion = 8
+ext.minorVersion = 0
 ext.minecraftVersion = "1.16.1"
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
