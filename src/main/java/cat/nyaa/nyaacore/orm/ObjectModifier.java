@@ -22,29 +22,13 @@ import java.util.*;
 public class ObjectModifier<T> {
     /* class -> TableStructure cache */
     private static final Map<Class<?>, ObjectModifier<?>> structured_tables = new HashMap<>();
-
-    @SuppressWarnings("unchecked")
-    public static <X> ObjectModifier<X> fromClass(Class<X> cls) {
-        if (structured_tables.containsKey(cls)) return (ObjectModifier<X>) structured_tables.get(cls);
-        ObjectModifier<X> ts;
-        try {
-            ts = new ObjectModifier<>(cls);
-        } catch (NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        }
-        structured_tables.put(cls, ts);
-        return ts;
-    }
-
     // Java object type info
     public final Class<T> clz;
     public final Constructor<T> ctor;
-
     // SQL table info
     public final String tableName;
     public final List<String> orderedColumnName = new ArrayList<>();
     public final Map<String, ObjectFieldModifier> columns = new HashMap<>();
-
     public final String primaryKey; // null if no primary key
 
     private ObjectModifier(Class<T> tableClass) throws NoSuchMethodException {
@@ -98,6 +82,19 @@ public class ObjectModifier<T> {
         primaryKey = pkColumn;
         orderedColumnName.addAll(columns.keySet());
         orderedColumnName.sort(String::compareTo);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <X> ObjectModifier<X> fromClass(Class<X> cls) {
+        if (structured_tables.containsKey(cls)) return (ObjectModifier<X>) structured_tables.get(cls);
+        ObjectModifier<X> ts;
+        try {
+            ts = new ObjectModifier<>(cls);
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
+        structured_tables.put(cls, ts);
+        return ts;
     }
 
 

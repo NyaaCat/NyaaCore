@@ -11,7 +11,7 @@ import java.util.Map;
 
 /**
  * Inter-Plugin Communication Utils
- *
+ * <p>
  * If one plugin register events or methods here,
  * other plugins can emit the event or call the method
  * without directly depends on the plugin.
@@ -25,7 +25,8 @@ public final class IPCUtils {
 
     /**
      * Register an event and its constructor
-     * @param name the event name, this is case-insensitive
+     *
+     * @param name             the event name, this is case-insensitive
      * @param eventConstructor the constructor
      */
     public static void registerEvent(String name, Constructor<? extends Event> eventConstructor) {
@@ -33,11 +34,12 @@ public final class IPCUtils {
         if (eventMap.containsKey(name)) {
             throw new IllegalArgumentException("duplicated event name");
         }
-        eventMap.put(name , eventConstructor);
+        eventMap.put(name, eventConstructor);
     }
 
     /**
      * emit a registered event.
+     *
      * @param name the event name
      * @param args constructor parameters
      */
@@ -71,6 +73,7 @@ public final class IPCUtils {
 
     /**
      * Call the method with the given args.
+     *
      * @param name method name, case-insensitive
      * @param args method arguments
      * @return method return value.

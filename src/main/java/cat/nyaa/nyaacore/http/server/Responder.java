@@ -35,8 +35,8 @@ import io.netty.handler.codec.http.HttpRequest;
 public interface Responder {
     /**
      * Receives an HTTP request and produces a response.
-     * 
-     * @param req The request
+     *
+     * @param req      The request
      * @param response The response headers - set headers and response code
      * @return A CharSequence/String/ByteBuf/HttpContent/ChunkedResponse
      */

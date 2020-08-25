@@ -22,6 +22,113 @@ import java.util.stream.Stream;
 
 public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
 
+    // Language class is passed in for message support
+    private final ILocalizer i18n;
+    // All subcommands
+    private final Map<String, SubCommandInfo> subCommands = new HashMap<>();
+    // Default subcommand
+    private SubCommandInfo defaultSubCommand = null;
+
+    /**
+     * @param plugin for logging purpose only
+     * @param _i18n
+     */
+    @SuppressWarnings("rawtypes")
+    public CommandReceiver(Plugin plugin, ILocalizer _i18n) {
+        if (plugin == null) throw new IllegalArgumentException();
+        if (_i18n == null)
+            _i18n = new LanguageRepository.InternalOnlyRepository(plugin);
+        this.i18n = _i18n;
+
+        // Collect all methods
+        Class cls = getClass();
+        Set<Method> allMethods = new HashSet<>();
+        while (cls != null) {
+            allMethods.addAll(Arrays.asList(cls.getDeclaredMethods()));
+            cls = cls.getSuperclass();
+        }
+
+        // Collect all fields
+        cls = getClass();
+        Set<Field> allFields = new HashSet<>();
+        while (cls != null) {
+            allFields.addAll(Arrays.asList(cls.getDeclaredFields()));
+            cls = cls.getSuperclass();
+        }
+
+        Stream.concat(
+                allMethods.stream().map(m -> parseSubCommandAnnotation(plugin, m)),
+                allFields.stream().map(f -> parseSubCommandAnnotation(plugin, f))
+        ).forEach(scInfo -> {
+            if (scInfo == null) return;
+            if (scInfo.name != null) {
+                if (subCommands.containsKey(scInfo.name)) {
+                    // TODO dup sub command
+                }
+                subCommands.put(scInfo.name, scInfo);
+            }
+
+            if (scInfo.isDefault) {
+                if (defaultSubCommand != null) {
+                    // TODO dup default subcommand
+                }
+                defaultSubCommand = scInfo;
+            }
+        });
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private static CommandReceiver newInstance(Class cls, Object arg1, Object arg2) throws ReflectiveOperationException {
+        for (Constructor c : cls.getConstructors()) {
+            if (c.getParameterCount() == 2 &&
+                    c.getParameterTypes()[0].isAssignableFrom(arg1.getClass()) &&
+                    c.getParameterTypes()[1].isAssignableFrom(arg2.getClass())) {
+                return (CommandReceiver) c.newInstance(arg1, arg2);
+            }
+        }
+        throw new NoSuchMethodException("no matching constructor found");
+    }
+
+    public static Player asPlayer(CommandSender target) {
+        if (target instanceof Player) {
+            return (Player) target;
+        } else {
+            throw new NotPlayerException();
+        }
+    }
+
+    public static ItemStack getItemInHand(CommandSender se) {
+        if (se instanceof Player) {
+            Player p = (Player) se;
+            if (p.getInventory() != null) {
+                ItemStack i = p.getInventory().getItemInMainHand();
+                if (i != null && i.getType() != Material.AIR) {
+                    return i;
+                }
+            }
+            throw new NoItemInHandException(false);
+        } else {
+            throw new NotPlayerException();
+        }
+    }
+
+    public static ItemStack getItemInOffHand(CommandSender se) {
+        if (se instanceof Player) {
+            Player p = (Player) se;
+            if (p.getInventory() != null) {
+                ItemStack i = p.getInventory().getItemInOffHand();
+                if (i != null && i.getType() != Material.AIR) {
+                    return i;
+                }
+            }
+            throw new NoItemInHandException(true);
+        } else {
+            throw new NotPlayerException();
+        }
+    }
+
+    // Scan recursively into parent class to find annotated methods when constructing
+
     /**
      * This prefix will be used to locate the correct manual item.
      * If the class is registered to bukkit directly, you should return a empty string.
@@ -37,70 +144,6 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
      */
     protected boolean showCompleteMessage() {
         return false;
-    }
-
-    private class SubCommandInfo {
-        final String name; // default command can have this be null
-        final String permission; // if none then no permission required
-        final Method tabCompleter;
-        final boolean isField; // isField? field : method;
-        final Method method;
-        final Field field;
-        final CommandReceiver fieldValue;
-        final boolean isDefault;
-
-        SubCommandInfo(String name, String permission, boolean isField, Method method, Field field, CommandReceiver fieldValue, boolean isDefault, Method tabCompleter) {
-            if (name == null && !isDefault) throw new IllegalArgumentException();
-            if (isField && !(method == null && field != null && fieldValue != null))
-                throw new IllegalArgumentException();
-            if (!isField && !(method != null && field == null && fieldValue == null))
-                throw new IllegalArgumentException();
-            if (isField && tabCompleter != null) {
-                throw new IllegalArgumentException();
-            }
-            this.name = name;
-            this.permission = permission;
-            this.isField = isField;
-            this.method = method;
-            this.field = field;
-            this.fieldValue = fieldValue;
-            this.isDefault = isDefault;
-            this.tabCompleter = tabCompleter;
-        }
-
-        void callCommand(CommandSender sender, Arguments args) throws IllegalAccessException, InvocationTargetException {
-            if (permission != null && !sender.hasPermission(permission)) {
-                throw new NoPermissionException(permission);
-            }
-            if (isField) {
-                fieldValue.acceptCommand(sender, args);
-            } else {
-                method.invoke(CommandReceiver.this, sender, args);
-            }
-        }
-
-        @SuppressWarnings("unchecked")
-        List<String> callTabComplete(CommandSender sender, Arguments args) {
-            if (permission != null && !sender.hasPermission(permission)) {
-                return null;
-            }
-            if (isField) {
-                return fieldValue.acceptTabComplete(sender, args);
-            } else if (tabCompleter != null) {
-                try {
-                    return (List<String>) tabCompleter.invoke(CommandReceiver.this, sender, args);
-                } catch (ReflectiveOperationException ex) {
-                    return null;
-                }
-            } else {
-                return null;
-            }
-        }
-
-        boolean hasPermission(CommandSender sender) {
-            if (permission == null) return true;
-            return sender.hasPermission(permission);
-        }
     }
 
     /**
@@ -152,6 +195,16 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
             return null;
         }
     }
+//
+//    public List<String> getSubcommands() {
+//        ArrayList<String> ret = new ArrayList<>();
+//        ret.addAll(subCommands.keySet());
+//        if (defaultSubCommand != null && defaultSubCommand.name == null) {
+//            ret.add("<default>");
+//        }
+//        ret.sort(String::compareTo);
+//        return ret;
+//    }
 
     /**
      * @param plugin for logging purpose only
@@ -204,99 +257,6 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
         }
     }
 
-    // Language class is passed in for message support
-    private final ILocalizer i18n;
-    // All subcommands
-    private final Map<String, SubCommandInfo> subCommands = new HashMap<>();
-    // Default subcommand
-    private SubCommandInfo defaultSubCommand = null;
-
-    // Scan recursively into parent class to find annotated methods when constructing
-
-    /**
-     * @param plugin for logging purpose only
-     * @param _i18n
-     */
-    @SuppressWarnings("rawtypes")
-    public CommandReceiver(Plugin plugin, ILocalizer _i18n) {
-        if (plugin == null) throw new IllegalArgumentException();
-        if (_i18n == null)
-            _i18n = new LanguageRepository.InternalOnlyRepository(plugin);
-        this.i18n = _i18n;
-
-        // Collect all methods
-        Class cls = getClass();
-        Set<Method> allMethods = new HashSet<>();
-        while (cls != null) {
-            allMethods.addAll(Arrays.asList(cls.getDeclaredMethods()));
-            cls = cls.getSuperclass();
-        }
-
-        // Collect all fields
-        cls = getClass();
-        Set<Field> allFields = new HashSet<>();
-        while (cls != null) {
-            allFields.addAll(Arrays.asList(cls.getDeclaredFields()));
-            cls = cls.getSuperclass();
-        }
-
-        Stream.concat(
-                allMethods.stream().map(m -> parseSubCommandAnnotation(plugin, m)),
-                allFields.stream().map(f -> parseSubCommandAnnotation(plugin, f))
-        ).forEach(scInfo -> {
-            if (scInfo == null) return;
-            if (scInfo.name != null) {
-                if (subCommands.containsKey(scInfo.name)) {
-                    // TODO dup sub command
-                }
-                subCommands.put(scInfo.name, scInfo);
-            }
-
-            if (scInfo.isDefault) {
-                if (defaultSubCommand != null) {
-                    // TODO dup default subcommand
-                }
-                defaultSubCommand = scInfo;
-            }
-        });
-    }
-
-    protected Set<String> getSubCommands(){
-        return Collections.unmodifiableSet(subCommands.keySet());
-    }
-
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    private static CommandReceiver newInstance(Class cls, Object arg1, Object arg2) throws ReflectiveOperationException {
-        for (Constructor c : cls.getConstructors()) {
-            if (c.getParameterCount() == 2 &&
-                    c.getParameterTypes()[0].isAssignableFrom(arg1.getClass()) &&
-                    c.getParameterTypes()[1].isAssignableFrom(arg2.getClass())) {
-                return (CommandReceiver) c.newInstance(arg1, arg2);
-            }
-        }
-        throw new NoSuchMethodException("no matching constructor found");
-    }
-//
-//    public List<String> getSubcommands() {
-//        ArrayList<String> ret = new ArrayList<>();
-//        ret.addAll(subCommands.keySet());
-//        if (defaultSubCommand != null && defaultSubCommand.name == null) {
-//            ret.add("<default>");
-//        }
-//        ret.sort(String::compareTo);
-//        return ret;
-//    }
-
-    // Only directly registered command handler need this
-    // acceptCommand() will be called directly in subcommand classes
-    @Override
-    public final boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        Arguments cmd = Arguments.parse(args, sender);
-        if (cmd == null) return false;
-        acceptCommand(sender, cmd);
-        return true;
-    }
-
     /*
      * Code path looks like this:
      * - Bukkit => CmdRecv:onCommand => CmdRecv:acceptCommand => SubCmdRecv:acceptCommand => SubCmdRecv:commandMethod
@@ -309,6 +269,32 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
      * 2. {@link CommandReceiver#defaultSubCommand}
      * 3. {@link CommandReceiver#printHelp(CommandSender, Arguments)}
      */
+
+    protected Set<String> getSubCommands() {
+        return Collections.unmodifiableSet(subCommands.keySet());
+    }
+
+    // Only directly registered command handler need this
+    // acceptCommand() will be called directly in subcommand classes
+    @Override
+    public final boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        Arguments cmd = Arguments.parse(args, sender);
+        if (cmd == null) return false;
+        acceptCommand(sender, cmd);
+        return true;
+    }
+
+    /*
+     * The code path looks like this:
+     * - Bukkit => CmdRecv:onTabComplete => CmdRecv:acceptTabComplete => SubCmdRecv:acceptTabComplete => SubCmdRecv:tabCompleteMethod
+     * <p>
+     * Subcommand tab completion search order:
+     * 1. {@link CommandReceiver#subCommands}
+     * 2. {@link CommandReceiver#defaultSubCommand}.callTabCompletion
+     * 3. default builtin completion logic
+     * <p>
+     */
+
     /**
      * @param sender who run the command
      * @param cmd    the command, or part of the command
@@ -380,16 +366,6 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
         }
     }
 
-    /*
-     * The code path looks like this:
-     * - Bukkit => CmdRecv:onTabComplete => CmdRecv:acceptTabComplete => SubCmdRecv:acceptTabComplete => SubCmdRecv:tabCompleteMethod
-     * <p>
-     * Subcommand tab completion search order:
-     * 1. {@link CommandReceiver#subCommands}
-     * 2. {@link CommandReceiver#defaultSubCommand}.callTabCompletion
-     * 3. default builtin completion logic
-     * <p>
-     */
     /**
      * @param sender who run the command
      * @param args   the command, or part of the command
@@ -458,45 +434,71 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
         sender.sendMessage(tmp);
     }
 
-    public static Player asPlayer(CommandSender target) {
-        if (target instanceof Player) {
-            return (Player) target;
-        } else {
-            throw new NotPlayerException();
-        }
-    }
-
     public void msg(CommandSender target, String template, Object... args) {
         target.sendMessage(i18n.getFormatted(template, args));
     }
 
-    public static ItemStack getItemInHand(CommandSender se) {
-        if (se instanceof Player) {
-            Player p = (Player) se;
-            if (p.getInventory() != null) {
-                ItemStack i = p.getInventory().getItemInMainHand();
-                if (i != null && i.getType() != Material.AIR) {
-                    return i;
-                }
-            }
-            throw new NoItemInHandException(false);
-        } else {
-            throw new NotPlayerException();
-        }
-    }
+    private class SubCommandInfo {
+        final String name; // default command can have this be null
+        final String permission; // if none then no permission required
+        final Method tabCompleter;
+        final boolean isField; // isField? field : method;
+        final Method method;
+        final Field field;
+        final CommandReceiver fieldValue;
+        final boolean isDefault;
 
-    public static ItemStack getItemInOffHand(CommandSender se) {
-        if (se instanceof Player) {
-            Player p = (Player) se;
-            if (p.getInventory() != null) {
-                ItemStack i = p.getInventory().getItemInOffHand();
-                if (i != null && i.getType() != Material.AIR) {
-                    return i;
-                }
+        SubCommandInfo(String name, String permission, boolean isField, Method method, Field field, CommandReceiver fieldValue, boolean isDefault, Method tabCompleter) {
+            if (name == null && !isDefault) throw new IllegalArgumentException();
+            if (isField && !(method == null && field != null && fieldValue != null))
+                throw new IllegalArgumentException();
+            if (!isField && !(method != null && field == null && fieldValue == null))
+                throw new IllegalArgumentException();
+            if (isField && tabCompleter != null) {
+                throw new IllegalArgumentException();
             }
-            throw new NoItemInHandException(true);
-        } else {
-            throw new NotPlayerException();
+            this.name = name;
+            this.permission = permission;
+            this.isField = isField;
+            this.method = method;
+            this.field = field;
+            this.fieldValue = fieldValue;
+            this.isDefault = isDefault;
+            this.tabCompleter = tabCompleter;
+        }
+
+        void callCommand(CommandSender sender, Arguments args) throws IllegalAccessException, InvocationTargetException {
+            if (permission != null && !sender.hasPermission(permission)) {
+                throw new NoPermissionException(permission);
+            }
+            if (isField) {
+                fieldValue.acceptCommand(sender, args);
+            } else {
+                method.invoke(CommandReceiver.this, sender, args);
+            }
+        }
+
+        @SuppressWarnings("unchecked")
+        List<String> callTabComplete(CommandSender sender, Arguments args) {
+            if (permission != null && !sender.hasPermission(permission)) {
+                return null;
+            }
+            if (isField) {
+                return fieldValue.acceptTabComplete(sender, args);
+            } else if (tabCompleter != null) {
+                try {
+                    return (List<String>) tabCompleter.invoke(CommandReceiver.this, sender, args);
+                } catch (ReflectiveOperationException ex) {
+                    return null;
+                }
+            } else {
+                return null;
+            }
+        }
+
+        boolean hasPermission(CommandSender sender) {
+            if (permission == null) return true;
+            return sender.hasPermission(permission);
         }
     }
 }

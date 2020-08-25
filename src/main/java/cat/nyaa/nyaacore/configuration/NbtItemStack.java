@@ -17,6 +17,17 @@ public class NbtItemStack implements ConfigurationSerializable {
         this.it = it;
     }
 
+    public static NbtItemStack deserialize(Map<String, Object> map) {
+        try {
+            String nbt = (String) map.getOrDefault("nbt", 0);
+            if (nbt == null || "<null>".equalsIgnoreCase(nbt)) return new NbtItemStack(null);
+            return new NbtItemStack(ItemStackUtils.itemFromBase64(nbt));
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return new NbtItemStack(null);
+        }
+    }
+
     @Override
     public Map<String, Object> serialize() {
         Map<String, Object> ret = new HashMap<>();
@@ -32,16 +43,5 @@ public class NbtItemStack implements ConfigurationSerializable {
         }
 
         return ret;
-    }
-
-    public static NbtItemStack deserialize(Map<String, Object> map) {
-        try {
-            String nbt = (String) map.getOrDefault("nbt", 0);
-            if (nbt == null || "<null>".equalsIgnoreCase(nbt)) return new NbtItemStack(null);
-            return new NbtItemStack(ItemStackUtils.itemFromBase64(nbt));
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return new NbtItemStack(null);
-        }
     }
 }

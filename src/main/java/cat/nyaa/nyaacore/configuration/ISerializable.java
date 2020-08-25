@@ -20,65 +20,6 @@ import java.util.logging.Level;
  * Serialize or Deserialize objects into ConfigurationSection
  */
 public interface ISerializable {
-    /**
-     * For informative only
-     */
-    @Target(ElementType.FIELD)
-    public @interface Ephemeral {
-    }
-
-    /**
-     * Indicates a field can be serialized.
-     * These four types are supported
-     * 1. Primitive types supported by ConfigurationSection (should put() &amp; get() directly)
-     * 2. ISerializable
-     * //3. List&lt;Type1/2/3/4&gt; (not implemented)
-     * 4. Map&lt;String, Type1/2/3/4&gt;
-     * NOTE:
-     * ENUM without typehint is not supported (ENUM in Map or List) They will be deserialized as string
-     */
-    @Target(ElementType.FIELD)
-    @Retention(RetentionPolicy.RUNTIME)
-    public @interface Serializable {
-        /**
-         * @return the name used in yaml config
-         */
-        String name() default "";
-
-        /**
-         * deserializer will check all the alias, but only name will be used for serialization
-         * Usually used for backward compatibility
-         *
-         * @return list of aliases
-         */
-        String[] alias() default {};
-
-        /**
-         * When set to true, this field is ignored
-         */
-        boolean manualSerialization() default false;
-    }
-
-    /**
-     * Must be placed on a {@link FileConfigure} field
-     */
-    @Target(ElementType.FIELD)
-    @Retention(RetentionPolicy.RUNTIME)
-    public @interface StandaloneConfig {
-        /**
-         * When set to true, this field is ignored
-         */
-        boolean manualSerialization() default false;
-    }
-
-    default void deserialize(ConfigurationSection config) {
-        deserialize(config, this);
-    }
-
-    default void serialize(ConfigurationSection config) {
-        serialize(config, this);
-    }
-
     @SuppressWarnings({"unchecked", "rawtypes"})
     static void deserialize(ConfigurationSection config, Object obj) {
         Class<?> clz = obj.getClass();
@@ -135,7 +76,7 @@ public interface ISerializable {
                 }
 
                 if (deserializer != null && obj instanceof ISerializable) {
-                    Setter.from((ISerializable)obj, deserializer.value()).set(newValue);
+                    Setter.from((ISerializable) obj, deserializer.value()).set(newValue);
                 }
 
                 if (f.getType().isEnum()) {
@@ -146,24 +87,28 @@ public interface ISerializable {
                         continue;
                     }
                 } else if (ISerializable.class.isAssignableFrom(f.getType())) {
-                    if (!(newValue instanceof ConfigurationSection)) throw new RuntimeException("Map object require ConfigSection: " + f.toString());
+                    if (!(newValue instanceof ConfigurationSection))
+                        throw new RuntimeException("Map object require ConfigSection: " + f.toString());
                     ConfigurationSection sec = (ConfigurationSection) newValue;
-                    if (!sec.isString("__class__")) throw new RuntimeException("Missing __class__ key: " + f.toString());
+                    if (!sec.isString("__class__"))
+                        throw new RuntimeException("Missing __class__ key: " + f.toString());
                     String clsName = sec.getString("__class__");
                     Class cls = Class.forName(clsName);
                     ISerializable o = (ISerializable) cls.newInstance();
                     o.deserialize(sec);
                     newValue = o;
-                //} else if (List.class.isAssignableFrom(f.getType())) {
-                //    throw new RuntimeException("List serialization is not supported: " + f.toString());
+                    //} else if (List.class.isAssignableFrom(f.getType())) {
+                    //    throw new RuntimeException("List serialization is not supported: " + f.toString());
                 } else if (Map.class.isAssignableFrom(f.getType())) {
-                    if (!(newValue instanceof ConfigurationSection)) throw new RuntimeException("Map object require ConfigSection: " + f.toString());
+                    if (!(newValue instanceof ConfigurationSection))
+                        throw new RuntimeException("Map object require ConfigSection: " + f.toString());
                     ConfigurationSection sec = (ConfigurationSection) newValue;
                     Map<String, Object> map = new LinkedHashMap<>();
                     for (String key : sec.getKeys(false)) {
                         if (sec.isConfigurationSection(key)) {
                             ConfigurationSection newSec = sec.getConfigurationSection(key);
-                            if (!newSec.isString("__class__")) throw new RuntimeException("Missing __class__ key: " + f.toString());
+                            if (!newSec.isString("__class__"))
+                                throw new RuntimeException("Missing __class__ key: " + f.toString());
                             String clsName = newSec.getString("__class__");
                             Class cls = Class.forName(clsName);
                             ISerializable o = (ISerializable) cls.newInstance();
@@ -255,8 +200,8 @@ public interface ISerializable {
                             section.set(k, o);
                         }
                     }
-                //} else if (List.class.isAssignableFrom(f.getType())) {
-                //    throw new RuntimeException("List serialization is not supported: " + f.toString());
+                    //} else if (List.class.isAssignableFrom(f.getType())) {
+                    //    throw new RuntimeException("List serialization is not supported: " + f.toString());
                 } else if (UUID.class.isAssignableFrom(f.getType())) {
                     Object uuidString = f.get(obj);
                     if (uuidString == null) continue;
@@ -270,6 +215,65 @@ public interface ISerializable {
                 Bukkit.getLogger().log(Level.SEVERE, "Failed to serialize object", ex);
             }
         }
+    }
+
+    default void deserialize(ConfigurationSection config) {
+        deserialize(config, this);
+    }
+
+    default void serialize(ConfigurationSection config) {
+        serialize(config, this);
+    }
+
+    /**
+     * For informative only
+     */
+    @Target(ElementType.FIELD)
+    @interface Ephemeral {
+    }
+
+    /**
+     * Indicates a field can be serialized.
+     * These four types are supported
+     * 1. Primitive types supported by ConfigurationSection (should put() &amp; get() directly)
+     * 2. ISerializable
+     * //3. List&lt;Type1/2/3/4&gt; (not implemented)
+     * 4. Map&lt;String, Type1/2/3/4&gt;
+     * NOTE:
+     * ENUM without typehint is not supported (ENUM in Map or List) They will be deserialized as string
+     */
+    @Target(ElementType.FIELD)
+    @Retention(RetentionPolicy.RUNTIME)
+    @interface Serializable {
+        /**
+         * @return the name used in yaml config
+         */
+        String name() default "";
+
+        /**
+         * deserializer will check all the alias, but only name will be used for serialization
+         * Usually used for backward compatibility
+         *
+         * @return list of aliases
+         */
+        String[] alias() default {};
+
+        /**
+         * When set to true, this field is ignored
+         */
+        boolean manualSerialization() default false;
+    }
+
+    /**
+     * Must be placed on a {@link FileConfigure} field
+     */
+    @Target(ElementType.FIELD)
+    @Retention(RetentionPolicy.RUNTIME)
+    @interface StandaloneConfig {
+        /**
+         * When set to true, this field is ignored
+         */
+        boolean manualSerialization() default false;
     }
 
 }

@@ -28,6 +28,55 @@ import static java.sql.JDBCType.*;
  */
 public class DataTypeMapping {
 
+    private static final Map<Class, IDataTypeConverter> cached_converters = new HashMap<>();
+
+    @SuppressWarnings("rawtypes")
+    public static boolean isStaticParsingType(Class cls) {
+        for (Method m : cls.getMethods()) {
+            if (Modifier.isStatic(m.getModifiers())) {
+                if ("parse".equals(m.getName()) || "fromString".equals(m.getName())) {
+                    if (m.getReturnType() == cls) {
+                        if (m.getParameterCount() == 1) {
+                            if (m.getParameterTypes()[0].isAssignableFrom(String.class)) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public static IDataTypeConverter getDataTypeConverter(Class cls) {
+        if (cls == boolean.class || cls == Boolean.class) return BooleanConverter.INSTANCE;
+        if (cls == int.class || cls == Integer.class) return IntegerConverter.INSTANCE;
+        if (cls == long.class || cls == Long.class) return LongConverter.INSTANCE;
+        if (cls == float.class || cls == Float.class) return FloatConverter.INSTANCE;
+        if (cls == double.class || cls == Double.class) return DoubleConverter.INSTANCE;
+        if (cls == String.class) return StringConverter.INSTANCE;
+        if (cls.isEnum()) {
+            IDataTypeConverter cvt = cached_converters.get(cls);
+            if (cvt == null) {
+                cvt = new EnumConverter(cls);
+                cached_converters.put(cls, cvt);
+            }
+            return cvt;
+        }
+        if (cls == ItemStack.class) return ItemStackConverter.INSTANCE;
+        if (isStaticParsingType(cls)) {
+            IDataTypeConverter cvt = cached_converters.get(cls);
+            if (cvt == null) {
+                cvt = new StaticParsingTypeConverter(cls);
+                cached_converters.put(cls, cvt);
+            }
+            return cvt;
+        }
+        if (cls == byte[].class) throw new NotImplementedException();
+        throw new IllegalArgumentException("Not an acceptable type: " + cls);
+    }
+
     /**
      * Convert one particular type of java objects to/from the java representation of SQL type
      *
@@ -164,7 +213,7 @@ public class DataTypeMapping {
     }
 
     public static class EnumConverter<E extends Enum<E>> implements IDataTypeConverter<E> {
-        private Class<E> enumClass;
+        private final Class<E> enumClass;
 
         public EnumConverter(Class<E> enumClass) {
             if (!enumClass.isEnum()) {
@@ -210,7 +259,7 @@ public class DataTypeMapping {
             if (obj instanceof String) {
                 ItemStack result = ItemStackUtils.itemFromBase64((String) obj);
                 if (result == null) {
-                    Bukkit.getLogger().warning("not a valid itemstack value in database:" + (String) obj);
+                    Bukkit.getLogger().warning("not a valid itemstack value in database:" + obj);
                 }
                 return result;
             } else {
@@ -272,55 +321,5 @@ public class DataTypeMapping {
         public SQLType getSqlType() {
             return VARCHAR;
         }
-    }
-
-
-    @SuppressWarnings("rawtypes")
-    public static boolean isStaticParsingType(Class cls) {
-        for (Method m : cls.getMethods()) {
-            if (Modifier.isStatic(m.getModifiers())) {
-                if ("parse".equals(m.getName()) || "fromString".equals(m.getName())) {
-                    if (m.getReturnType() == cls) {
-                        if (m.getParameterCount() == 1) {
-                            if (m.getParameterTypes()[0].isAssignableFrom(String.class)) {
-                                return true;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return false;
-    }
-
-    private static Map<Class, IDataTypeConverter> cached_converters = new HashMap<>();
-
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    public static IDataTypeConverter getDataTypeConverter(Class cls) {
-        if (cls == boolean.class || cls == Boolean.class) return BooleanConverter.INSTANCE;
-        if (cls == int.class || cls == Integer.class) return IntegerConverter.INSTANCE;
-        if (cls == long.class || cls == Long.class) return LongConverter.INSTANCE;
-        if (cls == float.class || cls == Float.class) return FloatConverter.INSTANCE;
-        if (cls == double.class || cls == Double.class) return DoubleConverter.INSTANCE;
-        if (cls == String.class) return StringConverter.INSTANCE;
-        if (cls.isEnum()) {
-            IDataTypeConverter cvt = cached_converters.get(cls);
-            if (cvt == null) {
-                cvt = new EnumConverter(cls);
-                cached_converters.put(cls, cvt);
-            }
-            return cvt;
-        }
-        if (cls == ItemStack.class) return ItemStackConverter.INSTANCE;
-        if (isStaticParsingType(cls)) {
-            IDataTypeConverter cvt = cached_converters.get(cls);
-            if (cvt == null) {
-                cvt = new StaticParsingTypeConverter(cls);
-                cached_converters.put(cls, cvt);
-            }
-            return cvt;
-        }
-        if (cls == byte[].class) throw new NotImplementedException();
-        throw new IllegalArgumentException("Not an acceptable type: " + cls);
     }
 }

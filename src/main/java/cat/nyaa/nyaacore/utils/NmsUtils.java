@@ -1,13 +1,13 @@
 package cat.nyaa.nyaacore.utils;
 
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import net.minecraft.server.v1_16_R1.*;
+import net.minecraft.server.v1_16_R2.*;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
-import org.bukkit.craftbukkit.v1_16_R1.CraftWorld;
-import org.bukkit.craftbukkit.v1_16_R1.entity.CraftEntity;
-import org.bukkit.craftbukkit.v1_16_R1.entity.CraftLivingEntity;
+import org.bukkit.craftbukkit.v1_16_R2.CraftWorld;
+import org.bukkit.craftbukkit.v1_16_R2.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_16_R2.entity.CraftLivingEntity;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 
@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 public final class NmsUtils {
     /* see CommandEntityData.java */
     public static void setEntityTag(Entity e, String tag) {
-        net.minecraft.server.v1_16_R1.Entity nmsEntity = ((CraftEntity) e).getHandle();
+        net.minecraft.server.v1_16_R2.Entity nmsEntity = ((CraftEntity) e).getHandle();
 
         if (nmsEntity instanceof EntityHuman) {
             throw new IllegalArgumentException("Player NBT cannot be edited");
@@ -73,8 +73,8 @@ public final class NmsUtils {
     /**
      * Update the yaw &amp; pitch of entities. Can be used to set head orientation.
      *
-     * @param entity the living entity
-     * @param newYaw can be null if not to be modified
+     * @param entity   the living entity
+     * @param newYaw   can be null if not to be modified
      * @param newPitch can be null if not to be modified
      */
     public static void updateEntityYawPitch(LivingEntity entity, Float newYaw, Float newPitch) {
@@ -103,16 +103,16 @@ public final class NmsUtils {
     public static void setEntityOnGround(Entity e, boolean isOnGround) {
         if (e == null) throw new IllegalArgumentException();
         CraftEntity nmsEntity = (CraftEntity) e;
-        nmsEntity.getHandle().c(isOnGround);
+        nmsEntity.getHandle().setOnGround(isOnGround); //nms method renamed
     }
 
-    public static List<Block> getTileEntities(World world){
+    public static List<Block> getTileEntities(World world) {
         List<TileEntity> tileEntityList = ((CraftWorld) world).getHandle().tileEntityListTick;
         // Safe to parallelize getPosition and getBlockAt
         return tileEntityList.stream().parallel().map(TileEntity::getPosition).map(p -> world.getBlockAt(p.getX(), p.getY(), p.getZ())).collect(Collectors.toList());
     }
 
-    public static List<BlockState> getTileEntityBlockStates(World world){
+    public static List<BlockState> getTileEntityBlockStates(World world) {
         List<TileEntity> tileEntityList = ((CraftWorld) world).getHandle().tileEntityListTick;
         // Not safe to parallelize getState
         return tileEntityList.stream().map(TileEntity::getPosition).map(p -> world.getBlockAt(p.getX(), p.getY(), p.getZ())).map(Block::getState).collect(Collectors.toList());

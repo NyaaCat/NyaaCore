@@ -35,6 +35,78 @@ public class Message {
         inner = new TextComponent(text);
     }
 
+    public static String getPlayerJson(OfflinePlayer player) {
+        return "{name:\"{\\\"text\\\":\\\"" + player.getName() + "\\\"}\",id:\"" + player.getUniqueId() + "\",type:\"minecraft:player\"}";
+    }
+
+    public static String getItemJsonStripped(ItemStack item) {
+        ItemStack cloned = item.clone();
+        if (cloned.hasItemMeta() && cloned.getItemMeta() instanceof BookMeta) {
+            return ItemStackUtils.itemToJson(removeBookContent(cloned));
+        }
+        if (cloned.hasItemMeta() && cloned.getItemMeta() instanceof BlockStateMeta) {
+            BlockStateMeta blockStateMeta = (BlockStateMeta) cloned.getItemMeta();
+            if (blockStateMeta.hasBlockState() && blockStateMeta.getBlockState() instanceof InventoryHolder) {
+                InventoryHolder inventoryHolder = (InventoryHolder) blockStateMeta.getBlockState();
+                ArrayList<ItemStack> items = new ArrayList<>();
+                for (int i = 0; i < inventoryHolder.getInventory().getSize(); i++) {
+                    ItemStack itemStack = inventoryHolder.getInventory().getItem(i);
+                    if (itemStack != null && itemStack.getType() != Material.AIR) {
+                        if (items.size() < 5) {
+                            if (itemStack.hasItemMeta()) {
+                                if (itemStack.getItemMeta().hasLore()) {
+                                    ItemMeta meta = itemStack.getItemMeta();
+                                    meta.setLore(new ArrayList<>());
+                                    itemStack.setItemMeta(meta);
+                                }
+                                if (itemStack.getItemMeta() instanceof BookMeta) {
+                                    itemStack = removeBookContent(itemStack);
+                                }
+                            }
+                            items.add(itemStack);
+                        } else {
+                            items.add(new ItemStack(Material.STONE));
+                        }
+                    }
+                }
+                inventoryHolder.getInventory().clear();
+                for (int i = 0; i < items.size(); i++) {
+                    inventoryHolder.getInventory().setItem(i, items.get(i));
+                }
+                blockStateMeta.setBlockState((BlockState) inventoryHolder);
+                cloned.setItemMeta(blockStateMeta);
+                return ItemStackUtils.itemToJson(cloned);
+            }
+        }
+        return ItemStackUtils.itemToJson(cloned);
+    }
+
+    /**
+     * Get a clone of the item where all book pages are removed
+     * if not a book, then the same item is returned
+     *
+     * @param item the book
+     * @return book without contents.
+     */
+    public static ItemStack removeBookContent(ItemStack item) {
+        if (item.hasItemMeta() && item.getItemMeta() instanceof BookMeta) {
+            ItemStack itemStack = item.clone();
+            BookMeta meta = (BookMeta) itemStack.getItemMeta();
+            meta.setPages(new ArrayList<>());
+            itemStack.setItemMeta(meta);
+            return itemStack;
+        }
+        return item;
+    }
+
+    public static void sendActionBarMessage(Player player, BaseComponent msg) {
+        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, msg);
+    }
+
+    public static void sendTitle(Player player, BaseComponent title, BaseComponent subtitle, int fadeInTicks, int stayTicks, int fadeOutTicks) {
+        player.sendTitle(title.toLegacyText(), subtitle.toLegacyText(), fadeInTicks, stayTicks, fadeOutTicks);
+    }
+
     public Message append(String text) {
         inner.addExtra(text);
         return this;
@@ -209,78 +281,6 @@ public class Message {
         Bukkit.getConsoleSender().sendMessage(inner.toLegacyText());
 //        Bukkit.getConsoleSender().sendMessage("broadcast with filter:" + playerFilter.toString());
         return this;
-    }
-
-    public static String getPlayerJson(OfflinePlayer player) {
-        return "{name:\"{\\\"text\\\":\\\"" + player.getName() + "\\\"}\",id:\"" + player.getUniqueId() + "\",type:\"minecraft:player\"}";
-    }
-
-    public static String getItemJsonStripped(ItemStack item) {
-        ItemStack cloned = item.clone();
-        if (cloned.hasItemMeta() && cloned.getItemMeta() instanceof BookMeta) {
-            return ItemStackUtils.itemToJson(removeBookContent(cloned));
-        }
-        if (cloned.hasItemMeta() && cloned.getItemMeta() instanceof BlockStateMeta) {
-            BlockStateMeta blockStateMeta = (BlockStateMeta) cloned.getItemMeta();
-            if (blockStateMeta.hasBlockState() && blockStateMeta.getBlockState() instanceof InventoryHolder) {
-                InventoryHolder inventoryHolder = (InventoryHolder) blockStateMeta.getBlockState();
-                ArrayList<ItemStack> items = new ArrayList<>();
-                for (int i = 0; i < inventoryHolder.getInventory().getSize(); i++) {
-                    ItemStack itemStack = inventoryHolder.getInventory().getItem(i);
-                    if (itemStack != null && itemStack.getType() != Material.AIR) {
-                        if (items.size() < 5) {
-                            if (itemStack.hasItemMeta()) {
-                                if (itemStack.getItemMeta().hasLore()) {
-                                    ItemMeta meta = itemStack.getItemMeta();
-                                    meta.setLore(new ArrayList<>());
-                                    itemStack.setItemMeta(meta);
-                                }
-                                if (itemStack.getItemMeta() instanceof BookMeta) {
-                                    itemStack = removeBookContent(itemStack);
-                                }
-                            }
-                            items.add(itemStack);
-                        } else {
-                            items.add(new ItemStack(Material.STONE));
-                        }
-                    }
-                }
-                inventoryHolder.getInventory().clear();
-                for (int i = 0; i < items.size(); i++) {
-                    inventoryHolder.getInventory().setItem(i, items.get(i));
-                }
-                blockStateMeta.setBlockState((BlockState) inventoryHolder);
-                cloned.setItemMeta(blockStateMeta);
-                return ItemStackUtils.itemToJson(cloned);
-            }
-        }
-        return ItemStackUtils.itemToJson(cloned);
-    }
-
-    /**
-     * Get a clone of the item where all book pages are removed
-     * if not a book, then the same item is returned
-     *
-     * @param item the book
-     * @return book without contents.
-     */
-    public static ItemStack removeBookContent(ItemStack item) {
-        if (item.hasItemMeta() && item.getItemMeta() instanceof BookMeta) {
-            ItemStack itemStack = item.clone();
-            BookMeta meta = (BookMeta) itemStack.getItemMeta();
-            meta.setPages(new ArrayList<>());
-            itemStack.setItemMeta(meta);
-            return itemStack;
-        }
-        return item;
-    }
-
-    public static void sendActionBarMessage(Player player, BaseComponent msg) {
-        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, msg);
-    }
-
-    public static void sendTitle(Player player, BaseComponent title, BaseComponent subtitle, int fadeInTicks, int stayTicks, int fadeOutTicks) {
-        player.sendTitle(title.toLegacyText(), subtitle.toLegacyText(), fadeInTicks, stayTicks, fadeOutTicks);
     }
 
     @Override

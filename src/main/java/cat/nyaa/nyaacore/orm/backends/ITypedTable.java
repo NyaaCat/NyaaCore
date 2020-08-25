@@ -64,8 +64,7 @@ public interface ITypedTable<T> extends ITable {
      * Instead, it returns null if not unique
      *
      * @param where
-     * @return
-     * implNote: has small performance advantage over {@link ITypedTable#select(WhereClause)} because it does not convert all records to java objects
+     * @return implNote: has small performance advantage over {@link ITypedTable#select(WhereClause)} because it does not convert all records to java objects
      */
     T selectUniqueUnchecked(WhereClause where);
 

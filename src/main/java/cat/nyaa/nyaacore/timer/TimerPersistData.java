@@ -10,6 +10,19 @@ import java.time.ZonedDateTime;
 
 public class TimerPersistData extends TimerData {
 
+    @Serializable(manualSerialization = true)
+    Instant creationTime;
+    @Serializable(manualSerialization = true)
+    Instant lastTimerCallback;
+    @Serializable(manualSerialization = true)
+    Instant lastResetCallback;
+    @Serializable(manualSerialization = true)
+    Instant lastCheckpoint;
+    @Serializable(manualSerialization = true)
+    Duration timeElapsed;
+    @Serializable
+    boolean isPaused;
+
     public TimerPersistData() {
 
     }
@@ -23,19 +36,6 @@ public class TimerPersistData extends TimerData {
         this.pauseOnDetach = data.pauseOnDetach;
         this.makeUpMissedOnReattach = data.makeUpMissedOnReattach;
     }
-
-    @Serializable(manualSerialization = true)
-    Instant creationTime;
-    @Serializable(manualSerialization = true)
-    Instant lastTimerCallback;
-    @Serializable(manualSerialization = true)
-    Instant lastResetCallback;
-    @Serializable(manualSerialization = true)
-    Instant lastCheckpoint;
-    @Serializable(manualSerialization = true)
-    Duration timeElapsed;
-    @Serializable
-    boolean isPaused;
 
     @Override
     public void deserialize(ConfigurationSection config) {

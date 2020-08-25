@@ -9,6 +9,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
 public final class VaultUtils {
+    private static Economy eco = null;
+    private static Chat chat = null;
+
     public static Economy getVaultEconomy() {
         if (eco == null) {
             RegisteredServiceProvider<Economy> provider = Bukkit.getServer().getServicesManager().getRegistration(Economy.class);
@@ -34,9 +37,6 @@ public final class VaultUtils {
             return chat;
         }
     }
-
-    private static Economy eco = null;
-    private static Chat chat = null;
 
     public static double balance(OfflinePlayer p) {
         return getVaultEconomy().getBalance(p);

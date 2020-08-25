@@ -54,16 +54,16 @@ public final class HttpClient {
         group = new NioEventLoopGroup(nThreads);
         bootstrap = new Bootstrap();
         bootstrap.group(group).channel(NioSocketChannel.class)
-                 .option(ChannelOption.TCP_NODELAY, true)
-                 .handler(new ChannelInitializer<NioSocketChannel>() {
-                     @Override
-                     protected void initChannel(NioSocketChannel ch) {
-                         ch.pipeline()
-                           .addLast(new HttpClientCodec())
-                           .addLast(new HttpContentDecompressor())
-                           .addLast(new HttpObjectAggregator(512 * 1024));
-                     }
-                 });
+                .option(ChannelOption.TCP_NODELAY, true)
+                .handler(new ChannelInitializer<NioSocketChannel>() {
+                    @Override
+                    protected void initChannel(NioSocketChannel ch) {
+                        ch.pipeline()
+                                .addLast(new HttpClientCodec())
+                                .addLast(new HttpContentDecompressor())
+                                .addLast(new HttpObjectAggregator(512 * 1024));
+                    }
+                });
 
         Runtime.getRuntime().addShutdownHook(new Thread(HttpClient::shutdown));
     }
@@ -143,9 +143,9 @@ public final class HttpClient {
                 return;
             }
             if (response.status().equals(HttpResponseStatus.FOUND) ||
-                        response.status().equals(HttpResponseStatus.SEE_OTHER) ||
-                        response.status().equals(HttpResponseStatus.TEMPORARY_REDIRECT) ||
-                        response.status().equals(HttpResponseStatus.PERMANENT_REDIRECT)) {
+                    response.status().equals(HttpResponseStatus.SEE_OTHER) ||
+                    response.status().equals(HttpResponseStatus.TEMPORARY_REDIRECT) ||
+                    response.status().equals(HttpResponseStatus.PERMANENT_REDIRECT)) {
                 String location = response.headers().get("Location");
                 CompletableFuture<FullHttpResponse> redirect = get(location, headers);
                 wrapFuture(future, redirect);
@@ -174,7 +174,7 @@ public final class HttpClient {
                 return;
             }
             if (response.status().equals(HttpResponseStatus.TEMPORARY_REDIRECT) ||
-                        response.status().equals(HttpResponseStatus.PERMANENT_REDIRECT)) {
+                    response.status().equals(HttpResponseStatus.PERMANENT_REDIRECT)) {
                 String location = response.headers().get("Location");
                 CompletableFuture<FullHttpResponse> redirect = request(location, method, headers, body, contentType);
                 wrapFuture(future, redirect);
@@ -201,7 +201,7 @@ public final class HttpClient {
                 return;
             }
             if (response.status().equals(HttpResponseStatus.TEMPORARY_REDIRECT) ||
-                        response.status().equals(HttpResponseStatus.PERMANENT_REDIRECT)) {
+                    response.status().equals(HttpResponseStatus.PERMANENT_REDIRECT)) {
                 String location = response.headers().get("Location");
                 CompletableFuture<FullHttpResponse> redirect = postJson(location, headers, json);
                 wrapFuture(future, redirect);
@@ -322,7 +322,7 @@ public final class HttpClient {
 
 class ResponseHandler extends SimpleChannelInboundHandler<FullHttpResponse> {
 
-    private HttpClient.HttpCallback httpCallback;
+    private final HttpClient.HttpCallback httpCallback;
 
     ResponseHandler(HttpClient.HttpCallback httpCallback) {
         this.httpCallback = httpCallback;

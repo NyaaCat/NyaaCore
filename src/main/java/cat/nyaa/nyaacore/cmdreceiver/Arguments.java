@@ -98,6 +98,22 @@ public class Arguments {
         return ret;
     }
 
+    public static <T extends Enum<T>> T parseEnum(Class<T> cls, String str) {
+        try {
+            return Enum.valueOf(cls, str);
+        } catch (IllegalArgumentException ex) {
+            String vals = "";
+            List<String> l = new ArrayList<>();
+            for (T k : cls.getEnumConstants()) {
+                l.add(k.name());
+            }
+            l.sort(Comparator.naturalOrder());
+            for (String k : l) vals += "\n" + k;
+
+            throw new BadCommandException("internal.error.bad_enum", cls.getName(), vals);
+        }
+    }
+
     /**
      * @deprecated hard coded indexes are not recommended
      */
@@ -189,22 +205,6 @@ public class Arguments {
             throw new BadCommandException("internal.error.bad_double", ex, str);
         } catch (IllegalArgumentException ex) {
             throw new BadCommandException("internal.error.bad_decimal_pattern", ex, pattern);
-        }
-    }
-
-    public static <T extends Enum<T>> T parseEnum(Class<T> cls, String str) {
-        try {
-            return Enum.valueOf(cls, str);
-        } catch (IllegalArgumentException ex) {
-            String vals = "";
-            List<String> l = new ArrayList<>();
-            for (T k : cls.getEnumConstants()) {
-                l.add(k.name());
-            }
-            l.sort(Comparator.naturalOrder());
-            for (String k : l) vals += "\n" + k;
-
-            throw new BadCommandException("internal.error.bad_enum", cls.getName(), vals);
         }
     }
 

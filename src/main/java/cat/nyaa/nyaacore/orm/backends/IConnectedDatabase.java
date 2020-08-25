@@ -32,7 +32,6 @@ public interface IConnectedDatabase extends AutoCloseable {
     <T> ITypedTable<T> getTable(Class<T> recordClass);
 
     /**
-     *
      * @param recordClass
      * @param <T>
      * @return

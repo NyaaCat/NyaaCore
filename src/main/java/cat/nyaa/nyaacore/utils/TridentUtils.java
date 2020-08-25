@@ -1,8 +1,8 @@
 package cat.nyaa.nyaacore.utils;
 
-import net.minecraft.server.v1_16_R1.EntityThrownTrident;
-import org.bukkit.craftbukkit.v1_16_R1.entity.CraftEntity;
-import org.bukkit.craftbukkit.v1_16_R1.inventory.CraftItemStack;
+import net.minecraft.server.v1_16_R2.EntityThrownTrident;
+import org.bukkit.craftbukkit.v1_16_R2.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_16_R2.inventory.CraftItemStack;
 import org.bukkit.entity.Trident;
 import org.bukkit.inventory.ItemStack;
 
@@ -10,7 +10,7 @@ import java.lang.reflect.Field;
 
 public final class TridentUtils {
 
-    private static Class<?> entityThrownTrident = ReflectionUtils.getNMSClass("EntityThrownTrident");
+    private static final Class<?> entityThrownTrident = ReflectionUtils.getNMSClass("EntityThrownTrident");
 
     private static Field entityThrownTridentFieldAx;
 
@@ -25,7 +25,7 @@ public final class TridentUtils {
 
     public static ItemStack getTridentItemStack(Trident entity) {
         EntityThrownTrident thrownTrident = (EntityThrownTrident) ((CraftEntity) entity).getHandle();
-        net.minecraft.server.v1_16_R1.ItemStack nmsItemStack = thrownTrident.trident;
+        net.minecraft.server.v1_16_R2.ItemStack nmsItemStack = thrownTrident.trident;
         return CraftItemStack.asBukkitCopy(nmsItemStack);
     }
 

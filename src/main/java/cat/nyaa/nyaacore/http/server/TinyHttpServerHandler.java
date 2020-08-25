@@ -51,9 +51,20 @@ import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 final class TinyHttpServerHandler extends ChannelInboundHandlerAdapter {
 
     private final Responder responder;
+    private Throwable lastCause;
 
     TinyHttpServerHandler(Responder responder) {
         this.responder = responder;
+    }
+
+    public static <ReturnType> ReturnType chuck(Throwable t) {
+        chuck(RuntimeException.class, t);
+        throw new AssertionError(t); //should not get here
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T extends Throwable> void chuck(Class<T> type, Throwable t) throws T {
+        throw (T) t;
     }
 
     @Override
@@ -135,8 +146,6 @@ final class TinyHttpServerHandler extends ChannelInboundHandlerAdapter {
         }
     }
 
-    private Throwable lastCause;
-
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         cause.printStackTrace();
@@ -150,16 +159,6 @@ final class TinyHttpServerHandler extends ChannelInboundHandlerAdapter {
         if (thr != null) {
             chuck(lastCause);
         }
-    }
-
-    public static <ReturnType> ReturnType chuck(Throwable t) {
-        chuck(RuntimeException.class, t);
-        throw new AssertionError(t); //should not get here
-    }
-
-    @SuppressWarnings("unchecked")
-    public static <T extends Throwable> void chuck(Class<T> type, Throwable t) throws T {
-        throw (T) t;
     }
 
     private ByteBuf toByteBuf(Object content) {

@@ -27,6 +27,25 @@ public class SQLiteDatabase implements IConnectedDatabase {
         }
     }
 
+    private static String getTableCreationScheme(ObjectFieldModifier fm) {
+        String ret = fm.name + " " + fm.columnDefinition;
+        if (fm.primary) ret += " PRIMARY KEY";
+        else if (!fm.nullable) ret += " NOT NULL";
+        if (fm.autoIncrement) ret += " AUTOINCREMENT";
+        if (fm.unique) ret += " UNIQUE";
+        return ret;
+    }
+
+    private static <T> String getTableCreationSql(Class<T> recordClass) {
+        ObjectModifier<T> objMod = ObjectModifier.fromClass(recordClass);
+        StringJoiner colStr = new StringJoiner(",");
+        for (String colName : objMod.getColNames()) {
+            ObjectFieldModifier ct = objMod.columns.get(colName);
+            colStr.add(getTableCreationScheme(ct));
+        }
+        return String.format("CREATE TABLE IF NOT EXISTS %s(%s)", objMod.tableName, colStr.toString());
+    }
+
     @Override
     public Connection getConnection() {
         return dbConn;
@@ -157,25 +176,6 @@ public class SQLiteDatabase implements IConnectedDatabase {
         } catch (SQLException ex) {
             throw new RuntimeException(ex);
         }
-    }
-
-    private static String getTableCreationScheme(ObjectFieldModifier fm) {
-        String ret = fm.name + " " + fm.columnDefinition;
-        if (fm.primary) ret += " PRIMARY KEY";
-        else if (!fm.nullable) ret += " NOT NULL";
-        if (fm.autoIncrement) ret += " AUTOINCREMENT";
-        if (fm.unique) ret += " UNIQUE";
-        return ret;
-    }
-
-    private static <T> String getTableCreationSql(Class<T> recordClass) {
-        ObjectModifier<T> objMod = ObjectModifier.fromClass(recordClass);
-        StringJoiner colStr = new StringJoiner(",");
-        for (String colName : objMod.getColNames()) {
-            ObjectFieldModifier ct = objMod.columns.get(colName);
-            colStr.add(getTableCreationScheme(ct));
-        }
-        return String.format("CREATE TABLE IF NOT EXISTS %s(%s)", objMod.tableName, colStr.toString());
     }
 
     private <T> void createTable(Class<T> cls) {

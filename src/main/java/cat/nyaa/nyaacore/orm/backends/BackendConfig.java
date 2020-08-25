@@ -3,18 +3,6 @@ package cat.nyaa.nyaacore.orm.backends;
 import cat.nyaa.nyaacore.configuration.ISerializable;
 
 public class BackendConfig implements ISerializable {
-    public static BackendConfig sqliteBackend(String dbFileName) {
-        return new BackendConfig("sqlite", dbFileName, null, null, null, null);
-    }
-
-    public static BackendConfig mysqlBackend(String url) {
-        return mysqlBackend(url, null, null);
-    }
-
-    public static BackendConfig mysqlBackend(String url, String username, String password) {
-        return new BackendConfig("mysql", null, url, username, password, null);
-    }
-
     @Serializable
     public String provider;
     @Serializable
@@ -38,5 +26,17 @@ public class BackendConfig implements ISerializable {
         this.mysql_username = mysql_username;
         this.mysql_password = mysql_password;
         this.mysql_jdbc_driver = mysql_jdbc_driver;
+    }
+
+    public static BackendConfig sqliteBackend(String dbFileName) {
+        return new BackendConfig("sqlite", dbFileName, null, null, null, null);
+    }
+
+    public static BackendConfig mysqlBackend(String url) {
+        return mysqlBackend(url, null, null);
+    }
+
+    public static BackendConfig mysqlBackend(String url, String username, String password) {
+        return new BackendConfig("mysql", null, url, username, password, null);
     }
 }

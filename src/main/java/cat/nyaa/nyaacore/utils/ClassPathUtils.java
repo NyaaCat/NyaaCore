@@ -47,13 +47,25 @@ import static java.util.logging.Level.WARNING;
 
 public final class ClassPathUtils {
 
+    /**
+     * Separator for the Class-Path manifest attribute value in jar files.
+     */
+    private static final Splitter CLASS_PATH_ATTRIBUTE_SEPARATOR =
+            Splitter.on(" ").omitEmptyStrings();
+    private static final String CLASS_FILE_NAME_EXTENSION = ".class";
+    private final ImmutableSet<ResourceInfo> resources;
+
+    private ClassPathUtils(ImmutableSet<ResourceInfo> resources) {
+        this.resources = resources;
+    }
+
     @SuppressWarnings("unchecked")
     public static <T> Class<? extends T>[] scanSubclasses(File file, ClassLoader classLoader, String pack, Class<T> clazz) {
         try {
             Set<ClassPathUtils.ClassInfo> classInfos = from(file, classLoader).getAllClasses();
             return (Class<? extends T>[]) loadClassesInPackage(pack, classInfos)
-                                                  .filter(c -> c != null && clazz.isAssignableFrom(c))
-                                                  .toArray(Class<?>[]::new);
+                    .filter(c -> c != null && clazz.isAssignableFrom(c))
+                    .toArray(Class<?>[]::new);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -63,8 +75,8 @@ public final class ClassPathUtils {
         try {
             Set<ClassPathUtils.ClassInfo> classInfos = from(file, classLoader).getAllClasses();
             return loadClassesInPackage(pack, classInfos)
-                           .filter(c -> c != null && c.getAnnotation(annotation) != null)
-                           .toArray(Class<?>[]::new);
+                    .filter(c -> c != null && c.getAnnotation(annotation) != null)
+                    .toArray(Class<?>[]::new);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -88,23 +100,9 @@ public final class ClassPathUtils {
 
     private static Stream<? extends Class<?>> loadClassesInPackage(String pack, Set<ClassInfo> classInfos) {
         return classInfos
-                       .stream()
-                       .filter(c -> pack == null || c.getPackageName().startsWith(pack))
-                       .map(ClassInfo::load);
-    }
-
-    /**
-     * Separator for the Class-Path manifest attribute value in jar files.
-     */
-    private static final Splitter CLASS_PATH_ATTRIBUTE_SEPARATOR =
-            Splitter.on(" ").omitEmptyStrings();
-
-    private static final String CLASS_FILE_NAME_EXTENSION = ".class";
-
-    private final ImmutableSet<ResourceInfo> resources;
-
-    private ClassPathUtils(ImmutableSet<ResourceInfo> resources) {
-        this.resources = resources;
+                .stream()
+                .filter(c -> pack == null || c.getPackageName().startsWith(pack))
+                .map(ClassInfo::load);
     }
 
     /**
@@ -133,6 +131,21 @@ public final class ClassPathUtils {
         return NyaaCoreLoader.getInstance().getLogger();
     }
 
+    @VisibleForTesting
+    static String getClassName(String filename) {
+        int classNameEnd = filename.length() - CLASS_FILE_NAME_EXTENSION.length();
+        return filename.substring(0, classNameEnd).replace('/', '.');
+    }
+
+    static File toFile(URL url) {
+        checkArgument(url.getProtocol().equals("file"));
+        try {
+            return new File(url.toURI()); // Accepts escaped characters like %20.
+        } catch (URISyntaxException e) { // URL.toURI() doesn't escape chars.
+            return new File(url.getPath()); // Accepts non-escaped chars like space.
+        }
+    }
+
     /**
      * Returns all classes loadable from the current class path.
      *
@@ -150,9 +163,13 @@ public final class ClassPathUtils {
      */
     @Beta
     public static class ResourceInfo {
+        final ClassLoader loader;
         private final String resourceName;
 
-        final ClassLoader loader;
+        ResourceInfo(String resourceName, ClassLoader loader) {
+            this.resourceName = checkNotNull(resourceName);
+            this.loader = checkNotNull(loader);
+        }
 
         static ResourceInfo of(String resourceName, ClassLoader loader) {
             if (resourceName.endsWith(CLASS_FILE_NAME_EXTENSION)) {
@@ -160,11 +177,6 @@ public final class ClassPathUtils {
             } else {
                 return new ResourceInfo(resourceName, loader);
             }
-        }
-
-        ResourceInfo(String resourceName, ClassLoader loader) {
-            this.resourceName = checkNotNull(resourceName);
-            this.loader = checkNotNull(loader);
         }
 
         @Override
@@ -253,60 +265,6 @@ public final class ClassPathUtils {
         // We only scan each file once independent of the classloader that resource might be associated
         // with.
         private final Set<File> scannedUris = Sets.newHashSet();
-
-        /**
-         * Called when a directory is scanned for resource files.
-         */
-        protected abstract void scanDirectory(ClassLoader loader, File directory) throws IOException;
-
-        /**
-         * Called when a jar file is scanned for resource entries.
-         */
-        protected abstract void scanJarFile(ClassLoader loader, JarFile file) throws IOException;
-
-        final void scan(File file, ClassLoader classloader) throws IOException {
-            if (scannedUris.add(file.getCanonicalFile())) {
-                scanFrom(file, classloader);
-            }
-        }
-
-        private void scanFrom(File file, ClassLoader classloader) throws IOException {
-            try {
-                if (!file.exists()) {
-                    return;
-                }
-            } catch (SecurityException e) {
-                getLogger().warning("Cannot access " + file + ": " + e);
-                // TODO(emcmanus): consider whether to log other failure cases too.
-                return;
-            }
-            if (file.isDirectory()) {
-                scanDirectory(classloader, file);
-            } else {
-                scanJar(file, classloader);
-            }
-        }
-
-        private void scanJar(File file, ClassLoader classloader) throws IOException {
-            JarFile jarFile;
-            try {
-                jarFile = new JarFile(file);
-            } catch (IOException e) {
-                // Not a jar file
-                return;
-            }
-            try {
-                for (File path : getClassPathFromManifest(file, jarFile.getManifest())) {
-                    scan(path, classloader);
-                }
-                scanJarFile(classloader, jarFile);
-            } finally {
-                try {
-                    jarFile.close();
-                } catch (IOException ignored) {
-                }
-            }
-        }
 
         /**
          * Returns the class path URIs specified by the {@code Class-Path} manifest attribute, according
@@ -398,6 +356,60 @@ public final class ClassPathUtils {
         static URL getClassPathEntry(File jarFile, String path) throws MalformedURLException {
             return new URL(jarFile.toURI().toURL(), path);
         }
+
+        /**
+         * Called when a directory is scanned for resource files.
+         */
+        protected abstract void scanDirectory(ClassLoader loader, File directory) throws IOException;
+
+        /**
+         * Called when a jar file is scanned for resource entries.
+         */
+        protected abstract void scanJarFile(ClassLoader loader, JarFile file) throws IOException;
+
+        final void scan(File file, ClassLoader classloader) throws IOException {
+            if (scannedUris.add(file.getCanonicalFile())) {
+                scanFrom(file, classloader);
+            }
+        }
+
+        private void scanFrom(File file, ClassLoader classloader) throws IOException {
+            try {
+                if (!file.exists()) {
+                    return;
+                }
+            } catch (SecurityException e) {
+                getLogger().warning("Cannot access " + file + ": " + e);
+                // TODO(emcmanus): consider whether to log other failure cases too.
+                return;
+            }
+            if (file.isDirectory()) {
+                scanDirectory(classloader, file);
+            } else {
+                scanJar(file, classloader);
+            }
+        }
+
+        private void scanJar(File file, ClassLoader classloader) throws IOException {
+            JarFile jarFile;
+            try {
+                jarFile = new JarFile(file);
+            } catch (IOException e) {
+                // Not a jar file
+                return;
+            }
+            try {
+                for (File path : getClassPathFromManifest(file, jarFile.getManifest())) {
+                    scan(path, classloader);
+                }
+                scanJarFile(classloader, jarFile);
+            } finally {
+                try {
+                    jarFile.close();
+                } catch (IOException ignored) {
+                }
+            }
+        }
     }
 
     static final class DefaultScanner extends Scanner {
@@ -467,21 +479,6 @@ public final class ClassPathUtils {
                     }
                 }
             }
-        }
-    }
-
-    @VisibleForTesting
-    static String getClassName(String filename) {
-        int classNameEnd = filename.length() - CLASS_FILE_NAME_EXTENSION.length();
-        return filename.substring(0, classNameEnd).replace('/', '.');
-    }
-
-    static File toFile(URL url) {
-        checkArgument(url.getProtocol().equals("file"));
-        try {
-            return new File(url.toURI()); // Accepts escaped characters like %20.
-        } catch (URISyntaxException e) { // URL.toURI() doesn't escape chars.
-            return new File(url.getPath()); // Accepts non-escaped chars like space.
         }
     }
 }

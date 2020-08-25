@@ -34,10 +34,10 @@ public interface ChunkedResponse {
     /**
      * Get the next chunk of content, returning null when the response
      * is complete.
-     * 
+     *
      * @param callCount The number of times this method has been called for
-     * this particular request.
+     *                  this particular request.
      * @return An object which may be a ByteBuf, byte[], CharSequence, etc.
      */
-    public Object nextChunk(int callCount);
+    Object nextChunk(int callCount);
 }

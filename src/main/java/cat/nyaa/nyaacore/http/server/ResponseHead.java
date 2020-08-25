@@ -36,9 +36,8 @@ import java.util.Map;
  */
 public final class ResponseHead {
 
-    int code = 200;
     final Map<CharSequence, Object> headers = new LinkedHashMap<>();
-
+    int code = 200;
     HttpVersion version = HttpVersion.HTTP_1_1;
 
     public ValueReceiver header(final CharSequence header) {

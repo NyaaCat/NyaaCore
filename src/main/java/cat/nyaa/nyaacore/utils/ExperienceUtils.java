@@ -42,7 +42,7 @@ public final class ExperienceUtils {
     public static int getLevelForExp(int exp) {
         if (exp < 0) throw new IllegalArgumentException();
         for (int lv = 1; lv < 21000; lv++) {
-            if (getExpForLevel(lv) > exp) return lv-1;
+            if (getExpForLevel(lv) > exp) return lv - 1;
         }
         throw new IllegalArgumentException("exp too large");
     }

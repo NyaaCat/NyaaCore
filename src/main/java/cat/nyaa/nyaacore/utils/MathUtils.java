@@ -8,9 +8,8 @@ import java.util.List;
 import java.util.Random;
 
 public final class MathUtils {
-    private static final Random rng = new Random();
-
     public static final int MILLI_IN_SEC = 1000;
+    private static final Random rng = new Random();
 
     /**
      * Generate a random number in [min,max]

@@ -29,20 +29,20 @@ import java.util.stream.Stream;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class OfflinePlayerUtils {
-    private static ConcurrentMap<String, OfflinePlayer> playerCache;
-    private static ConcurrentMap<UUID, String> nameCache;
-    private static TypeToken<List<Map<String, Object>>> typeTokenListMap = new TypeToken<List<Map<String, Object>>>() {
-    };
     private static final String UNDASHED = "(\\w{8})(\\w{4})(\\w{4})(\\w{4})(\\w{12})";
     private static final String DASHED = "$1-$2-$3-$4-$5";
+    private static final TypeToken<List<Map<String, Object>>> typeTokenListMap = new TypeToken<List<Map<String, Object>>>() {
+    };
+    private static ConcurrentMap<String, OfflinePlayer> playerCache;
+    private static ConcurrentMap<UUID, String> nameCache;
 
     private OfflinePlayerUtils() {
     }
 
     public static void init() {
         playerCache = Arrays.stream(Bukkit.getOfflinePlayers())
-                            .filter(p -> p.getName() != null)
-                            .collect(Collectors.toConcurrentMap(p -> p.getName().toLowerCase(Locale.ENGLISH), Function.identity(), BinaryOperator.maxBy(Comparator.comparing(OfflinePlayer::getLastPlayed))));
+                .filter(p -> p.getName() != null)
+                .collect(Collectors.toConcurrentMap(p -> p.getName().toLowerCase(Locale.ENGLISH), Function.identity(), BinaryOperator.maxBy(Comparator.comparing(OfflinePlayer::getLastPlayed))));
         nameCache = playerCache.entrySet().stream().collect(Collectors.toConcurrentMap(e -> e.getValue().getUniqueId(), Map.Entry::getKey));
     }
 

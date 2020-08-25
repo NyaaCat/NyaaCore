@@ -10,18 +10,16 @@ import org.junit.Test;
 import java.io.StringReader;
 import java.util.*;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 public class ISerializableTest {
     private static final boolean enable_print = false;
     //private static final boolean enable_print = true;
 
-    private <T extends ISerializable> T process(T obj) throws ReflectiveOperationException{
+    private <T extends ISerializable> T process(T obj) throws ReflectiveOperationException {
         YamlConfiguration cfg = new YamlConfiguration();
         obj.serialize(cfg);
-        T newObj = (T)obj.getClass().newInstance();
+        T newObj = (T) obj.getClass().newInstance();
         if (enable_print) System.out.println(cfg.saveToString());
         newObj.deserialize(YamlConfiguration.loadConfiguration(new StringReader(cfg.saveToString())));
         return newObj;
@@ -34,12 +32,86 @@ public class ISerializableTest {
         System.out.println(cfg.saveToString());
     }
 
-    public static enum TestEnum {
+    @Test
+    public void test1() throws Exception {
+        process(new Test1Class().fill()).assertEq();
+    }
+
+    @Test
+    public void test2() throws Exception {
+        Test2Class obj = new Test2Class();
+        obj.obj = new Test1Class().fill();
+        Test2Class n = process(obj);
+        assertNotNull(n);
+        assertNotNull(n.obj);
+        assertEquals(Test2Class.class, n.getClass());
+        n.obj.assertEq();
+    }
+
+    @Test
+    public void test3() throws Exception {
+        Test3Class o = new Test3Class();
+        o.map = new HashMap<>();
+        for (int i = 0; i <= 10; i++) o.map.put(Integer.toString(i), i);
+        Test3Class p = process(o);
+        for (int i = 0; i <= 10; i++) assertEquals((Integer) i, p.map.get(Integer.toString(i)));
+    }
+
+    @Test
+    public void test4() throws Exception {
+        process(new Test4Class(10)).check(10);
+    }
+
+    @Test
+    public void test5() throws Exception {
+        Test5Class c = new Test5Class();
+        c.map = new HashMap<>();
+        c.map.put("abc", new Test1Class().fill());
+        process(c).map.get("abc").assertEq();
+    }
+
+    @Test
+    public void test6() throws Exception {
+        process(new Test6Class(6)).verify(6);
+    }
+
+    @Test
+    public void test7() throws Exception {
+        process(new Test7Class().fill()).verify();
+    }
+
+    //test extend and LinkedHashMap.
+    @Test
+    public void test8() throws Exception {
+        Test8Class obj = new Test8Class();
+        obj.fill();
+        Test8Class fill = process(obj);
+        fill.verify();
+    }
+
+    //    @Test
+    public void test9() throws ReflectiveOperationException {
+        Test9Class test9Class = new Test9Class();
+        test9Class.fill();
+        process(test9Class).verify();
+    }
+
+    @Test
+    public void test10() throws ReflectiveOperationException {
+        Test10Class test10Class = new Test10Class();
+        test10Class.test7Class.fill();
+        test10Class.innerClass.test8Class.fill();
+        process(test10Class);
+        test10Class.test7Class.verify();
+        test10Class.test7Class.verify();
+    }
+
+    public enum TestEnum {
         VALUE_A,
         VALUE_B,
         VALUE_C,
         VALUE_D,
-        VALUE_E;
+        VALUE_E
     }
 
     public static class Test1Class implements ISerializable {
@@ -61,16 +133,11 @@ public class ISerializableTest {
         }
 
         public void assertEq() {
-            assertEquals((Integer)42, i);
-            assertEquals((Double)42.42, d);
+            assertEquals((Integer) 42, i);
+            assertEquals((Double) 42.42, d);
             assertEquals("42", s);
             assertEquals(TestEnum.VALUE_D, e);
         }
-    }
-
-    @Test
-    public void test1() throws Exception {
-        process(new Test1Class().fill()).assertEq();
     }
 
     static class Test2Class implements ISerializable {
@@ -78,29 +145,9 @@ public class ISerializableTest {
         Test1Class obj;
     }
 
-    @Test
-    public void test2() throws Exception {
-        Test2Class obj = new Test2Class();
-        obj.obj = new Test1Class().fill();
-        Test2Class n = process(obj);
-        assertNotNull(n);
-        assertNotNull(n.obj);
-        assertEquals(Test2Class.class, n.getClass());
-        n.obj.assertEq();
-    }
-
     static class Test3Class implements ISerializable {
         @Serializable
         Map<String, Integer> map;
-    }
-
-    @Test
-    public void test3() throws Exception {
-        Test3Class o = new Test3Class();
-        o.map = new HashMap<>();
-        for (int i = 0;i<=10;i++) o.map.put(Integer.toString(i), i);
-        Test3Class p = process(o);
-        for (int i = 0;i<=10;i++) assertEquals((Integer)i, p.map.get(Integer.toString(i)));
     }
 
     static class Test4Class implements ISerializable {
@@ -108,7 +155,10 @@ public class ISerializableTest {
         int depth;
         @Serializable
         Test4Class nested;
-        public Test4Class() {}
+
+        public Test4Class() {
+        }
+
         public Test4Class(int depth) {
             this.depth = depth;
             if (depth > 0) {
@@ -125,33 +175,23 @@ public class ISerializableTest {
         }
     }
 
-    @Test
-    public void test4() throws Exception {
-        process(new Test4Class(10)).check(10);
-    }
-
     static class Test5Class implements ISerializable {
         @Serializable
         Map<String, Test1Class> map;
     }
 
-    @Test
-    public void test5() throws Exception {
-        Test5Class c = new Test5Class();
-        c.map = new HashMap<>();
-        c.map.put("abc", new Test1Class().fill());
-        process(c).map.get("abc").assertEq();
-    }
-
     static class Test6Class implements ISerializable {
         @Serializable(manualSerialization = true)
         List<Test6Class> list = null;
-        public Test6Class(){}
+
+        public Test6Class() {
+        }
+
         public Test6Class(int depth) {
             if (depth == 0) return;
             list = new ArrayList<>();
-            for (int i=0;i<depth;i++) {
-                list.add(new Test6Class(depth-1));
+            for (int i = 0; i < depth; i++) {
+                list.add(new Test6Class(depth - 1));
             }
         }
 
@@ -160,7 +200,7 @@ public class ISerializableTest {
             else {
                 assertNotNull(list);
                 assertEquals(depth, list.size());
-                for (int i=0;i<depth;i++) list.get(i).verify(depth-1);
+                for (int i = 0; i < depth; i++) list.get(i).verify(depth - 1);
             }
         }
 
@@ -181,16 +221,11 @@ public class ISerializableTest {
         @Override
         public void serialize(ConfigurationSection config) {
             if (list == null) return;
-            for (int i=0;i<list.size();i++) {
+            for (int i = 0; i < list.size(); i++) {
                 ConfigurationSection sec = config.createSection(Integer.toString(i));
                 list.get(i).serialize(sec);
             }
         }
-    }
-
-    @Test
-    public void test6() throws Exception {
-        process(new Test6Class(6)).verify(6);
     }
 
     static class Test7Class implements ISerializable {
@@ -204,7 +239,7 @@ public class ISerializableTest {
         public Test7Class fill() {
             this.s = new ArrayList<>();
             this.i = new ArrayList<>();
-            for (int x = 0;x<100;x++) {
+            for (int x = 0; x < 100; x++) {
                 i.add(x);
                 s.add(Integer.toString(x));
             }
@@ -212,16 +247,11 @@ public class ISerializableTest {
         }
 
         public void verify() {
-            for (Integer x = 0;x<100;x++) {
+            for (Integer x = 0; x < 100; x++) {
                 assertEquals(x, this.i.get(x));
                 assertEquals(x.toString(), this.s.get(x));
             }
         }
-    }
-
-    @Test
-    public void test7() throws Exception {
-        process(new Test7Class().fill()).verify();
     }
 
     static class Test8Class extends Test7Class {
@@ -233,7 +263,7 @@ public class ISerializableTest {
             super.fill();
             name = "tester";
             stringMap = new LinkedHashMap<>();
-            for (int j = 99, i = 0; j >= 0; j--,i++) {
+            for (int j = 99, i = 0; j >= 0; j--, i++) {
                 stringMap.put(String.valueOf(j), String.valueOf(i));
             }
             return this;
@@ -255,16 +285,7 @@ public class ISerializableTest {
         }
     }
 
-    //test extend and LinkedHashMap.
-    @Test
-    public void test8() throws Exception {
-        Test8Class obj = new Test8Class();
-        obj.fill();
-        Test8Class fill = process(obj);
-        fill.verify();
-    }
-
-    static class Test9Class implements ISerializable{
+    static class Test9Class implements ISerializable {
         @Serializable
         public String str = "";
         @Serializable
@@ -275,12 +296,13 @@ public class ISerializableTest {
         public List<EntityType> entityTypes = new ArrayList<>();
         @Serializable
         public Map<String, Difficulty> difficultyMap = new LinkedHashMap<>();
+
         {
             entityTypes.add(EntityType.BAT);
             difficultyMap.put("100", Difficulty.EASY);
         }
 
-        public void fill(){
+        public void fill() {
             str = "laji";
             in = 100;
             material = Material.ARROW;
@@ -302,34 +324,17 @@ public class ISerializableTest {
         }
     }
 
-//    @Test
-    public void test9() throws ReflectiveOperationException {
-        Test9Class test9Class = new Test9Class();
-        test9Class.fill();
-        process(test9Class).verify();
-    }
-
-    static class Test10Class implements ISerializable{
+    static class Test10Class implements ISerializable {
         @Serializable
         Test7Class test7Class = new Test7Class();
         @Serializable
         Test10InnerClass innerClass = new Test10InnerClass();
 
-        static class Test10InnerClass implements ISerializable{
+        static class Test10InnerClass implements ISerializable {
             @Serializable
             Test8Class test8Class = new Test8Class();
         }
 
-    }
-
-    @Test
-    public void test10() throws ReflectiveOperationException {
-        Test10Class test10Class = new Test10Class();
-        test10Class.test7Class.fill();
-        test10Class.innerClass.test8Class.fill();
-        process(test10Class);
-        test10Class.test7Class.verify();
-        test10Class.test7Class.verify();
     }
 
 }

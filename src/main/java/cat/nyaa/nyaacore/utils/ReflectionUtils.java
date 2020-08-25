@@ -28,24 +28,21 @@ import java.util.*;
 public final class ReflectionUtils {
 
     /*
-     * The server version string to location NMS & OBC classes
-     */
-    private static String versionString;
-
-    /*
      * Cache of NMS classes that we've searched for
      */
-    private static Map<String, Class<?>> loadedNMSClasses = new HashMap<>();
-
+    private static final Map<String, Class<?>> loadedNMSClasses = new HashMap<>();
     /*
      * Cache of OBS classes that we've searched for
      */
-    private static Map<String, Class<?>> loadedOBCClasses = new HashMap<>();
-
+    private static final Map<String, Class<?>> loadedOBCClasses = new HashMap<>();
     /*
      * Cache of methods that we've found in particular classes
      */
-    private static Map<Class<?>, Map<String, Method>> loadedMethods = new HashMap<>();
+    private static final Map<Class<?>, Map<String, Method>> loadedMethods = new HashMap<>();
+    /*
+     * The server version string to location NMS & OBC classes
+     */
+    private static String versionString;
 
     /**
      * Gets the version string for NMS &amp; OBC class paths
@@ -148,22 +145,23 @@ public final class ReflectionUtils {
 
     /**
      * get all declared fields in a class and its' super class.
+     *
      * @param clz target class
      * @return a List of Field objects declared by clz.
      * @since 7.2
      */
-    public static List<Field> getAllFields(Class<?> clz){
+    public static List<Field> getAllFields(Class<?> clz) {
         List<Field> fields = new ArrayList<>();
         return getAllFields(clz, fields);
     }
 
-    private static List<Field> getAllFields(Class<?> clz, List<Field> list){
+    private static List<Field> getAllFields(Class<?> clz, List<Field> list) {
         Collections.addAll(list, clz.getDeclaredFields());
 
         Class<?> supClz = clz.getSuperclass();
-        if (supClz == null){
+        if (supClz == null) {
             return list;
-        }else {
+        } else {
             return getAllFields(supClz, list);
         }
     }

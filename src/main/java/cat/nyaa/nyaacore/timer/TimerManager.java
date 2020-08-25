@@ -19,19 +19,32 @@ import java.util.Map;
  * When the server is down, all timers are DETACHED
  * PAUSED:   A timer is PAUSED when it's not counting time.
  * A timer can be NOT PAUSED even when the server is down.
- *
+ * <p>
  * //TODO: use bukkit events instead of callbacks
  */
 public class TimerManager extends FileConfigure {
+    private static final ITimerCallback dummyTimerCallback = (a, b, c, d) -> {
+    };
     private final NyaaCoreLoader plugin;
+    @Serializable
+    Map<String, TimerPersistData> timerData;
+    Map<String, ITimerCallback> timerCallback;
+    Map<String, ITimerCallback> timerResetCallback;
+
+    public TimerManager(NyaaCoreLoader plugin) {
+        this.plugin = plugin;
+    }
 
     public static TimerManager instance() {
         throw new RuntimeException("Timer subsystem is not implemented");
         //return NyaaCoreLoader.getInstance().timerManager;
     }
 
-    public TimerManager(NyaaCoreLoader plugin) {
-        this.plugin = plugin;
+    /**
+     * Convert (plugin, timerName) pair to internal timer name string
+     */
+    static String toInternalName(JavaPlugin plugin, String timerName) {
+        return plugin.getName() + "!" + timerName;
     }
 
     @Override
@@ -42,18 +55,6 @@ public class TimerManager extends FileConfigure {
     @Override
     protected JavaPlugin getPlugin() {
         return plugin;
-    }
-
-    @Serializable
-    Map<String, TimerPersistData> timerData;
-    Map<String, ITimerCallback> timerCallback;
-    Map<String, ITimerCallback> timerResetCallback;
-
-    /**
-     * Convert (plugin, timerName) pair to internal timer name string
-     */
-    static String toInternalName(JavaPlugin plugin, String timerName) {
-        return plugin.getName() + "!" + timerName;
     }
 
     /**
@@ -116,7 +117,4 @@ public class TimerManager extends FileConfigure {
         TimerPersistData data = timerData.get(toInternalName(plugin, timerName));
         return data == null ? null : new TimerHandler(plugin, timerName, data);
     }
-
-    private static ITimerCallback dummyTimerCallback = (a, b, c, d) -> {
-    };
 }

@@ -48,6 +48,9 @@ import java.util.logging.Logger;
  */
 public final class TinyHttpServer {
 
+    static final Random r = new Random(System.currentTimeMillis());
+    static int[] temp = new int[1];
+    static int port = 7000 + (int) (System.currentTimeMillis() % 1000);
     private final Channel httpChannel;
     private final Channel httpsChannel;
     private final EventLoopGroup eventHandlers = new NioEventLoopGroup(2);
@@ -55,15 +58,14 @@ public final class TinyHttpServer {
     private final int httpsPort;
     private final int httpPort;
     private final TinyHttpServerHandler handler;
-    static int[] temp = new int[1];
+
     /**
      * Create a new server, using randomly selected ports that are tested for
      * availability.
      *
      * @param responder The thing that will construct responses.
-     *
      * @throws CertificateException If something goes wrong
-     * @throws SSLException If something goes wrong
+     * @throws SSLException         If something goes wrong
      * @throws InterruptedException If something goes wrong
      */
     public TinyHttpServer(Responder responder) throws CertificateException, SSLException, InterruptedException {
@@ -112,6 +114,63 @@ public final class TinyHttpServer {
         } else {
             httpsChannel = null;
         }
+    }
+
+    private static int findPort(int not) {
+
+        do {
+            // Make sure we're out of the way of a running mongo instance,
+            // both the mongo port and the http port
+            port = r.nextInt(1000) + 1 + port;
+            if (port > 65535) {
+                port = 7000;
+                continue;
+            }
+        } while (!available(port) || port == not);
+        return port;
+    }
+
+    private static boolean available(int port) {
+        try (ServerSocket ss = new ServerSocket(port)) {
+            ss.setReuseAddress(true);
+            try (DatagramSocket ds = new DatagramSocket(port)) {
+                ds.setReuseAddress(true);
+                return true;
+            } catch (IOException e) {
+                return false;
+            }
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    public static void main(String[] args) throws Exception {
+//        Responder r = (HttpRequest req, ResponseHead response) -> {
+//            response.header("Content-Type").set("text/plain;charset=UTF-8");
+//            return "Hello world\n";
+//        };
+
+        Responder r = (HttpRequest req, ResponseHead response) -> {
+            response.header("Content-Type").set("text/plain;charset=UTF-8");
+            return (ChunkedResponse) (int callCount) -> {
+                if (callCount > 10) {
+                    return null;
+                }
+                try {
+                    Thread.sleep(500);
+                    return "Hello world " + callCount + "\n";
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(TinyHttpServer.class.getName()).log(Level.SEVERE, null, ex);
+                    return null;
+                }
+            };
+        };
+
+        TinyHttpServer server = new TinyHttpServer(r);
+//        TinyHttpServer server = new TinyHttpServer(r);
+        System.out.println("Created");
+        server.await();
+        System.out.println("Await exited");
     }
 
     /**
@@ -177,66 +236,6 @@ public final class TinyHttpServer {
         workers.shutdownGracefully();
         await();
         return this;
-    }
-
-    static final Random r = new Random(System.currentTimeMillis());
-
-    static int port = 7000 + (int) (System.currentTimeMillis() % 1000);
-    private static int findPort(int not) {
-
-        do {
-            // Make sure we're out of the way of a running mongo instance,
-            // both the mongo port and the http port
-            port = r.nextInt(1000) + 1 + port;
-            if (port > 65535) {
-                port = 7000;
-                continue;
-            }
-        } while (!available(port) || port == not);
-        return port;
-    }
-
-    private static boolean available(int port) {
-        try (ServerSocket ss = new ServerSocket(port)) {
-            ss.setReuseAddress(true);
-            try (DatagramSocket ds = new DatagramSocket(port)) {
-                ds.setReuseAddress(true);
-                return true;
-            } catch (IOException e) {
-                return false;
-            }
-        } catch (IOException e) {
-            return false;
-        }
-    }
-
-    public static void main(String[] args) throws Exception {
-//        Responder r = (HttpRequest req, ResponseHead response) -> {
-//            response.header("Content-Type").set("text/plain;charset=UTF-8");
-//            return "Hello world\n";
-//        };
-
-        Responder r = (HttpRequest req, ResponseHead response) -> {
-            response.header("Content-Type").set("text/plain;charset=UTF-8");
-            return (ChunkedResponse) (int callCount) -> {
-                if (callCount > 10) {
-                    return null;
-                }
-                try {
-                    Thread.sleep(500);
-                    return "Hello world " + callCount + "\n";
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(TinyHttpServer.class.getName()).log(Level.SEVERE, null, ex);
-                    return null;
-                }
-            };
-        };
-
-        TinyHttpServer server = new TinyHttpServer(r);
-//        TinyHttpServer server = new TinyHttpServer(r);
-        System.out.println("Created");
-        server.await();
-        System.out.println("Await exited");
     }
 
 }

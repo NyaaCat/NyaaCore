@@ -32,7 +32,7 @@ public class WhereClause {
      *
      * @param columnName
      * @param comparator if it's a keyword, you need to add spaces before and after, e.g. " LIKE ", if obj is null, this should use " IS " instead of "="
-     * @param obj the java object, can be null
+     * @param obj        the java object, can be null
      */
     public WhereClause where(String columnName, String comparator, Object obj) {
         if (columnName == null || comparator == null) throw new IllegalArgumentException();

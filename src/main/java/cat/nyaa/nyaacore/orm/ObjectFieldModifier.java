@@ -19,15 +19,6 @@ import java.lang.reflect.Modifier;
  */
 public class ObjectFieldModifier {
 
-    public int getLength() {
-        return length;
-    }
-
-    public enum AccessMethod {
-        DIRECT_FIELD,  // directly get from field
-        GETTER_SETTER  // use getter and setter
-    }
-
     public final String name;
     public final boolean nullable;
     public final boolean unique;
@@ -39,7 +30,6 @@ public class ObjectFieldModifier {
     public final Field field;   // used if access method is DIRECT_FIELD
     public final Method setter; // used if access method is GETTER_SETTER
     public final Method getter; // used if access method is GETTER_SETTER
-
     public final Class javaType;
     public final DataTypeMapping.IDataTypeConverter typeConverter;
 
@@ -125,6 +115,10 @@ public class ObjectFieldModifier {
         this.length = anno.length();
     }
 
+    public int getLength() {
+        return length;
+    }
+
     public String getName() {
         return name;
     }
@@ -168,5 +162,10 @@ public class ObjectFieldModifier {
         } else {
             setJavaObject(entityObj, typeConverter.toJavaType(obj));
         }
+    }
+
+    public enum AccessMethod {
+        DIRECT_FIELD,  // directly get from field
+        GETTER_SETTER  // use getter and setter
     }
 }

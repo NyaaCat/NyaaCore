@@ -14,8 +14,12 @@ public class Pair<K, V> implements Map.Entry<K, V> {
     }
 
     public Pair(Map.Entry<? extends K, ? extends V> entry) {
-        this.key   = entry.getKey();
+        this.key = entry.getKey();
         this.value = entry.getValue();
+    }
+
+    public static <Ks, Vs> Pair<Ks, Vs> of(Ks key, Vs value) {
+        return new Pair<>(key, value);
     }
 
     @Override
@@ -60,9 +64,5 @@ public class Pair<K, V> implements Map.Entry<K, V> {
     @Override
     public String toString() {
         return key + "=" + value;
-    }
-
-    public static <Ks, Vs> Pair<Ks, Vs> of(Ks key, Vs value) {
-        return new Pair<>(key, value);
     }
 }

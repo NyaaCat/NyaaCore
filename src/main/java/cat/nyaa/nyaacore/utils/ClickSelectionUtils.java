@@ -19,26 +19,11 @@ public class ClickSelectionUtils {
     private static final Map<UUID, Consumer<Location>> callbackMap = new HashMap<>();
     private static final Map<UUID, BukkitRunnable> timeoutListener = new HashMap<>();
 
-    public static class _Listener implements Listener {
-        @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-        public void onRightClickBlock(PlayerInteractEvent ev) {
-            if (callbackMap.containsKey(ev.getPlayer().getUniqueId()) && ev.hasBlock() && ev.getAction() == Action.RIGHT_CLICK_BLOCK) {
-                Block b = ev.getClickedBlock();
-                Consumer<Location> cb = callbackMap.remove(ev.getPlayer().getUniqueId());
-                BukkitRunnable tl = timeoutListener.remove(ev.getPlayer().getUniqueId());
-
-                if (tl == null || !tl.isCancelled()) {
-                    cb.accept(b.getLocation());
-                    ev.setCancelled(true);
-                }
-            }
-        }
-    }
-
     /**
      * Callback will be invoked if the player right clicked on a block, or the timer goes off.
-     * @param player the player
-     * @param timeout seconds, must positive
+     *
+     * @param player   the player
+     * @param timeout  seconds, must positive
      * @param callback if timeout, the parameter will be null
      */
     public static void registerRightClickBlock(UUID player, int timeout, Consumer<Location> callback, Plugin plugin) {
@@ -60,5 +45,21 @@ public class ClickSelectionUtils {
         };
         runnable.runTaskLater(plugin, timeout * 20);
         timeoutListener.put(player, runnable);
+    }
+
+    public static class _Listener implements Listener {
+        @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+        public void onRightClickBlock(PlayerInteractEvent ev) {
+            if (callbackMap.containsKey(ev.getPlayer().getUniqueId()) && ev.hasBlock() && ev.getAction() == Action.RIGHT_CLICK_BLOCK) {
+                Block b = ev.getClickedBlock();
+                Consumer<Location> cb = callbackMap.remove(ev.getPlayer().getUniqueId());
+                BukkitRunnable tl = timeoutListener.remove(ev.getPlayer().getUniqueId());
+
+                if (tl == null || !tl.isCancelled()) {
+                    cb.accept(b.getLocation());
+                    ev.setCancelled(true);
+                }
+            }
+        }
     }
 }

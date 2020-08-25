@@ -9,21 +9,21 @@ import cat.nyaa.nyaacore.utils.ClickSelectionUtils;
 import cat.nyaa.nyaacore.utils.OfflinePlayerUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
-import org.bukkit.craftbukkit.v1_16_R1.util.CraftMagicNumbers;
+import org.bukkit.craftbukkit.v1_16_R2.util.CraftMagicNumbers;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class NyaaCoreLoader extends JavaPlugin {
+    public static final String TARGET_MAPPING = "a69acbca3007d2ae1b4b69881f0ab9ad";
     private static NyaaCoreLoader instance;
+
+    static {
+        ConfigurationSerialization.registerClass(NbtItemStack.class);
+    }
+
     public TimerManager timerManager;
 
     public static NyaaCoreLoader getInstance() {
         return instance;
-    }
-
-    public static final String TARGET_MAPPING = "a69acbca3007d2ae1b4b69881f0ab9ad";
-
-    static {
-        ConfigurationSerialization.registerClass(NbtItemStack.class);
     }
 
     @Override
@@ -37,10 +37,10 @@ public class NyaaCoreLoader extends JavaPlugin {
     public void onEnable() {
         try {
             boolean check = MappingChecker.check();
-            if (!check){
+            if (!check) {
                 getLogger().severe("CraftBukkit Mapping changed! Use with caution!");
             }
-        } catch (NoSuchMethodError e){
+        } catch (NoSuchMethodError e) {
             getLogger().info("Cannot detect CraftBukkit Mapping!");
         }
         HttpClient.init(0);

@@ -31,6 +31,15 @@ public class BasicItemMatcher implements ISerializable {
     @Serializable
     public MatchingMode repairCostMatch = MatchingMode.EXACT;
 
+    public static boolean containsMatch(Collection<BasicItemMatcher> list, ItemStack item) {
+        for (BasicItemMatcher m : list) {
+            if (m.matches(item)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public boolean matches(ItemStack anotherItem) {
         ItemStack base = itemTemplate.clone();
         ItemStack given = anotherItem.clone();
@@ -47,8 +56,8 @@ public class BasicItemMatcher implements ISerializable {
             return false;
         }
 
-        int baseDamage = ((Damageable)baseItemMeta).getDamage();
-        int givenDamage = ((Damageable)givenItemMeta).getDamage();
+        int baseDamage = ((Damageable) baseItemMeta).getDamage();
+        int givenDamage = ((Damageable) givenItemMeta).getDamage();
         if (minDamageValue == -2 && givenDamage < baseDamage) return false;
         if (minDamageValue >= 0 && givenDamage < minDamageValue) return false;
         if (maxDamageValue == -2 && givenDamage > baseDamage) return false;
@@ -83,9 +92,7 @@ public class BasicItemMatcher implements ISerializable {
             for (int i = 0; i < givenLore.length; i++) givenLore[i] = ChatColor.stripColor(givenLore[i]);
             if (!Arrays.deepEquals(baseLore, givenLore)) return false;
         }
-        if (loreMatch == MatchingMode.CONTAINS_TEXT && !containStrArr(givenLore, baseLore, true)) return false;
-
-        return true;
+        return loreMatch != MatchingMode.CONTAINS_TEXT || containStrArr(givenLore, baseLore, true);
     }
 
     private String getDisplayName(ItemStack i) {
@@ -115,15 +122,6 @@ public class BasicItemMatcher implements ISerializable {
         EXACT_TEXT, // ignore the control chars for strings.
         CONTAINS,
         CONTAINS_TEXT,  // ignore the control chars for strings.
-        ARBITRARY;
-    }
-
-    public static boolean containsMatch(Collection<BasicItemMatcher> list, ItemStack item) {
-        for (BasicItemMatcher m : list) {
-            if (m.matches(item)) {
-                return true;
-            }
-        }
-        return false;
+        ARBITRARY
     }
 }
