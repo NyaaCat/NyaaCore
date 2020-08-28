@@ -13,7 +13,7 @@ import org.bukkit.craftbukkit.v1_16_R2.util.CraftMagicNumbers;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class NyaaCoreLoader extends JavaPlugin {
-    public static final String TARGET_MAPPING = "a69acbca3007d2ae1b4b69881f0ab9ad";
+    public static final String TARGET_MAPPING = "c2d5d7871edcc4fb0f81d18959c647af";
     private static NyaaCoreLoader instance;
 
     static {
@@ -38,10 +38,10 @@ public class NyaaCoreLoader extends JavaPlugin {
         try {
             boolean check = MappingChecker.check();
             if (!check) {
-                getLogger().severe("CraftBukkit Mapping changed! Use with caution!");
+                getLogger().severe("Unsupported NMS Mapping version detected. Unexpected error may occurred.");
             }
         } catch (NoSuchMethodError e) {
-            getLogger().info("Cannot detect CraftBukkit Mapping!");
+            getLogger().info("Can not detect CraftBukkit NMS Mapping version. Unexpected error may occurred.");
         }
         HttpClient.init(0);
         IMessageQueue.DefaultMessageQueue defaultMessageQueue = new IMessageQueue.DefaultMessageQueue();
