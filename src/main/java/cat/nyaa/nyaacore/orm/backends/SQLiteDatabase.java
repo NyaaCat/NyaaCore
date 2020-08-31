@@ -30,7 +30,7 @@ public class SQLiteDatabase implements IConnectedDatabase {
     private static String getTableCreationScheme(ObjectFieldModifier fm) {
         String ret = fm.name + " " + fm.columnDefinition;
         if (fm.primary) ret += " PRIMARY KEY";
-        else if (!fm.nullable) ret += " NOT NULL";
+        if (!fm.nullable) ret += " NOT NULL";
         if (fm.autoIncrement) ret += " AUTOINCREMENT";
         if (fm.unique) ret += " UNIQUE";
         return ret;
