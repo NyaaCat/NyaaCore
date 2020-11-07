@@ -1,11 +1,11 @@
 package cat.nyaa.nyaacore.utils;
 
-import net.minecraft.server.v1_16_R2.EntityPlayer;
-import net.minecraft.server.v1_16_R2.EnumHand;
-import net.minecraft.server.v1_16_R2.PacketPlayOutSetSlot;
+import net.minecraft.server.v1_16_R3.EntityPlayer;
+import net.minecraft.server.v1_16_R3.EnumHand;
+import net.minecraft.server.v1_16_R3.PacketPlayOutSetSlot;
 import org.bukkit.Material;
-import org.bukkit.craftbukkit.v1_16_R2.entity.CraftPlayer;
-import org.bukkit.craftbukkit.v1_16_R2.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_16_R3.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_16_R3.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -23,7 +23,7 @@ public class PlayerUtils {
         if (player.playerConnection == null) {
             return;
         }
-        if (index < net.minecraft.server.v1_16_R2.PlayerInventory.getHotbarSize()) {
+        if (index < net.minecraft.server.v1_16_R3.PlayerInventory.getHotbarSize()) {
             index += 36;
         } else if (index > 39) {
             index += 5;
