@@ -14,12 +14,32 @@ public class HexColorUtils {
     //Extracted from EssentialsX
     private static final Pattern REPLACE_ALL_RGB_PATTERN = Pattern.compile("(&)?&#([0-9a-fA-F]{6})");
     private static final Pattern REPLACE_ALL_PATTERN = Pattern.compile("(&)?&([0-9a-fk-orA-FK-OR])");
+    private static final Pattern LOGCOLOR_PATTERN = Pattern.compile("\\x1B\\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]");
 
     private static String replaceFormat(final String input) {
         if (input == null) {
             return null;
         }
         return replaceColor(input, EnumSet.allOf(ChatColor.class), true);
+    }
+
+    //This method is used to simply strip the & convention colour codes
+    public static String stripEssentialsFormat(final String input) {
+        if (input == null) {
+            return null;
+        }
+        return stripColor(input, REPLACE_ALL_PATTERN);
+    }
+
+    static String stripColor(final String input, final Pattern pattern) {
+        return pattern.matcher(input).replaceAll("");
+    }
+
+    public static String stripLogColorFormat(final String input) {
+        if (input == null) {
+            return null;
+        }
+        return stripColor(input, LOGCOLOR_PATTERN);
     }
 
     private static String replaceColor(final String input, final Set<ChatColor> supported, boolean rgb) {
