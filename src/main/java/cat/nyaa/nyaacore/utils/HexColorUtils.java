@@ -28,7 +28,7 @@ public class HexColorUtils {
         if (input == null) {
             return null;
         }
-        return stripColor(input, REPLACE_ALL_PATTERN);
+        return stripColor(stripColor(input, REPLACE_ALL_PATTERN), REPLACE_ALL_RGB_PATTERN);
     }
 
     static String stripColor(final String input, final Pattern pattern) {
