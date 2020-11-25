@@ -1,5 +1,6 @@
 package cat.nyaa.nyaacore.utils;
 
+import net.milkbowl.vault.chat.Chat;
 import org.bukkit.ChatColor;
 
 import java.awt.*;
@@ -14,53 +15,6 @@ public class HexColorUtils {
     private static final Pattern REPLACE_ALL_RGB_PATTERN = Pattern.compile("(&)?&#([0-9a-fA-F]{6})");
     private static final Pattern REPLACE_ALL_PATTERN = Pattern.compile("(&)?&([0-9a-fk-orA-FK-OR])");
     private static final Pattern LOGCOLOR_PATTERN = Pattern.compile("\\x1B\\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]");
-    //Vanilla patterns used to strip existing formats
-    private static final Pattern STRIP_ALL_PATTERN = Pattern.compile("\u00a7+([0-9a-fk-orA-FK-OR])");
-    //Pattern used to strip md_5 legacy hex hack
-    private static final Pattern STRIP_RGB_PATTERN = Pattern.compile("\u00a7x((?:\u00a7[0-9a-fA-F]){6})");
-
-
-    public static String unformatString(String message) {
-        if (message == null) {
-            return null;
-        }
-        EnumSet<ChatColor> supported = getSupported();
-
-        // RGB Codes
-        StringBuffer rgbBuilder = new StringBuffer();
-        Matcher rgbMatcher = STRIP_RGB_PATTERN.matcher(message);
-        boolean rgb = true;
-        while (rgbMatcher.find()) {
-            String code = rgbMatcher.group(1).replace("\u00a7", "");
-            if (rgb) {
-                rgbMatcher.appendReplacement(rgbBuilder, "&#" + code);
-                continue;
-            }
-            rgbMatcher.appendReplacement(rgbBuilder, "");
-        }
-        rgbMatcher.appendTail(rgbBuilder);
-        message = rgbBuilder.toString(); // arreter de parler
-
-        // Legacy Colors
-        StringBuffer builder = new StringBuffer();
-        Matcher matcher = STRIP_ALL_PATTERN.matcher(message);
-        searchLoop: while (matcher.find()) {
-            char code = matcher.group(1).toLowerCase(Locale.ROOT).charAt(0);
-            for (ChatColor color : supported) {
-                if (color.getChar() == code) {
-                    matcher.appendReplacement(builder, "&" + code);
-                    continue searchLoop;
-                }
-            }
-            matcher.appendReplacement(builder, "");
-        }
-        matcher.appendTail(builder);
-        return builder.toString();
-    }
-
-    private static EnumSet<ChatColor> getSupported() {
-        return EnumSet.allOf(ChatColor.class);
-    }
 
     private static String replaceFormat(final String input) {
         if (input == null) {
