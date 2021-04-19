@@ -162,6 +162,16 @@ public class Arguments {
         }
     }
 
+    public Integer nextInt(Integer defaultVal){
+        int curIndex = index;
+        try{
+            return nextInt();
+        }catch (Throwable e){
+            index = curIndex;
+            return defaultVal;
+        }
+    }
+
     public long nextLong() {
         String str = next();
         if (str == null) throw new BadCommandException("internal.error.no_more_int");
@@ -170,6 +180,16 @@ public class Arguments {
             return Long.parseLong(str);
         } catch (NumberFormatException ex) {
             throw new BadCommandException("internal.error.bad_int", ex, str);
+        }
+    }
+
+    public Long nextLong(Long defaultVal){
+        int curIndex = index;
+        try{
+            return nextLong();
+        }catch (Throwable e){
+            index = curIndex;
+            return defaultVal;
         }
     }
 
@@ -186,11 +206,31 @@ public class Arguments {
         }
     }
 
+    public Double nextDouble(Double defaultVal){
+        int curIndex = index;
+        try{
+            return nextDouble();
+        }catch (Throwable e){
+            index = curIndex;
+            return defaultVal;
+        }
+    }
+
     // throw exception if no string found
     public String nextString() {
         String str = next();
         if (str == null) throw new BadCommandException("internal.error.no_more_string");
         return str;
+    }
+
+    public String nextString(String defaultVal){
+        int curIndex = index;
+        try{
+            return nextString();
+        }catch (Throwable e){
+            index = curIndex;
+            return defaultVal;
+        }
     }
 
     public double nextDouble(String pattern) {
@@ -208,16 +248,46 @@ public class Arguments {
         }
     }
 
+    public Double nextDouble(String pattern, Double defaultVal){
+        int curIndex = index;
+        try{
+            return nextDouble(pattern);
+        }catch (Throwable e){
+            index = curIndex;
+            return defaultVal;
+        }
+    }
+
     public <T extends Enum<T>> T nextEnum(Class<T> cls) {
         String str = next();
         if (str == null) throw new BadCommandException("internal.error.no_more_enum");
         return parseEnum(cls, str);
     }
 
+    public <T extends Enum<T>> T nextEnum(Class<T> cls, T defaultVal){
+        int curIndex = index;
+        try{
+            return nextEnum(cls);
+        }catch (Throwable e){
+            index = curIndex;
+            return defaultVal;
+        }
+    }
+
     public boolean nextBoolean() {
         String str = next();
         if (str == null) throw new BadCommandException("internal.error.no_more_bool");
         return Boolean.parseBoolean(str);
+    }
+
+    public Boolean nextBoolean(Boolean defaultVal){
+        int curIndex = index;
+        try{
+            return nextBoolean();
+        }catch (Throwable e){
+            index = curIndex;
+            return defaultVal;
+        }
     }
 
     public Player nextPlayer() {
@@ -244,6 +314,16 @@ public class Arguments {
         Player p = Bukkit.getPlayer(name);
         if (p == null) throw new BadCommandException("internal.error.player_not_found", name);
         return p;
+    }
+
+    public Player nextPlayer(Player defaultVal){
+        int curIndex = index;
+        try{
+            return nextPlayer();
+        }catch (Throwable e){
+            index = curIndex;
+            return defaultVal;
+        }
     }
 
     public Player nextPlayerByName() {
@@ -281,6 +361,16 @@ public class Arguments {
         Player p = Bukkit.getPlayer(name);
         if (p == null) throw new BadCommandException("internal.error.entity_not_found", name);
         return p;
+    }
+
+    public Entity nextEntity(Entity defaultVal){
+        int curIndex = index;
+        try{
+            return nextEntity();
+        }catch (Throwable e){
+            index = curIndex;
+            return defaultVal;
+        }
     }
 
     public Entity nextEntityOrSender() {
