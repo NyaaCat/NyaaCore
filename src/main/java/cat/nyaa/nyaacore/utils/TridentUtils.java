@@ -1,8 +1,8 @@
 package cat.nyaa.nyaacore.utils;
 
-import net.minecraft.server.v1_16_R3.EntityThrownTrident;
-import org.bukkit.craftbukkit.v1_16_R3.entity.CraftEntity;
-import org.bukkit.craftbukkit.v1_16_R3.inventory.CraftItemStack;
+import net.minecraft.world.entity.projectile.EntityThrownTrident;
+import org.bukkit.craftbukkit.v1_17_R1.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_17_R1.inventory.CraftItemStack;
 import org.bukkit.entity.Trident;
 import org.bukkit.inventory.ItemStack;
 
@@ -25,13 +25,15 @@ public final class TridentUtils {
 
     public static ItemStack getTridentItemStack(Trident entity) {
         EntityThrownTrident thrownTrident = (EntityThrownTrident) ((CraftEntity) entity).getHandle();
-        net.minecraft.server.v1_16_R3.ItemStack nmsItemStack = thrownTrident.trident;
+        // net.minecraft.server.v1_16_R3.ItemStack nmsItemStack = thrownTrident.trident;
+        net.minecraft.world.item.ItemStack nmsItemStack = thrownTrident.aq;
         return CraftItemStack.asBukkitCopy(nmsItemStack);
     }
 
     public static void setTridentItemStack(Trident entity, ItemStack itemStack) {
         EntityThrownTrident thrownTrident = (EntityThrownTrident) ((CraftEntity) entity).getHandle();
-        thrownTrident.trident = CraftItemStack.asNMSCopy(itemStack);
+        // thrownTrident.trident = CraftItemStack.asNMSCopy(itemStack);
+        thrownTrident.aq = CraftItemStack.asNMSCopy(itemStack);
     }
 
     public static boolean getTridentDealtDamage(Trident entity) {
