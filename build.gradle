@@ -88,9 +88,7 @@ dependencies {
 
 // artifacts
 shadowJar {
-    archiveBaseName.set("${archivesBaseName}-shadowed")
-    archiveClassifier.set('')
-    archiveVersion.set("$version")
+    archiveClassifier.set("shadowed")
 }
 
 task sourcesJar(type: Jar) {
