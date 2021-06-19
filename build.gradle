@@ -1,7 +1,7 @@
 plugins {
     id 'java-library'
     id 'maven-publish'
-    id 'com.github.johnrengelman.shadow' version '2.0.4'
+    id 'com.github.johnrengelman.shadow' version '7.0.0'
 }
 
 ext.majorVersion = 8
@@ -88,7 +88,9 @@ dependencies {
 
 // artifacts
 shadowJar {
-    archiveFileName = "${archivesBaseName}-${archiveVersion}-shadowed.${archiveExtension}"
+    archiveBaseName.set("${archivesBaseName}-shadowed")
+    archiveClassifier.set('')
+    archiveVersion.set("$version")
 }
 
 task sourcesJar(type: Jar) {
