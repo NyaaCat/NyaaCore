@@ -3,7 +3,7 @@ pipeline {
     stages {
         stage('Build') {
             tools {
-                jdk "jdk11"
+                jdk "openjdk11"
             }
             steps {
                 sh './gradlew shadowJar publish'
