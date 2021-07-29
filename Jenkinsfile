@@ -2,6 +2,9 @@ pipeline {
     agent any
     stages {
         stage('Build') {
+            tools {
+                jdk "jdk11"
+            }
             steps {
                 sh './gradlew shadowJar publish'
             }
