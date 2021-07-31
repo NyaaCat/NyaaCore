@@ -59,31 +59,6 @@ public final class ReflectionUtils {
     }
 
     /**
-     * Get an NMS Class
-     *
-     * @param nmsClassName The name of the class
-     * @return The class
-     */
-    public static Class<?> getNMSClass(String nmsClassName) {
-        if (loadedNMSClasses.containsKey(nmsClassName)) {
-            return loadedNMSClasses.get(nmsClassName);
-        }
-
-        String clazzName = "net.minecraft.server." + getVersion() + nmsClassName;
-        Class<?> clazz;
-
-        try {
-            clazz = Class.forName(clazzName);
-        } catch (Throwable t) {
-            t.printStackTrace();
-            return loadedNMSClasses.put(nmsClassName, null);
-        }
-
-        loadedNMSClasses.put(nmsClassName, clazz);
-        return clazz;
-    }
-
-    /**
      * Get a class from the org.bukkit.craftbukkit package
      *
      * @param obcClassName the path to the class
