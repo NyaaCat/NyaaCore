@@ -10,13 +10,13 @@ import java.lang.reflect.Field;
 
 public final class TridentUtils {
 
-    private static final Class<?> entityThrownTrident = ReflectionUtils.getNMSClass("EntityThrownTrident");
+    private static final Class<?> entityThrownTrident = net.minecraft.world.entity.projectile.EntityThrownTrident.class;
 
     private static Field entityThrownTridentFieldAx;
 
     static {
         try {
-            entityThrownTridentFieldAx = entityThrownTrident.getDeclaredField("ax");
+            entityThrownTridentFieldAx = entityThrownTrident.getDeclaredField("ar");//TODO : 1.17 = ar , add 1.17.1 support
             entityThrownTridentFieldAx.setAccessible(true);
         } catch (NoSuchFieldException e) {
             e.printStackTrace();
