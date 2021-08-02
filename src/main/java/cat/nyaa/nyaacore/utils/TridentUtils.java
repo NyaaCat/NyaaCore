@@ -12,12 +12,12 @@ public final class TridentUtils {
 
     private static final Class<?> entityThrownTrident = net.minecraft.world.entity.projectile.EntityThrownTrident.class;
 
-    private static Field entityThrownTridentFieldAx;
+    private static Field entityThrownTridentFieldDealtDamage;
 
     static {
         try {
-            entityThrownTridentFieldAx = entityThrownTrident.getDeclaredField("ar");//TODO : 1.17 = ar , add 1.17.1 support
-            entityThrownTridentFieldAx.setAccessible(true);
+            entityThrownTridentFieldDealtDamage = entityThrownTrident.getDeclaredField("ar");//1.17&1.17.1 = ar,1.16.3 = ai(not support)
+            entityThrownTridentFieldDealtDamage.setAccessible(true);
         } catch (NoSuchFieldException e) {
             e.printStackTrace();
         }
@@ -39,7 +39,7 @@ public final class TridentUtils {
     public static boolean getTridentDealtDamage(Trident entity) {
         try {
             EntityThrownTrident thrownTrident = (EntityThrownTrident) ((CraftEntity) entity).getHandle();
-            return (boolean) entityThrownTridentFieldAx.get(thrownTrident);
+            return (boolean) entityThrownTridentFieldDealtDamage.get(thrownTrident);
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         }
@@ -48,7 +48,7 @@ public final class TridentUtils {
     public static void setTridentDealtDamage(Trident entity, boolean dealtDamage) {
         try {
             EntityThrownTrident thrownTrident = (EntityThrownTrident) ((CraftEntity) entity).getHandle();
-            entityThrownTridentFieldAx.set(thrownTrident, dealtDamage);
+            entityThrownTridentFieldDealtDamage.set(thrownTrident, dealtDamage);
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         }

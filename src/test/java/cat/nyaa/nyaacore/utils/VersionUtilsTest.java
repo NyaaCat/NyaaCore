@@ -17,24 +17,27 @@ public class VersionUtilsTest {
 
     @Test
     public void test2() throws Exception {
-        int[] res1 = VersionUtils.splitVersionStringToInt("1.17.1R1");
+        int[] res1 = VersionUtils.splitVersionStringToIntArray("1.17.1R1");
         assert (Arrays.equals(res1, new int[]{1, 17, 1, 1}));
-        int[] res2 = VersionUtils.splitVersionStringToInt("1.17.1R1_2");
+        int[] res2 = VersionUtils.splitVersionStringToIntArray("1.17.1R1_2");
         assert (Arrays.equals(res2, new int[]{1, 17, 1, 1, 2}));
-        int[] res3 = VersionUtils.splitVersionStringToInt("1.17.1R1_2A");
+        int[] res3 = VersionUtils.splitVersionStringToIntArray("1.17.1R1_2A");
         assert (Arrays.equals(res3, new int[]{1, 17, 1, 1, 2}));
+        int[] res4 = VersionUtils.splitVersionStringToIntArray("1.17.1R1_2A.0.1.0000.00.0a");
+        assert (Arrays.equals(res4, new int[]{1, 17, 1, 1, 2, 0, 1}));
     }
+
     @Test
     public void test3() throws Exception {
-        boolean res1 = VersionUtils.isVersionGreaterOrEq("1.17.1R1","1.17.1R2");
+        boolean res1 = VersionUtils.isVersionGreaterOrEq("1.17.1R1", "1.17.1R2");
         assert (!res1);
-        boolean res2 = VersionUtils.isVersionGreaterOrEq("1.17.1R1","1.17.1R1");
+        boolean res2 = VersionUtils.isVersionGreaterOrEq("1.17.1R1", "1.17.1R1");
         assert (res2);
-        boolean res3 = VersionUtils.isVersionGreaterOrEq("1.17.1","1.17.1R0");
-        assert (!res3);
-        boolean res4 = VersionUtils.isVersionGreaterOrEq("1.16.3","1.17.1R0");
+        boolean res3 = VersionUtils.isVersionGreaterOrEq("1.17.1", "1.17.1R0");
+        assert (res3);
+        boolean res4 = VersionUtils.isVersionGreaterOrEq("1.16.3", "1.17.1R0");
         assert (!res4);
-        boolean res5 = VersionUtils.isVersionGreaterOrEq("1.18.1R3","1.17.1R0");
+        boolean res5 = VersionUtils.isVersionGreaterOrEq("1.18.1R3", "1.17.1R0");
         assert (res5);
     }
 }
