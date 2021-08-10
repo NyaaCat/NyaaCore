@@ -65,7 +65,7 @@ repositories {
 dependencies {
     // spigot dependencies
     compileOnly "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT"
-    compileOnly 'io.netty:netty-all:4.1.25.Final' // netty is shadowed inside spigot jar
+    compileOnly 'io.netty:netty-all:4.1.66.Final' // netty is shadowed inside spigot jar
     compileOnly files(spigotNmsPath)    // for NMS
 
     // other plugins
@@ -73,17 +73,17 @@ dependencies {
     compileOnly('net.ess3:EssentialsX:2.18.0') { transitive = false }      // soft dep
 
     // 3rd party packages to be shadowed
-    api 'com.udojava:EvalEx:2.1'
-    shadow 'com.udojava:EvalEx:2.1'
+    api 'com.udojava:EvalEx:2.6'
+    shadow 'com.udojava:EvalEx:2.6'
     api 'co.aikar:taskchain-bukkit:3.7.2'
     shadow "co.aikar:taskchain-bukkit:3.7.2"
 
     // Testing
-    testImplementation 'junit:junit:4.12'
+    testImplementation 'junit:junit:4.13.2'
     testImplementation files(spigotNmsPath)
-    testImplementation 'org.mockito:mockito-core:2.18.3'
-    testImplementation 'org.xerial:sqlite-jdbc:3.21.0.1'
-    testImplementation 'ch.vorburger.mariaDB4j:mariaDB4j:2.2.3'
+    testImplementation 'org.mockito:mockito-core:3.11.2'
+    testImplementation 'org.xerial:sqlite-jdbc:3.36.0.1'
+    testImplementation 'ch.vorburger.mariaDB4j:mariaDB4j:2.4.0'
 }
 
 // artifacts
@@ -129,6 +129,9 @@ publishing {
 }
 
 javadoc {
+    // javadoc output folder
+    if (project.jdDirectory != null) destinationDir = file("${jdDirectory}/${pluginNameLower}-${version}")
+
     (options as StandardJavadocDocletOptions).with {
         links 'https://docs.oracle.com/en/java/javase/16/docs/api/'
         links 'https://hub.spigotmc.org/javadocs/spigot/'
