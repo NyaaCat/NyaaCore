@@ -4,6 +4,9 @@ plugins {
     id 'com.github.johnrengelman.shadow' version '7.0.0'
 }
 
+ext.pluginNameUpper = "NyaaCore"
+ext.pluginNameLower = ext.pluginNameUpper.toLowerCase()
+
 ext.majorVersion = 8
 ext.minorVersion = 1
 ext.minecraftVersion = "1.17"
@@ -43,7 +46,7 @@ println ("Found NMS jar: ${spigotNmsPath}")
 
 // Version used for distribution. Different from maven repo
 group = "cat.nyaa"
-archivesBaseName = "NyaaCore-mc$minecraftVersion"
+archivesBaseName = "${pluginNameUpper}-mc$minecraftVersion"
 version = "$majorVersion.$minorVersion.$buildNumber".toString()
 
 // extra compile warnings
@@ -95,10 +98,6 @@ task sourcesJar(type: Jar) {
     archiveClassifier.set('sources')
     from sourceSets.main.java.srcDirs
 }
-// write javadocs to an external folder which can be served via nginx
-if (ext.jdDirectory != null) {
-    javadoc.destinationDir = file("${jdDirectory}/nyaacore-${version}")
-}
 task javadocJar(type: Jar, dependsOn: javadoc) {
     archiveClassifier.set('javadoc')
     from javadoc.destinationDir
@@ -113,17 +112,18 @@ processResources { // modify version string
 publishing {
     publications {
         mavenJava(MavenPublication) {
+            group      project.group
+            artifactId pluginNameLower
+            version    "$majorVersion.$minorVersion-SNAPSHOT"
+
+            from components.java
             artifact sourcesJar
             artifact javadocJar
-            groupId "cat.nyaa"
-            artifactId "nyaacore"
-            version "$majorVersion.$minorVersion-SNAPSHOT"
-            from components.java
         }
     }
     repositories {
         maven {
-            url "$mavenDirectory"
+            url mavenDirectory
         }
     }
 }
@@ -146,7 +146,7 @@ javadoc {
 
         options.addBooleanOption('html5', true)
 
-        windowTitle = "NyaaCore Javadoc"
-        docTitle = "NyaaCore (mc$minecraftVersion-${project.version})"
+        windowTitle = "${pluginNameUpper} Javadoc"
+        docTitle = "${pluginNameUpper} (mc$minecraftVersion-${project.version})"
     }
 }
