@@ -35,7 +35,7 @@ public final class ItemStackUtils {
     private static final int currentDataVersion;
     private static final Cache<String, List<ItemStack>> itemDeserializerCache = CacheBuilder.newBuilder()
             .weigher((String k, List<ItemStack> v) -> k.getBytes().length)
-            .maximumWeight(100L * 1024 * 1024).build(); // Hard Coded 100M
+            .maximumWeight(256L * 1024 * 1024).build(); // Hard Coded 256M
     private static NBTReadLimiter unlimitedNBTReadLimiter = null;
 
     static {
