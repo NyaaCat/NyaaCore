@@ -94,7 +94,7 @@ public class RayTraceUtils {
     public static Entity getTargetEntity(LivingEntity entity, float maxDistance) {
         RayTraceResult r = entity.getWorld().rayTraceEntities(entity.getEyeLocation(), entity.getEyeLocation().getDirection(), maxDistance,
                 e -> e != null &&
-                        (e instanceof LivingEntity || e.getType() == EntityType.ITEM_FRAME) &&
+                        (e instanceof LivingEntity || e.getType() == EntityType.ITEM_FRAME || e.getType() == EntityType.GLOW_ITEM_FRAME) &&
                         !(e instanceof LivingEntity && !((LivingEntity) e).isCollidable()) &&
                         e.getUniqueId() != entity.getUniqueId() &&
                         !(e instanceof Player && ((Player) e).getGameMode() == GameMode.SPECTATOR));
