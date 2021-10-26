@@ -20,7 +20,7 @@ public class DatabaseUtils {
         if ("sqlite".equalsIgnoreCase(cfg.provider)) {
             return new SQLiteDatabase(newJdbcConnection(plugin, cfg));
         } else if ("mysql".equalsIgnoreCase(cfg.provider)) {
-            return new MysqlDatabase(newJdbcConnection(plugin, cfg));
+            throw new RuntimeException("NyaaCore ORM MySQL backend is not implemented");
         } else {
             throw new IllegalArgumentException("Invalid provider: " + cfg.provider);
         }
