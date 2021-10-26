@@ -62,7 +62,7 @@ repositories {
     maven { name 'vault-repo';  url 'https://nexus.hc.to/content/repositories/pub_releases' }
     maven { name 'EssentialsX'; url 'https://ci.ender.zone/plugin/repository/everything' }
     maven { name 'NyaaCat';     url 'https://ci.nyaacat.com/maven/' }
-    maven { name 'aikar';     url 'https://repo.aikar.co/content/groups/aikar/' }
+    maven { name 'aikar';       url 'https://repo.aikar.co/content/groups/aikar/' }
 }
 
 dependencies {
@@ -84,6 +84,7 @@ dependencies {
     // Testing
     testImplementation 'junit:junit:4.13.2'
     testImplementation files(spigotNmsPath)
+    testImplementation 'com.github.seeseemelk:MockBukkit-v1.17:1.7.0'
     testImplementation 'org.mockito:mockito-core:3.11.2'
     testImplementation 'org.xerial:sqlite-jdbc:3.36.0.1'
     testImplementation 'ch.vorburger.mariaDB4j:mariaDB4j:2.4.0'

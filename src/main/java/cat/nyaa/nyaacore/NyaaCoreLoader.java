@@ -10,7 +10,11 @@ import cat.nyaa.nyaacore.utils.OfflinePlayerUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.craftbukkit.v1_17_R1.util.CraftMagicNumbers;
+import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.plugin.java.JavaPluginLoader;
+
+import java.io.File;
 
 public class NyaaCoreLoader extends JavaPlugin {
     public static final String TARGET_MAPPING = "c2d5d7871edcc4fb0f81d18959c647af";
@@ -21,6 +25,14 @@ public class NyaaCoreLoader extends JavaPlugin {
     }
 
     public TimerManager timerManager;
+
+    public NyaaCoreLoader() {
+        super();
+    }
+
+    protected NyaaCoreLoader(JavaPluginLoader loader, PluginDescriptionFile description, File dataFolder, File file) {
+        super(loader, description, dataFolder, file);
+    }
 
     public static NyaaCoreLoader getInstance() {
         return instance;
@@ -40,7 +52,7 @@ public class NyaaCoreLoader extends JavaPlugin {
             if (!check) {
                 getLogger().severe("Unsupported NMS Mapping version detected. Unexpected error may occurred.");
             }
-        } catch (NoSuchMethodError e) {
+        } catch (NoSuchMethodError|ExceptionInInitializerError e) {
             getLogger().info("Can not detect CraftBukkit NMS Mapping version. Unexpected error may occurred.");
         }
         HttpClient.init(0);
