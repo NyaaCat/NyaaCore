@@ -1,17 +1,17 @@
-package cat.nyaa.nyaacoretester.cmdreceiver;
+package cat.nyaa.nyaacore.cmdreceiver.dispatchtest;
 
 import cat.nyaa.nyaacore.ILocalizer;
 import cat.nyaa.nyaacore.cmdreceiver.Arguments;
 import cat.nyaa.nyaacore.cmdreceiver.CommandReceiver;
 import cat.nyaa.nyaacore.cmdreceiver.SubCommand;
-import cat.nyaa.nyaacoretester.NyaaCoreTester;
 import org.bukkit.command.CommandSender;
+import org.bukkit.plugin.Plugin;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class CmdSub2 extends CommandReceiver {
-    public CmdSub2(NyaaCoreTester plugin, ILocalizer i18n) {
+    public CmdSub2(Plugin plugin, ILocalizer i18n) {
         super(plugin, i18n);
     }
 
@@ -26,11 +26,11 @@ public class CmdSub2 extends CommandReceiver {
     // call with: nct sub2 b {...}
     @SubCommand(value = "b", tabCompleter = "btc")
     public void sub3Cmd(CommandSender sender, Arguments args) {
-        CommandReceiverTest.touchMark("nct-sub2-b", args);
+        DispatchTest.callback.onCommand("nct-sub2-b", sender, args);
     }
 
     public List<String> btc(CommandSender sender, Arguments args) {
-        CommandReceiverTest.touchMark("nct-sub2-btc", args);
+        DispatchTest.callback.onTab("nct-sub2-btc", sender, args);
         String s = args.next();
         while (args.top() != null) s = args.next();
         List<String> ret = new ArrayList<>();

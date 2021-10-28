@@ -52,7 +52,7 @@ public class NyaaCoreLoader extends JavaPlugin {
             if (!check) {
                 getLogger().severe("Unsupported NMS Mapping version detected. Unexpected error may occurred.");
             }
-        } catch (NoSuchMethodError|ExceptionInInitializerError e) {
+        } catch (Throwable e) {
             getLogger().info("Can not detect CraftBukkit NMS Mapping version. Unexpected error may occurred.");
         }
         HttpClient.init(0);

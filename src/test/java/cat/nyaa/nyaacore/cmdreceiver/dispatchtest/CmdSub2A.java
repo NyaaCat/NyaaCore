@@ -1,18 +1,18 @@
-package cat.nyaa.nyaacoretester.cmdreceiver;
+package cat.nyaa.nyaacore.cmdreceiver.dispatchtest;
 
 import cat.nyaa.nyaacore.ILocalizer;
 import cat.nyaa.nyaacore.cmdreceiver.Arguments;
 import cat.nyaa.nyaacore.cmdreceiver.CommandReceiver;
 import cat.nyaa.nyaacore.cmdreceiver.SubCommand;
-import cat.nyaa.nyaacoretester.NyaaCoreTester;
 import org.bukkit.command.CommandSender;
+import org.bukkit.plugin.Plugin;
 import org.junit.Assert;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class CmdSub2A extends CommandReceiver {
-    public CmdSub2A(NyaaCoreTester plugin, ILocalizer i18n) {
+    public CmdSub2A(Plugin plugin, ILocalizer i18n) {
         super(plugin, i18n);
     }
 
@@ -24,13 +24,13 @@ public class CmdSub2A extends CommandReceiver {
     // call with: nct sub2 {[anything except "b" and "c"] ...}
     @SubCommand(isDefaultCommand = true)
     public void sub2ADef(CommandSender sender, Arguments args) {
-        CommandReceiverTest.touchMark("nct-sub2-a-<def>", args);
+        DispatchTest.callback.onCommand("nct-sub2-a-<def>", sender, args);
     }
 
     // call with: nct sub2 c {...}
     @SubCommand(value = "c", tabCompleter = "ctc")
     public void sub2AC(CommandSender sender, Arguments args) {
-        CommandReceiverTest.touchMark("nct-sub2-a-c", args);
+        DispatchTest.callback.onCommand("nct-sub2-a-c", sender, args);
     }
 
     // no way to call this sub command
@@ -40,7 +40,7 @@ public class CmdSub2A extends CommandReceiver {
     }
 
     public List<String> ctc(CommandSender sender, Arguments args) {
-        CommandReceiverTest.touchMark("nct-sub2a-ctc", args);
+        DispatchTest.callback.onTab("nct-sub2a-ctc", sender, args);
         String s = args.next();
         while (args.top() != null) s = args.next();
         List<String> ret = new ArrayList<>();
