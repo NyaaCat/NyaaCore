@@ -67,4 +67,66 @@ public class ArgumentsTest {
         assertEquals("3", arg.nextString());
         assertNull(arg.next());
     }
+
+    @Test
+    public void test6() throws Exception {
+        String cmd = "\"a\"b";
+        Arguments arg = Arguments.parse(cmd.split(" "), null);
+        assertNull(arg);
+
+        cmd = "`a`b";
+        arg = Arguments.parse(cmd.split(" "), null);
+        assertNull(arg);
+
+        cmd = "\"";
+        arg = Arguments.parse(cmd.split(" "), null);
+        assertNull(arg);
+
+        cmd = "`";
+        arg = Arguments.parse(cmd.split(" "), null);
+        assertNull(arg);
+
+        cmd = "\"\\";
+        arg = Arguments.parse(cmd.split(" "), null);
+        assertNull(arg);
+
+        cmd = "`\\";
+        arg = Arguments.parse(cmd.split(" "), null);
+        assertNull(arg);
+
+        cmd = "a\"";
+        arg = Arguments.parse(cmd.split(" "), null);
+        assertNull(arg);
+
+        cmd = "a`";
+        arg = Arguments.parse(cmd.split(" "), null);
+        assertNull(arg);
+
+        cmd = "a\\";
+        arg = Arguments.parse(cmd.split(" "), null);
+        assertNull(arg);
+
+        cmd = "`\\\"`";
+        arg = Arguments.parse(cmd.split(" "), null);
+        assertNull(arg);
+
+        cmd = "\"\\`\"";
+        arg = Arguments.parse(cmd.split(" "), null);
+        assertNull(arg);
+    }
+
+    @Test
+    public void test7() throws Exception {
+        String cmd;
+        Arguments arg;
+
+        cmd = "key1:\"foo\\\"\" \"ab cd\" key2:";
+        arg = Arguments.parse(cmd.split(" "), null);
+        assertNotNull(arg);
+        assertEquals("foo\"", arg.argString("key1"));
+        assertEquals("ab cd", arg.nextString());
+        assertEquals("", arg.argString("key2"));
+        assertNull(arg.next());
+
+    }
 }
