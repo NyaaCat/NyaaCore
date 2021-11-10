@@ -7,8 +7,9 @@ import cat.nyaa.nyaacore.cmdreceiver.Arguments;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.command.PluginCommandUtils;
-import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -35,15 +36,14 @@ public class DispatchTest {
 
     public static ICallback callback;
 
-    private ServerMock server;
-    private NyaaCoreLoader plugin;
-    private CmdRoot cmdRoot;
-    private PluginCommand cmd;
+    private static ServerMock server;
+    private static NyaaCoreLoader plugin;
+    private static CmdRoot cmdRoot;
+    private static PluginCommand cmd;
 
 
-    @Before
-    public void setUp() {
-        callback = Mockito.mock(ICallback.class);
+    @BeforeClass
+    public static void setUp() {
         server = MockBukkit.mock();
         plugin = MockBukkit.load(NyaaCoreLoader.class);
         cmdRoot = new CmdRoot(plugin);
@@ -53,9 +53,14 @@ public class DispatchTest {
         server.getCommandMap().register("nyaacoretest", cmd);
     }
 
-    @After
-    public void tearDown() {
+    @AfterClass
+    public static void tearDown() {
         MockBukkit.unmock();
+    }
+
+    @Before
+    public void setUpCallbackStub() {
+        callback = Mockito.mock(ICallback.class);
     }
 
     private Arguments invoke(String command, String mark) {
