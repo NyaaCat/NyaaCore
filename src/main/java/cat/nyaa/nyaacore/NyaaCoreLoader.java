@@ -41,7 +41,6 @@ public class NyaaCoreLoader extends JavaPlugin {
     @Override
     public void onLoad() {
         instance = this;
-        LanguageRepository.initInternalMap(this);
         //timerManager = new TimerManager(this);
     }
 
