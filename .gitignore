@@ -74,3 +74,4 @@ build
 !/gradle/wrapper/gradle-wrapper.jar
 /testdb.db
 /testdb.db-journal
+*.log
