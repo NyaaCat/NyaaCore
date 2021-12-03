@@ -3,7 +3,6 @@ package cat.nyaa.nyaacore;
 import cat.nyaa.nyaacore.component.IMessageQueue;
 import cat.nyaa.nyaacore.component.NyaaComponent;
 import cat.nyaa.nyaacore.configuration.NbtItemStack;
-import cat.nyaa.nyaacore.http.client.HttpClient;
 import cat.nyaa.nyaacore.timer.TimerManager;
 import cat.nyaa.nyaacore.utils.ClickSelectionUtils;
 import cat.nyaa.nyaacore.utils.OfflinePlayerUtils;
@@ -44,7 +43,6 @@ public class NyaaCoreLoader extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        HttpClient.init(0);
         IMessageQueue.DefaultMessageQueue defaultMessageQueue = new IMessageQueue.DefaultMessageQueue();
         Bukkit.getPluginManager().registerEvents(defaultMessageQueue, this);
         Bukkit.getPluginManager().registerEvents(new ClickSelectionUtils._Listener(), this);
@@ -56,7 +54,6 @@ public class NyaaCoreLoader extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        HttpClient.shutdown();
         //timerManager.save();
     }
 }
