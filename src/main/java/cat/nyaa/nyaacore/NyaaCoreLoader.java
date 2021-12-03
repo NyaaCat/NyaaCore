@@ -3,7 +3,6 @@ package cat.nyaa.nyaacore;
 import cat.nyaa.nyaacore.component.IMessageQueue;
 import cat.nyaa.nyaacore.component.NyaaComponent;
 import cat.nyaa.nyaacore.configuration.NbtItemStack;
-import cat.nyaa.nyaacore.timer.TimerManager;
 import cat.nyaa.nyaacore.utils.ClickSelectionUtils;
 import cat.nyaa.nyaacore.utils.OfflinePlayerUtils;
 import org.bukkit.Bukkit;
@@ -21,8 +20,6 @@ public class NyaaCoreLoader extends JavaPlugin {
         ConfigurationSerialization.registerClass(NbtItemStack.class);
     }
 
-    public TimerManager timerManager;
-
     public NyaaCoreLoader() {
         super();
     }
@@ -38,7 +35,6 @@ public class NyaaCoreLoader extends JavaPlugin {
     @Override
     public void onLoad() {
         instance = this;
-        //timerManager = new TimerManager(this);
     }
 
     @Override
@@ -49,11 +45,5 @@ public class NyaaCoreLoader extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new OfflinePlayerUtils._Listener(), this);
         NyaaComponent.register(IMessageQueue.class, defaultMessageQueue);
         OfflinePlayerUtils.init();
-        //timerManager.load();
-    }
-
-    @Override
-    public void onDisable() {
-        //timerManager.save();
     }
 }
