@@ -4,7 +4,7 @@ import net.minecraft.world.phys.Vec3D;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.GameMode;
 import org.bukkit.block.Block;
-import org.bukkit.craftbukkit.v1_17_R1.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_18_R1.entity.CraftEntity;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
@@ -38,7 +38,7 @@ public class RayTraceUtils {
         for (Entity e : player.getWorld().getNearbyEntities(player.getEyeLocation(), distance, distance, distance, predicate)) {
             if (e instanceof LivingEntity && e instanceof CraftEntity && e.isValid()) {
                 net.minecraft.world.entity.Entity nmsEntity = ((CraftEntity) e).getHandle();
-                Optional<Vec3D> hit = nmsEntity.getBoundingBox().b(toVec3DInternal(start), toVec3DInternal(end));
+                Optional<Vec3D> hit = nmsEntity.getBoundingBox().clip(toVec3DInternal(start), toVec3DInternal(end));
                 if (hit.isPresent()) {
                     result.add((LivingEntity) e);
                 }

@@ -14,7 +14,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.datafix.DataConverterRegistry;
 import net.minecraft.util.datafix.fixes.DataConverterTypes;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v1_17_R1.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_18_R1.inventory.CraftItemStack;
 import org.bukkit.inventory.ItemStack;
 
 import java.io.*;
@@ -54,7 +54,7 @@ public final class ItemStackUtils {
         net.minecraft.world.item.ItemStack nativeItemStack = CraftItemStack.asNMSCopy(itemStack);
         NBTTagCompound nbtTagCompound = new NBTTagCompound();
         nativeItemStack.save(nbtTagCompound);
-        nbtTagCompound.setInt(NYAACORE_ITEMSTACK_DATAVERSION_KEY, currentDataVersion);
+        nbtTagCompound.putInt(NYAACORE_ITEMSTACK_DATAVERSION_KEY, currentDataVersion);
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream dos = new DataOutputStream(baos);
@@ -78,13 +78,13 @@ public final class ItemStackUtils {
 
     public static ItemStack itemFromBinary(byte[] nbt, int offset, int len) throws IOException {
         if (unlimitedNBTReadLimiter == null) {
-            unlimitedNBTReadLimiter = NBTReadLimiter.a;
+            unlimitedNBTReadLimiter = NBTReadLimiter.UNLIMITED;
         }
 
         //Constructor<?> constructNativeItemStackFromNBTTagCompound = classNativeItemStack.getConstructor(classNBTTagCompound);
         ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(nbt, offset, len);
         DataInputStream dataInputStream = new DataInputStream(byteArrayInputStream);
-        NBTTagCompound reconstructedNBTTagCompound = NBTTagCompound.b.b(dataInputStream, 0, unlimitedNBTReadLimiter);
+        NBTTagCompound reconstructedNBTTagCompound = NBTTagCompound.TYPE.load(dataInputStream, 0, unlimitedNBTReadLimiter);
         dataInputStream.close();
         byteArrayInputStream.close();
         int dataVersion = reconstructedNBTTagCompound.getInt(NYAACORE_ITEMSTACK_DATAVERSION_KEY);
@@ -96,14 +96,14 @@ public final class ItemStackUtils {
             if (dataVersion <= 0) {
                 dataVersion = NYAACORE_ITEMSTACK_DEFAULT_DATAVERSION;
             }
-            DSL.TypeReference dataConverterTypes_ITEM_STACK = DataConverterTypes.m;
-            DynamicOpsNBT DynamicOpsNBT_instance = DynamicOpsNBT.a;
-            DataFixer dataFixer_instance = DataConverterRegistry.a();
+            DSL.TypeReference dataConverterTypes_ITEM_STACK = DataConverterTypes.ITEM_STACK;
+            DynamicOpsNBT DynamicOpsNBT_instance = DynamicOpsNBT.INSTANCE;
+            DataFixer dataFixer_instance = DataConverterRegistry.getDataFixer();
             Dynamic<NBTBase> dynamicInstance = new Dynamic<>(DynamicOpsNBT_instance, reconstructedNBTTagCompound);
             Dynamic<NBTBase> out = dataFixer_instance.update(dataConverterTypes_ITEM_STACK, dynamicInstance, dataVersion, currentDataVersion);
             reconstructedNBTTagCompound = (NBTTagCompound) out.getValue();
         }
-        net.minecraft.world.item.ItemStack reconstructedNativeItemStack = net.minecraft.world.item.ItemStack.a(reconstructedNBTTagCompound);
+        net.minecraft.world.item.ItemStack reconstructedNativeItemStack = net.minecraft.world.item.ItemStack.of(reconstructedNBTTagCompound);
         return CraftItemStack.asBukkitCopy(reconstructedNativeItemStack);
     }
 

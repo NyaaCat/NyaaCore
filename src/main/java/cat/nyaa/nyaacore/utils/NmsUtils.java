@@ -11,9 +11,9 @@ import net.minecraft.world.level.block.entity.TileEntity;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
-import org.bukkit.craftbukkit.v1_17_R1.CraftWorld;
-import org.bukkit.craftbukkit.v1_17_R1.entity.CraftEntity;
-import org.bukkit.craftbukkit.v1_17_R1.entity.CraftLivingEntity;
+import org.bukkit.craftbukkit.v1_18_R1.CraftWorld;
+import org.bukkit.craftbukkit.v1_18_R1.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_18_R1.entity.CraftLivingEntity;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 
@@ -40,26 +40,26 @@ public final class NmsUtils {
             NBTTagCompound nbtToBeMerged;
 
             try {
-                nbtToBeMerged = MojangsonParser.parse(tag);
+                nbtToBeMerged = MojangsonParser.parseTag(tag);
             } catch (CommandSyntaxException ex) {
                 throw new IllegalArgumentException("Invalid NBTTag string");
             }
 
-            NBTTagCompound nmsOrigNBT = CriterionConditionNBT.b(nmsEntity); // entity to nbt
-            NBTTagCompound nmsClonedNBT = nmsOrigNBT.clone(); // clone
-            nmsClonedNBT.a(nbtToBeMerged); // merge NBT
+            NBTTagCompound nmsOrigNBT = CriterionConditionNBT.getEntityTagToCompare(nmsEntity); // entity to nbt
+            NBTTagCompound nmsClonedNBT = nmsOrigNBT.copy(); // clone
+            nmsClonedNBT.merge(nbtToBeMerged); // merge NBT
             if (nmsClonedNBT.equals(nmsOrigNBT)) {
                 return;
             } else {
-                UUID uuid = nmsEntity.getUniqueID(); // store UUID
+                UUID uuid = nmsEntity.getUUID(); // store UUID
                 nmsEntity.load(nmsClonedNBT); // set nbt
-                nmsEntity.a_(uuid); // set uuid
+                nmsEntity.setUUID(uuid); // set uuid
             }
         }
     }
 
     public static boolean createExplosion(World world, Entity entity, double x, double y, double z, float power, boolean setFire, boolean breakBlocks) {
-        return !((CraftWorld) world).getHandle().createExplosion(((CraftEntity) entity).getHandle(), x, y, z, power, setFire, breakBlocks ? Explosion.Effect.b : Explosion.Effect.a).wasCanceled;
+        return !((CraftWorld) world).getHandle().explode(((CraftEntity) entity).getHandle(), x, y, z, power, setFire, breakBlocks ? Explosion.Effect.BREAK : Explosion.Effect.NONE).wasCanceled;
     }
 
     //**
