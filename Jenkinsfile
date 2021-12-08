@@ -3,10 +3,10 @@ pipeline {
     stages {
         stage('Build') {
             tools {
-                jdk "jdk16"
+                jdk "jdk17"
             }
             steps {
-                sh './gradlew shadowJar publish'
+                sh './gradlew reobfedJar publish'
             }
         }
     }
