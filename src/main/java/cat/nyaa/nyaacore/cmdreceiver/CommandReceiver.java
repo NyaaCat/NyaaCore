@@ -12,10 +12,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import java.lang.reflect.*;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -146,55 +143,6 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
         return false;
     }
 
-    /**
-     * @param plugin for logging purpose only
-     * @param m
-     * @return
-     */
-    private SubCommandInfo parseSubCommandAnnotation(Plugin plugin, Method m) {
-        SubCommand scAnno = m.getAnnotation(SubCommand.class);
-        if (scAnno == null) return null;
-
-        Class<?>[] params = m.getParameterTypes();
-        if (!(params.length == 2 &&
-                params[0] == CommandSender.class &&
-                params[1] == Arguments.class)) {
-            plugin.getLogger().warning(i18n.getFormatted("internal.error.bad_subcommand", m.toString()));
-            return null; // incorrect method signature
-        }
-        m.setAccessible(true);
-
-        Method tabm = null;
-        if (!scAnno.tabCompleter().isEmpty()) {
-            try {
-                tabm = m.getDeclaringClass().getDeclaredMethod(scAnno.tabCompleter(), CommandSender.class, Arguments.class);
-                tabm.setAccessible(true);
-            } catch (NoSuchMethodException ex) {
-                ex.printStackTrace();
-                plugin.getLogger().warning(i18n.getFormatted("internal.error.bad_subcommand", m.toString()));
-                return null;
-            }
-        }
-
-        if (!scAnno.value().isEmpty() && scAnno.isDefaultCommand()) {
-            // cannot be both subcommand and default command
-            plugin.getLogger().warning(i18n.getFormatted("internal.error.bad_subcommand", m.toString()));
-            return null;
-        } else if (!scAnno.value().isEmpty()) {
-            // subcommand
-            String subCommandName = scAnno.value();
-            String perm = scAnno.permission().isEmpty() ? null : scAnno.permission();
-            return new SubCommandInfo(subCommandName, perm, false, m, null, null, false, tabm);
-        } else if (scAnno.isDefaultCommand()) {
-            // default command
-            String perm = scAnno.permission().isEmpty() ? null : scAnno.permission();
-            return new SubCommandInfo(null, perm, false, m, null, null, true, tabm);
-        } else {
-            // not subcommand nor default command, remove the annotation
-            plugin.getLogger().warning(i18n.getFormatted("internal.error.bad_subcommand", m.toString()));
-            return null;
-        }
-    }
 //
 //    public List<String> getSubcommands() {
 //        ArrayList<String> ret = new ArrayList<>();
@@ -206,55 +154,76 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
 //        return ret;
 //    }
 
-    /**
-     * @param plugin for logging purpose only
-     * @param f
-     * @return
-     */
-    private SubCommandInfo parseSubCommandAnnotation(Plugin plugin, Field f) {
-        SubCommand scAnno = f.getAnnotation(SubCommand.class);
+    private SubCommandInfo getSubCommandInfo(Plugin plugin, AccessibleObject accessibleObject) {
+        if (!(accessibleObject instanceof Field || accessibleObject instanceof Method)) {
+            return null;
+        }
+        accessibleObject.setAccessible(true);
+        SubCommand scAnno = accessibleObject.getAnnotation(SubCommand.class);
         if (scAnno == null) return null;
 
-        if (!CommandReceiver.class.isAssignableFrom(f.getType())) {
-            plugin.getLogger().warning(i18n.getFormatted("internal.error.bad_subcommand", f.toString()));
-            return null; // incorrect field type
-        }
+        boolean isDefault = scAnno.isDefaultCommand();
+        boolean isField = accessibleObject instanceof Field;
+        String subCommandName = scAnno.value().isEmpty() ? null : scAnno.value();
+        String permission = scAnno.permission().isEmpty() ? null : scAnno.permission();
+        String tabCompleter = scAnno.tabCompleter().isEmpty() ? null : scAnno.tabCompleter();
+        CommandReceiver fieldValue = null;
+        Method method = null;
+        Field field = null;
+        Method tabCompleterMethod = null;
 
-        if (!scAnno.tabCompleter().isEmpty()) {
-            plugin.getLogger().warning(i18n.getFormatted("internal.error.bad_subcommand", f.toString()));
-            return null; // field-based subcommand does not need method-based tabcompletion
-        }
-
-        // try to instantiate sub command receiver
-        CommandReceiver obj;
-        try {
-            obj = newInstance(f.getType(), plugin, i18n);
-            f.setAccessible(true);
-            f.set(this, obj);
-        } catch (ReflectiveOperationException ex) {
-            plugin.getLogger().warning(i18n.getFormatted("internal.error.bad_subcommand", f.toString()));
-            ex.printStackTrace();
-            return null;
-        }
-
-        if (!scAnno.value().isEmpty() && scAnno.isDefaultCommand()) {
-            // cannot be both subcommand and default command
-            plugin.getLogger().warning(i18n.getFormatted("internal.error.bad_subcommand", f.toString()));
-            return null;
-        } else if (!scAnno.value().isEmpty()) {
-            // subcommand
-            String subCommandName = scAnno.value();
-            String perm = scAnno.permission().isEmpty() ? null : scAnno.permission();
-            return new SubCommandInfo(subCommandName, perm, true, null, f, obj, false, null);
-        } else if (scAnno.isDefaultCommand()) {
-            // default command
-            String perm = scAnno.permission().isEmpty() ? null : scAnno.permission();
-            return new SubCommandInfo(null, perm, true, null, f, obj, true, null);
-        } else {
+        if (!isDefault && subCommandName == null) {
             // not subcommand nor default command, remove the annotation
-            plugin.getLogger().warning(i18n.getFormatted("internal.error.bad_subcommand", f.toString()));
             return null;
         }
+
+        if (tabCompleter != null) {
+            Class<?> declaringClass = isField ? ((Field) accessibleObject).getDeclaringClass() : ((Method) accessibleObject).getDeclaringClass();
+            try {
+                tabCompleterMethod = declaringClass.getDeclaredMethod(scAnno.tabCompleter(), CommandSender.class, Arguments.class);
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
+
+        if (isField) {//Field
+            field = (Field) accessibleObject;
+            Class<?> fieldType = field.getType();
+            if (!CommandReceiver.class.isAssignableFrom(fieldType)) {
+                return null; // incorrect field type
+            }
+            if (tabCompleterMethod != null) {
+                return null; // field-based subcommand does not need method-based tabcompletion
+            }
+            try {
+                fieldValue = newInstance(fieldType, plugin, i18n);
+                ((Field) accessibleObject).set(this, fieldValue);
+            } catch (ReflectiveOperationException e) {
+                e.printStackTrace();
+                return null;
+            }
+
+        } else {//Method
+            method = (Method) accessibleObject;
+            Class<?>[] params = method.getParameterTypes();
+            if (!(params.length == 2 &&
+                    params[0] == CommandSender.class &&
+                    params[1] == Arguments.class)) {
+                return null; // incorrect method signature
+            }
+        }
+        return new SubCommandInfo(subCommandName, permission, isField, method, field, fieldValue, isDefault, tabCompleterMethod);
+    }
+
+    private SubCommandInfo parseSubCommandAnnotation(Plugin plugin, AccessibleObject accessibleObject) {
+        SubCommand scAnno = accessibleObject.getAnnotation(SubCommand.class);
+        if (scAnno == null) return null;
+        SubCommandInfo result = getSubCommandInfo(plugin, accessibleObject);
+        if (result == null) {
+            plugin.getLogger().warning(i18n.getFormatted("internal.error.bad_subcommand", accessibleObject.toString()));
+        }
+        return result;
     }
 
     /*
