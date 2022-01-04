@@ -2,6 +2,7 @@ package cat.nyaa.nyaacore.cmdreceiver;
 
 import cat.nyaa.nyaacore.ILocalizer;
 import cat.nyaa.nyaacore.LanguageRepository;
+import com.google.common.collect.Lists;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
@@ -11,10 +12,11 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
+import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nullable;
 import java.lang.reflect.*;
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
@@ -23,12 +25,13 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
     private final ILocalizer i18n;
     // All subcommands
     private final Map<String, SubCommandInfo> subCommands = new HashMap<>();
+    private final Map<String, String> subCommandAlias = new HashMap<>();
     // Default subcommand
     private SubCommandInfo defaultSubCommand = null;
 
     /**
      * @param plugin for logging purpose only
-     * @param _i18n
+     * @param _i18n i18n
      */
     @SuppressWarnings("rawtypes")
     public CommandReceiver(Plugin plugin, ILocalizer _i18n) {
@@ -63,6 +66,13 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
                     // TODO dup sub command
                 }
                 subCommands.put(scInfo.name, scInfo);
+
+                if (scInfo.alias != null) {
+                    for (String k : scInfo.alias) {
+                        if (!k.isEmpty())
+                            subCommandAlias.put(k, scInfo.name);
+                    }
+                }
             }
 
             if (scInfo.isDefault) {
@@ -165,12 +175,20 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
         boolean isDefault = scAnno.isDefaultCommand();
         boolean isField = accessibleObject instanceof Field;
         String subCommandName = scAnno.value().isEmpty() ? null : scAnno.value();
+        String[] alias = scAnno.alias().length == 0 ? null : scAnno.alias();
         String permission = scAnno.permission().isEmpty() ? null : scAnno.permission();
         String tabCompleter = scAnno.tabCompleter().isEmpty() ? null : scAnno.tabCompleter();
         CommandReceiver fieldValue = null;
         Method method = null;
         Field field = null;
         Method tabCompleterMethod = null;
+
+        if (alias != null) {
+            if (subCommandName == null) return null;
+            for (String s : alias) {
+                if (s.isEmpty()) return null;
+            }
+        }
 
         if (!isDefault && subCommandName == null) {
             // not subcommand nor default command, remove the annotation
@@ -213,7 +231,7 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
                 return null; // incorrect method signature
             }
         }
-        return new SubCommandInfo(subCommandName, permission, isField, method, field, fieldValue, isDefault, tabCompleterMethod);
+        return new SubCommandInfo(subCommandName, alias, permission, isField, method, field, fieldValue, isDefault, tabCompleterMethod);
     }
 
     private SubCommandInfo parseSubCommandAnnotation(Plugin plugin, AccessibleObject accessibleObject) {
@@ -246,7 +264,7 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
     // Only directly registered command handler need this
     // acceptCommand() will be called directly in subcommand classes
     @Override
-    public final boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public final boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         Arguments cmd = Arguments.parse(args, sender);
         if (cmd == null) return false;
         acceptCommand(sender, cmd);
@@ -269,9 +287,9 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
      * @param cmd    the command, or part of the command
      */
     public void acceptCommand(CommandSender sender, Arguments cmd) {
-        String subCommand = cmd.top();
+        String CommandTop = cmd.top();
+        String subCommand = getSubCommandName(CommandTop);
         try {
-
             boolean subclass_may_print_success_msg;
             try {
                 if (subCommand != null && subCommands.containsKey(subCommand)) {
@@ -313,7 +331,7 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
                 msg(sender, "internal.error.invalid_command_arg");
             }
             msg(sender, "internal.info.usage_prompt",
-                    getHelpContent("usage", getHelpPrefix(), subCommand));
+                    getHelpContent("usage", getHelpPrefix(), CommandTop));
         } catch (NoPermissionException ex) {
             msg(sender, "internal.error.no_required_permission", ex.getMessage());
         } catch (Exception ex) {
@@ -325,7 +343,7 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
     // Only directly registered command handler need this
     // acceptTabComplete() will be called directly in subcommand classes
     @Override
-    public final List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+    public final List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
         try {
             Arguments cmd = Arguments.parsePreserveLastBlank(args, sender);
             if (cmd == null) return null;
@@ -352,21 +370,44 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
             if (defaultSubCommand != null) ret = defaultSubCommand.callTabComplete(sender, args);
             if (ret == null) ret = new ArrayList<>();
             final String cmd_prefix = cmd;
-            List<String> subcommands = subCommands.keySet().stream().filter(s -> s.startsWith(cmd_prefix)).sorted().collect(Collectors.toList());
+            Set<String> allSubCommandsName = new HashSet<>();
+            allSubCommandsName.addAll(subCommandAlias.keySet());
+            allSubCommandsName.addAll(subCommands.keySet());
+            List<String> subcommands =allSubCommandsName.stream().filter(s -> s.startsWith(cmd_prefix)).sorted().toList();
             ret.addAll(subcommands);
             return ret;
         } else {
             // goto subcommand if exact match found
             // otherwise ask default command
-            if (subCommands.containsKey(cmd)) {
+            String subCommandName = getSubCommandName(cmd);
+            if (subCommandName !=null) {
                 args.next();
-                return subCommands.get(cmd).callTabComplete(sender, args);
+                return subCommands.get(subCommandName).callTabComplete(sender, args);
             } else if (defaultSubCommand != null) {
                 return defaultSubCommand.callTabComplete(sender, args);
             } else {
                 return null;
             }
         }
+    }
+
+    @Nullable
+    private String getSubCommandName(@Nullable String str) {
+        if (str == null) return null;
+        if (subCommands.containsKey(str)) return str;
+        if (subCommandAlias.containsKey(str)) {
+            return subCommandAlias.get(str);
+        }
+        return null;
+    }
+    @Nullable
+    private String[] getSubCommandAlias(@Nullable SubCommandInfo subCommandInfo) {
+        if(subCommandInfo == null)return null;
+        if(subCommandInfo.alias == null)return null;
+        ArrayList<String> list = Lists.newArrayList(subCommandInfo.alias);
+        list.removeIf(String::isEmpty);
+        if(list.size()<=0)return null;
+        return list.toArray(new String[0]);
     }
 
     private String getHelpContent(String type, String... subkeys) {
@@ -416,9 +457,11 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
         final Field field;
         final CommandReceiver fieldValue;
         final boolean isDefault;
+        public String[] alias;
 
-        SubCommandInfo(String name, String permission, boolean isField, Method method, Field field, CommandReceiver fieldValue, boolean isDefault, Method tabCompleter) {
+        SubCommandInfo(String name, String[] alias, String permission, boolean isField, Method method, Field field, CommandReceiver fieldValue, boolean isDefault, Method tabCompleter) {
             if (name == null && !isDefault) throw new IllegalArgumentException();
+            if (name == null && alias != null) throw new IllegalArgumentException();
             if (isField && !(method == null && field != null && fieldValue != null))
                 throw new IllegalArgumentException();
             if (!isField && !(method != null && field == null && fieldValue == null))

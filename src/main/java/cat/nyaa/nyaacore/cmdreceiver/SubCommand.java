@@ -13,6 +13,8 @@ import java.lang.annotation.Target;
 public @interface SubCommand {
     String value() default "";
 
+    String[] alias() default {};
+
     boolean isDefaultCommand() default false;
 
     String permission() default "";
