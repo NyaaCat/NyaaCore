@@ -457,7 +457,7 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
         final Field field;
         final CommandReceiver fieldValue;
         final boolean isDefault;
-        public String[] alias;
+        final String[] alias;
 
         SubCommandInfo(String name, String[] alias, String permission, boolean isField, Method method, Field field, CommandReceiver fieldValue, boolean isDefault, Method tabCompleter) {
             if (name == null && !isDefault) throw new IllegalArgumentException();
@@ -477,6 +477,7 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
             this.fieldValue = fieldValue;
             this.isDefault = isDefault;
             this.tabCompleter = tabCompleter;
+            this.alias = alias;
         }
 
         void callCommand(CommandSender sender, Arguments args) throws IllegalAccessException, InvocationTargetException {
