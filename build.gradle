@@ -13,9 +13,9 @@ sourceCompatibility = 17
 targetCompatibility = 17
 
 // Supplied by Jenkins
-ext.buildNumber = System.env.BUILD_NUMBER == null ? "x"                : "$System.env.BUILD_NUMBER"
+ext.buildNumber = System.env.BUILD_NUMBER == null ? "x" : "$System.env.BUILD_NUMBER"
 ext.mavenDirectory = System.env.MAVEN_DIR == null ? "$projectDir/repo" : "$System.env.MAVEN_DIR"
-ext.jdDirectory = System.env.JAVADOCS_DIR == null ? null               : "$System.env.JAVADOCS_DIR"
+ext.jdDirectory = System.env.JAVADOCS_DIR == null ? null : "$System.env.JAVADOCS_DIR"
 
 String DownloadFile(String manual_override, String filename, String url) {
     String ret = "";
@@ -27,7 +27,7 @@ String DownloadFile(String manual_override, String filename, String url) {
         } else {
             throw new GradleException("File not found: ${ret}")
         }
-    } 
+    }
 
     // ci environment
     if (new File("${mavenDirectory}/${filename}").exists()) {
@@ -41,21 +41,21 @@ String DownloadFile(String manual_override, String filename, String url) {
         def f = new File(ret)
         println "Downloading ${filename}"
         f.getParentFile().mkdirs()
-        new URL(url).withInputStream{ i -> f.withOutputStream{ it << i }}
+        new URL(url).withInputStream { i -> f.withOutputStream { it << i } }
     }
-    println ("Found file: ${filename} => ${ret}")
+    println("Found file: ${filename} => ${ret}")
     return ret
 }
 
 String deobfedJar = DownloadFile(System.env.NMS_JAR,
-                                    "spigot-${minecraftVersion}-latest-deobfed.jar",
-                                    "https://ci.nyaacat.com/maven/spigot-${minecraftVersion}-latest-deobfed.jar")
+        "spigot-${minecraftVersion}-latest-deobfed.jar",
+        "https://ci.nyaacat.com/maven/spigot-${minecraftVersion}-latest-deobfed.jar")
 String deobfMapping = DownloadFile(System.env.NMS_DEOBF_MAPPING,
-                                    "spigot-${minecraftVersion}-latest-deobf-mapping.csrg",
-                                    "https://ci.nyaacat.com/maven/spigot-${minecraftVersion}-latest-deobf-mapping.csrg")
+        "spigot-${minecraftVersion}-latest-deobf-mapping.csrg",
+        "https://ci.nyaacat.com/maven/spigot-${minecraftVersion}-latest-deobf-mapping.csrg")
 String specialSourceJar = DownloadFile(System.env.SPECIAL_SOURCE_JAR,
-                                    "specialsource-shaded.jar",
-                                    "https://search.maven.org/remotecontent?filepath=net/md-5/SpecialSource/1.11.0/SpecialSource-1.11.0-shaded.jar")
+        "specialsource-shaded.jar",
+        "https://search.maven.org/remotecontent?filepath=net/md-5/SpecialSource/1.11.0/SpecialSource-1.11.0-shaded.jar")
 
 // Version used for distribution. Different from maven repo
 group = "cat.nyaa"
@@ -70,12 +70,12 @@ compileJava {
 
 repositories {
     mavenCentral()
-    maven { name 'Bugjang';     url 'https://libraries.minecraft.net' }
-    maven { name 'Spigot';      url 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/' }
-    maven { name 'Sonatype';    url 'https://oss.sonatype.org/content/groups/public' }
-    maven { name 'vault-repo';  url 'https://nexus.hc.to/content/repositories/pub_releases' }
+    maven { name 'Bugjang'; url 'https://libraries.minecraft.net' }
+    maven { name 'Spigot'; url 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/' }
+    maven { name 'Sonatype'; url 'https://oss.sonatype.org/content/groups/public' }
+    maven { name 'vault-repo'; url 'https://nexus.hc.to/content/repositories/pub_releases' }
     maven { name 'EssentialsX'; url 'https://ci.ender.zone/plugin/repository/everything' }
-    maven { name 'NyaaCat';     url 'https://ci.nyaacat.com/maven/' }
+    maven { name 'NyaaCat'; url 'https://ci.nyaacat.com/maven/' }
 }
 
 dependencies {
@@ -94,13 +94,14 @@ dependencies {
     // Testing
     testImplementation 'junit:junit:4.13.2'
     testImplementation files(deobfedJar)
-    testImplementation 'com.github.seeseemelk:MockBukkit-v1.17:1.7.0'
-    testImplementation 'org.mockito:mockito-core:3.11.2'
-    testImplementation 'org.xerial:sqlite-jdbc:3.36.0.1'
-    testImplementation 'ch.vorburger.mariaDB4j:mariaDB4j:2.4.0'
+    testImplementation 'com.github.seeseemelk:MockBukkit-v1.18:1.15.5'
+    testImplementation 'org.mockito:mockito-core:4.2.0'
+    testImplementation 'org.xerial:sqlite-jdbc:3.36.0.2'
+    testImplementation 'ch.vorburger.mariaDB4j:mariaDB4j:2.5.3'
 }
-
-
+task info {
+    println(new File(project.getProjectDir(), "at.at").getPath())
+}
 
 // artifacts
 task reobfedJar(dependsOn: [build]) {
@@ -108,12 +109,18 @@ task reobfedJar(dependsOn: [build]) {
         exec {
             String inJar = jar.archiveFile.get().asFile.path;
             String outJar = new File(jar.getArchiveFile().get().asFile.getParent(), jar.getArchiveBaseName().get() + "-" + jar.archiveVersion.get() + "-reobfed.jar").path
+
+            String atFile = new File(project.getProjectDir(), "at.at").getPath();
+            String logFile= new File(project.getProjectDir(), "rebof.log").getPath()
+            println("log:"+logFile)
             commandLine(
-                    "java","-jar",specialSourceJar,
+                    "java", "-jar", specialSourceJar,
                     "--live",
                     "-i", inJar,
                     "-o", outJar,
                     "-m", deobfMapping,
+                    "--log", logFile,
+                    "--access-transformer",atFile,
                     "--reverse"
             )
         }
@@ -138,9 +145,9 @@ processResources { // modify version string
 publishing {
     publications {
         mavenJava(MavenPublication) {
-            group      project.group
+            group project.group
             artifactId pluginNameLower
-            version    "$majorVersion.$minorVersion-SNAPSHOT"
+            version "$majorVersion.$minorVersion-SNAPSHOT"
 
             from components.java
             artifact sourcesJar

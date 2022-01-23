@@ -11,6 +11,7 @@ public class MessageTest {
 
     private ServerMock server;
     private NyaaCoreLoader plugin;
+    public static final char COLOR_CHAR = '\u00A7';
 
     @Before
     public void setUp()
@@ -29,7 +30,8 @@ public class MessageTest {
     public void chatText() {
         PlayerMock pm = server.addPlayer();
         new Message("foobar").send(pm);
-        pm.assertSaid("foobar");
+        pm.assertSaid(COLOR_CHAR+"f"+"foobar");
+        //pm.assertSaid("foobar");
         pm.assertNoMoreSaid();
     }
 }
