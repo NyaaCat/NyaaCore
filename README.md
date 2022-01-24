@@ -2,7 +2,7 @@
 Common library used for all NyaaCat plugin.  
 Provides infrastructures to simplify plugin development.
 
-[![Build Status](https://ci.nyaacat.com/job/NyaaCore/job/1.17/badge/icon)](https://ci.nyaacat.com/job/NyaaCore/job/1.17/)
+[![Build Status](https://ci.nyaacat.com/job/NyaaCore/job/1.18/badge/icon)](https://ci.nyaacat.com/job/NyaaCore/job/1.18/)
 ## Component List
 
 - Annotation based command dispatcher
@@ -28,7 +28,7 @@ repositories {
 }
 
 dependencies {
-    compile('cat.nyaa:nyaacore:7.1-SNAPSHOT')
+    compile('cat.nyaa:nyaacore:9.0-SNAPSHOT')
 }
 ```
 
