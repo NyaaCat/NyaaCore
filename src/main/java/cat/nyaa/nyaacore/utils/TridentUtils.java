@@ -13,7 +13,12 @@ public final class TridentUtils {
     static {
         try {
             var cls = EntityThrownTrident.class;
-            FIELD_DEALT_DAMAGE = cls.getDeclaredField("as");
+            try {
+                FIELD_DEALT_DAMAGE = cls.getDeclaredField("dealtDamage");
+            }catch (NoSuchFieldException ignored){}
+            if (FIELD_DEALT_DAMAGE == null) {
+                FIELD_DEALT_DAMAGE = cls.getDeclaredField("as");
+            }
             FIELD_DEALT_DAMAGE.setAccessible(true);
         } catch (NoSuchFieldException e) {
             e.printStackTrace();

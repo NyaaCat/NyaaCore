@@ -8,7 +8,7 @@ ext.pluginNameLower = ext.pluginNameUpper.toLowerCase()
 
 ext.majorVersion = 9
 ext.minorVersion = 0
-ext.minecraftVersion = "1.18"
+ext.minecraftVersion = "1.18.1"
 sourceCompatibility = 17
 targetCompatibility = 17
 
@@ -112,7 +112,8 @@ task reobfedJar(dependsOn: [build]) {
 
             String atFile = new File(project.getProjectDir(), "at.at").getPath();
             String logFile= new File(project.getProjectDir(), "rebof.log").getPath()
-            println("log:"+logFile)
+            println("using at file:"+atFile)
+            println("using log file:"+logFile)
             commandLine(
                     "java", "-jar", specialSourceJar,
                     "--live",
