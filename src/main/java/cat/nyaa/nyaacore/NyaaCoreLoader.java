@@ -46,6 +46,5 @@ public class NyaaCoreLoader extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new OfflinePlayerUtils._Listener(), this);
         NyaaComponent.register(IMessageQueue.class, defaultMessageQueue);
         OfflinePlayerUtils.init();
-        SpigotMappingUtils.init(this);
     }
 }

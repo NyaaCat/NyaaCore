@@ -13,6 +13,8 @@ import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.Optional;
 
 public class SpigotMappingUtils {
@@ -22,9 +24,18 @@ public class SpigotMappingUtils {
     @Nullable
     static MappingSet obfMappingSet; //obf (deobf->obf)
 
-    public static void init(NyaaCoreLoader nyaaCoreLoader) {
-        InputStream inputStream = nyaaCoreLoader.getResource(FILE_NAME);
-        if (inputStream == null) throw new RuntimeException("Resource " + FILE_NAME + " not found");
+    public static void load() throws RuntimeException {
+        InputStream inputStream;
+        URL resourceUrl = NyaaCoreLoader.class.getClassLoader().getResource(FILE_NAME);
+        if (resourceUrl == null) throw new RuntimeException("Resource " + FILE_NAME + " not found");
+        try {
+            URLConnection urlConnection = resourceUrl.openConnection();
+            urlConnection.setUseCaches(false);
+            inputStream = urlConnection.getInputStream();
+        } catch (IOException e) {
+            throw new RuntimeException(e.getMessage());
+        }
+        if (inputStream == null) throw new RuntimeException("Can not open " + FILE_NAME);
         try {
             deobfMappingSet = new CSrgReader(new InputStreamReader(inputStream)).read();
             obfMappingSet = deobfMappingSet.reverse();
@@ -34,7 +45,12 @@ public class SpigotMappingUtils {
         }
     }
 
+    public static void checkAndLoad() {
+        if (deobfMappingSet == null || obfMappingSet == null) load();
+    }
+
     public static MappingSet getObfMappingSet() {
+        checkAndLoad();
         if (obfMappingSet == null) {
             throw new RuntimeException("obfMappingSet has not been loaded");
         }
@@ -42,6 +58,7 @@ public class SpigotMappingUtils {
     }
 
     public static MappingSet getDeobfMappingSet() {
+        checkAndLoad();
         if (deobfMappingSet == null) {
             throw new RuntimeException("deobfMappingSet has not been loaded");
         }
