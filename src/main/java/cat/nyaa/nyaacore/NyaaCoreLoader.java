@@ -5,6 +5,7 @@ import cat.nyaa.nyaacore.component.NyaaComponent;
 import cat.nyaa.nyaacore.configuration.NbtItemStack;
 import cat.nyaa.nyaacore.utils.ClickSelectionUtils;
 import cat.nyaa.nyaacore.utils.OfflinePlayerUtils;
+import cat.nyaa.nyaacore.utils.SpigotMappingUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.plugin.PluginDescriptionFile;
@@ -45,5 +46,6 @@ public class NyaaCoreLoader extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new OfflinePlayerUtils._Listener(), this);
         NyaaComponent.register(IMessageQueue.class, defaultMessageQueue);
         OfflinePlayerUtils.init();
+        SpigotMappingUtils.init(this);
     }
 }

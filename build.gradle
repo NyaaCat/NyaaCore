@@ -50,7 +50,7 @@ String DownloadFile(String manual_override, String filename, String url) {
 String deobfedJar = DownloadFile(System.env.NMS_JAR,
         "spigot-${minecraftVersion}-latest-deobfed.jar",
         "https://ci.nyaacat.com/maven/spigot-${minecraftVersion}-latest-deobfed.jar")
-String deobfMapping = DownloadFile(System.env.NMS_DEOBF_MAPPING,
+String deobfMappingCsrg = DownloadFile(System.env.NMS_DEOBF_MAPPING,
         "spigot-${minecraftVersion}-latest-deobf-mapping.csrg",
         "https://ci.nyaacat.com/maven/spigot-${minecraftVersion}-latest-deobf-mapping.csrg")
 String specialSourceJar = DownloadFile(System.env.SPECIAL_SOURCE_JAR,
@@ -91,6 +91,8 @@ dependencies {
 
     compileOnly 'org.jetbrains:annotations:22.0.0'
 
+    implementation 'org.cadixdev:lorenz:0.5.8'
+
     // Testing
     testImplementation 'junit:junit:4.13.2'
     testImplementation files(deobfedJar)
@@ -98,9 +100,6 @@ dependencies {
     testImplementation 'org.mockito:mockito-core:4.2.0'
     testImplementation 'org.xerial:sqlite-jdbc:3.36.0.2'
     testImplementation 'ch.vorburger.mariaDB4j:mariaDB4j:2.5.3'
-}
-task info {
-    println(new File(project.getProjectDir(), "at.at").getPath())
 }
 
 // artifacts
@@ -111,17 +110,17 @@ task reobfedJar(dependsOn: [build]) {
             String outJar = new File(jar.getArchiveFile().get().asFile.getParent(), jar.getArchiveBaseName().get() + "-" + jar.archiveVersion.get() + "-reobfed.jar").path
 
             String atFile = new File(project.getProjectDir(), "at.at").getPath();
-            String logFile= new File(project.getProjectDir(), "rebof.log").getPath()
-            println("using at file:"+atFile)
-            println("using log file:"+logFile)
+            String logFile = new File(project.getProjectDir(), "rebof.log").getPath()
+            println("using at file:" + atFile)
+            println("using log file:" + logFile)
             commandLine(
                     "java", "-jar", specialSourceJar,
                     "--live",
                     "-i", inJar,
                     "-o", outJar,
-                    "-m", deobfMapping,
+                    "-m", deobfMappingCsrg,
                     "--log", logFile,
-                    "--access-transformer",atFile,
+                    "--access-transformer", atFile,
                     "--reverse"
             )
         }
@@ -137,12 +136,20 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
     from javadoc.destinationDir
 }
 
+
 processResources { // modify version string
     filesMatching("**/plugin.yml") {
         expand 'version': project.version
     }
+    from(deobfMappingCsrg) {
+        rename { 'spigot-deobf.csrg' }
+    }
 }
-
+processTestResources {
+    from(deobfMappingCsrg) {
+        rename { 'spigot-deobf.csrg' }
+    }
+}
 publishing {
     publications {
         mavenJava(MavenPublication) {
