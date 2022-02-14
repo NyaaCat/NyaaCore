@@ -22,9 +22,17 @@ public class EntityUtils {
         return -FAKE_ENTITY_COUNTER.incrementAndGet();
     }
 
+    private static Optional<EntityTypes<?>> getNmsEntityTypes(EntityType entityType) {
+        return EntityTypes.byString(entityType.getKey().getKey());
+    }
     public static Optional<Integer> getEntityTypeId(EntityType entityType) {
-        Optional<EntityTypes<?>> entityTypesOptional = EntityTypes.byString(entityType.getKey().getKey());
-        return entityTypesOptional.map(IRegistry.ENTITY_TYPE::getId);
+        return getNmsEntityTypes(entityType).map(IRegistry.ENTITY_TYPE::getId);
+    }
+    public static int getUpdateInterval(EntityType entityType) {
+        return getNmsEntityTypes(entityType).map(EntityTypes::updateInterval).orElse(3);
+    }
+    public static int getClientTrackingRange(EntityType entityType){
+        return getNmsEntityTypes(entityType).map(EntityTypes::clientTrackingRange).orElse(5);
     }
 
     /**
