@@ -1,7 +1,7 @@
 package cat.nyaa.nyaacore.utils;
 
 import net.minecraft.world.entity.projectile.EntityThrownTrident;
-import org.bukkit.craftbukkit.v1_18_R1.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_18_R2.entity.CraftEntity;
 import org.bukkit.entity.Trident;
 import org.bukkit.inventory.ItemStack;
 
@@ -12,13 +12,7 @@ public final class TridentUtils {
 
     static {
         try {
-            var cls = EntityThrownTrident.class;
-            try {
-                FIELD_DEALT_DAMAGE = cls.getDeclaredField("dealtDamage");
-            }catch (NoSuchFieldException ignored){}
-            if (FIELD_DEALT_DAMAGE == null) {
-                FIELD_DEALT_DAMAGE = cls.getDeclaredField("as");
-            }
+            FIELD_DEALT_DAMAGE = EntityThrownTrident.class.getDeclaredField("dealtDamage");
             FIELD_DEALT_DAMAGE.setAccessible(true);
         } catch (NoSuchFieldException e) {
             e.printStackTrace();
