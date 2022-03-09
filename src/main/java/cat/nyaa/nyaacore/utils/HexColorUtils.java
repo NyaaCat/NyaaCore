@@ -1,6 +1,5 @@
 package cat.nyaa.nyaacore.utils;
 
-import net.milkbowl.vault.chat.Chat;
 import org.bukkit.ChatColor;
 
 import java.awt.*;
