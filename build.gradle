@@ -88,14 +88,14 @@ dependencies {
     // other plugins
     compileOnly('net.essentialsx:EssentialsX:2.19.3')      // soft dep
 
-    compileOnly 'org.jetbrains:annotations:22.0.0'
+    compileOnly 'org.jetbrains:annotations:23.0.0'
     implementation 'org.cadixdev:lorenz:0.5.8'
     // Testing
     testImplementation 'junit:junit:4.13.2'
     testImplementation files(deobfedJar)
-    testImplementation 'com.github.seeseemelk:MockBukkit-v1.18:1.15.5'
+    testImplementation 'com.github.seeseemelk:MockBukkit-v1.18:1.24.1'
     testImplementation 'org.mockito:mockito-core:4.3.1'
-    testImplementation 'org.xerial:sqlite-jdbc:3.36.0.2'
+    testImplementation 'org.xerial:sqlite-jdbc:3.36.0.3'
     testImplementation 'ch.vorburger.mariaDB4j:mariaDB4j:2.5.3'
 }
 
