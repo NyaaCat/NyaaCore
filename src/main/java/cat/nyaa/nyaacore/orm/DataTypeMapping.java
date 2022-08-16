@@ -1,7 +1,8 @@
 package cat.nyaa.nyaacore.orm;
 
 import cat.nyaa.nyaacore.utils.ItemStackUtils;
-import org.apache.commons.lang.NotImplementedException;
+
+import org.apache.commons.lang3.NotImplementedException;
 import org.bukkit.Bukkit;
 import org.bukkit.inventory.ItemStack;
 
@@ -73,7 +74,7 @@ public class DataTypeMapping {
             }
             return cvt;
         }
-        if (cls == byte[].class) throw new NotImplementedException();
+        if (cls == byte[].class) throw new NotImplementedException("byte[] is not yet supported");
         throw new IllegalArgumentException("Not an acceptable type: " + cls);
     }
 

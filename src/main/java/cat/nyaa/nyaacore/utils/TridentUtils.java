@@ -1,7 +1,7 @@
 package cat.nyaa.nyaacore.utils;
 
 import net.minecraft.world.entity.projectile.EntityThrownTrident;
-import org.bukkit.craftbukkit.v1_18_R2.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_19_R1.entity.CraftEntity;
 import org.bukkit.entity.Trident;
 import org.bukkit.inventory.ItemStack;
 
