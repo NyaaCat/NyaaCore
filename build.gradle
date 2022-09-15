@@ -84,6 +84,7 @@ dependencies {
     compileOnly files(deobfedJar)
     compileOnly 'com.mojang:brigadier:1.0.18'
     compileOnly 'com.mojang:datafixerupper:4.0.26'
+    compileOnly 'com.mojang:javabridge:1.2.24'
 
     // other plugins
     compileOnly('net.essentialsx:EssentialsX:2.19.6')      // soft dep
@@ -94,8 +95,8 @@ dependencies {
     testImplementation 'junit:junit:4.13.2'
     testImplementation files(deobfedJar)
     testImplementation 'com.github.seeseemelk:MockBukkit-v1.18:2.85.2'
-    testImplementation 'org.mockito:mockito-core:4.6.1'
-    testImplementation 'org.xerial:sqlite-jdbc:3.36.0.3'
+    testImplementation 'org.mockito:mockito-core:4.8.0'
+    testImplementation 'org.xerial:sqlite-jdbc:3.39.3.0'
     testImplementation 'ch.vorburger.mariaDB4j:mariaDB4j:2.5.3'
 }
 
@@ -138,6 +139,9 @@ processResources { // modify version string
     filesMatching("**/plugin.yml") {
         expand 'version': project.version
     }
+    filesMatching("**/MCVersion"){
+        expand 'minecraftVersion': project.minecraftVersion
+    }
     from(deobfMappingCsrg) {
         rename { 'spigot-deobf.csrg' }
     }
@@ -172,8 +176,8 @@ javadoc {
 
     (options as StandardJavadocDocletOptions).with {
         links 'https://docs.oracle.com/en/java/javase/16/docs/api/'
-        links 'https://hub.spigotmc.org/javadocs/spigot/'
-        links 'https://google.github.io/guava/releases/21.0/api/docs/'
+        //links 'https://hub.spigotmc.org/javadocs/spigot/'
+        links 'https://guava.dev/releases/21.0/api/docs/'
         links 'https://ci.md-5.net/job/BungeeCord/ws/chat/target/apidocs/'
 
         locale 'en_US'
