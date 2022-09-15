@@ -20,7 +20,7 @@ public class LanguageRepositoryTest {
     @BeforeClass
     public static void setUpMockServer() throws IOException {
         server = MockBukkit.mock();
-        nyaacore = MockBukkit.load(NyaaCoreLoader.class);
+        nyaacore = MockBukkit.load(NyaaCoreLoader.class,true);
         plugin = Mockito.mock(Plugin.class);
         Mockito.when(plugin.getDataFolder()).thenReturn(another_plugin_data_dir.getRoot());
 

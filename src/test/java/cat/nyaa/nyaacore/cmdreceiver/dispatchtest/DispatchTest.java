@@ -45,7 +45,7 @@ public class DispatchTest {
     @BeforeClass
     public static void setUp() {
         server = MockBukkit.mock();
-        plugin = MockBukkit.load(NyaaCoreLoader.class);
+        plugin = MockBukkit.load(NyaaCoreLoader.class,true);
         cmdRoot = new CmdRoot(plugin);
 
         cmd = PluginCommandUtils.createPluginCommand("nct", plugin);
