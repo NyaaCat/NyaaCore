@@ -30,7 +30,7 @@ public class MessageTest {
     public void chatText() {
         PlayerMock pm = server.addPlayer();
         new Message("foobar").send(pm);
-        pm.assertSaid(COLOR_CHAR+"f"+"foobar");
+        pm.assertSaid("foobar");
         //pm.assertSaid("foobar");
         pm.assertNoMoreSaid();
     }
