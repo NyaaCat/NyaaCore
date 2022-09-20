@@ -53,17 +53,11 @@ repositories {
 }
 
 dependencies {
-
-    testImplementation 'junit:junit:4.13.2'
     paperweightDevelopmentBundle("io.papermc.paper:dev-bundle:$minecraftVersion-R0.1-SNAPSHOT")
-
-
     // other plugins
     compileOnly('net.essentialsx:EssentialsX:2.19.6')      // soft dep
-
     compileOnly 'org.jetbrains:annotations:23.0.0'
     // Testing
-
     testImplementation(platform('org.junit:junit-bom:5.9.0'))
     testImplementation('org.junit.jupiter:junit-jupiter')
 //    testImplementation 'junit:junit:4.13.2'
