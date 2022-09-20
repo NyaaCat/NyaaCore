@@ -15,21 +15,10 @@ import java.util.List;
 import java.util.UUID;
 
 public class Arguments {
-    private enum ParserState {
-        EXPECT_ARG,
-        IN_UNQUOTE_BEFORE_COLON,
-        IN_UNQUOTE_AFTER_COLON,
-        IN_BACKTICK,
-        IN_BACKTICK_ESCAPE,
-        IN_QUOTE,
-        IN_QUOTE_ESCAPE
-    }
-
     private List<String> parsedArguments = new ArrayList<>();
     private int index = 0;
     private CommandSender sender;
     private String[] rawArgs;
-
     private Arguments() {
     }
 
@@ -256,11 +245,11 @@ public class Arguments {
         }
     }
 
-    public Integer nextInt(Integer defaultVal){
+    public Integer nextInt(Integer defaultVal) {
         int curIndex = index;
-        try{
+        try {
             return nextInt();
-        }catch (Throwable e){
+        } catch (Throwable e) {
             index = curIndex;
             return defaultVal;
         }
@@ -277,11 +266,11 @@ public class Arguments {
         }
     }
 
-    public Long nextLong(Long defaultVal){
+    public Long nextLong(Long defaultVal) {
         int curIndex = index;
-        try{
+        try {
             return nextLong();
-        }catch (Throwable e){
+        } catch (Throwable e) {
             index = curIndex;
             return defaultVal;
         }
@@ -300,11 +289,11 @@ public class Arguments {
         }
     }
 
-    public Double nextDouble(Double defaultVal){
+    public Double nextDouble(Double defaultVal) {
         int curIndex = index;
-        try{
+        try {
             return nextDouble();
-        }catch (Throwable e){
+        } catch (Throwable e) {
             index = curIndex;
             return defaultVal;
         }
@@ -317,11 +306,11 @@ public class Arguments {
         return str;
     }
 
-    public String nextString(String defaultVal){
+    public String nextString(String defaultVal) {
         int curIndex = index;
-        try{
+        try {
             return nextString();
-        }catch (Throwable e){
+        } catch (Throwable e) {
             index = curIndex;
             return defaultVal;
         }
@@ -342,11 +331,11 @@ public class Arguments {
         }
     }
 
-    public Double nextDouble(String pattern, Double defaultVal){
+    public Double nextDouble(String pattern, Double defaultVal) {
         int curIndex = index;
-        try{
+        try {
             return nextDouble(pattern);
-        }catch (Throwable e){
+        } catch (Throwable e) {
             index = curIndex;
             return defaultVal;
         }
@@ -358,11 +347,11 @@ public class Arguments {
         return parseEnum(cls, str);
     }
 
-    public <T extends Enum<T>> T nextEnum(Class<T> cls, T defaultVal){
+    public <T extends Enum<T>> T nextEnum(Class<T> cls, T defaultVal) {
         int curIndex = index;
-        try{
+        try {
             return nextEnum(cls);
-        }catch (Throwable e){
+        } catch (Throwable e) {
             index = curIndex;
             return defaultVal;
         }
@@ -374,11 +363,11 @@ public class Arguments {
         return Boolean.parseBoolean(str);
     }
 
-    public Boolean nextBoolean(Boolean defaultVal){
+    public Boolean nextBoolean(Boolean defaultVal) {
         int curIndex = index;
-        try{
+        try {
             return nextBoolean();
-        }catch (Throwable e){
+        } catch (Throwable e) {
             index = curIndex;
             return defaultVal;
         }
@@ -410,11 +399,11 @@ public class Arguments {
         return p;
     }
 
-    public Player nextPlayer(Player defaultVal){
+    public Player nextPlayer(Player defaultVal) {
         int curIndex = index;
-        try{
+        try {
             return nextPlayer();
-        }catch (Throwable e){
+        } catch (Throwable e) {
             index = curIndex;
             return defaultVal;
         }
@@ -457,11 +446,11 @@ public class Arguments {
         return p;
     }
 
-    public Entity nextEntity(Entity defaultVal){
+    public Entity nextEntity(Entity defaultVal) {
         int curIndex = index;
-        try{
+        try {
             return nextEntity();
-        }catch (Throwable e){
+        } catch (Throwable e) {
             index = curIndex;
             return defaultVal;
         }
@@ -495,9 +484,6 @@ public class Arguments {
         return this;
     }
 
-    // Note: all `arg*()` functions will rearrange argument order
-    // and mess up indexes. Thus, it's not recommended to use together with `at()` function
-
     /**
      * fetch an named argument from remaining list
      * if multiple arguments, the first one will be returned
@@ -522,6 +508,9 @@ public class Arguments {
         index++;
         return value;
     }
+
+    // Note: all `arg*()` functions will rearrange argument order
+    // and mess up indexes. Thus, it's not recommended to use together with `at()` function
 
     /**
      * get named argument as string
@@ -571,5 +560,15 @@ public class Arguments {
 
     public int length() {
         return parsedArguments.size();
+    }
+
+    private enum ParserState {
+        EXPECT_ARG,
+        IN_UNQUOTE_BEFORE_COLON,
+        IN_UNQUOTE_AFTER_COLON,
+        IN_BACKTICK,
+        IN_BACKTICK_ESCAPE,
+        IN_QUOTE,
+        IN_QUOTE_ESCAPE
     }
 }

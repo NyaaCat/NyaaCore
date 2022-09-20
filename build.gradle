@@ -1,7 +1,12 @@
+import java.nio.charset.StandardCharsets
+
 plugins {
     id 'java-library'
     id 'maven-publish'
+    id 'io.papermc.paperweight.userdev' version '1.3.8'
+    id 'xyz.jpenilla.run-paper' version '1.0.6' // Adds runServer and runMojangMappedServer tasks for testing
 }
+
 
 ext.pluginNameUpper = "NyaaCore"
 ext.pluginNameLower = ext.pluginNameUpper.toLowerCase()
@@ -9,53 +14,12 @@ ext.pluginNameLower = ext.pluginNameUpper.toLowerCase()
 ext.majorVersion = 9
 ext.minorVersion = 1
 ext.minecraftVersion = "1.19.2"
-sourceCompatibility = 17
-targetCompatibility = 17
+
 
 // Supplied by Jenkins
 ext.buildNumber = System.env.BUILD_NUMBER == null ? "x" : "$System.env.BUILD_NUMBER"
 ext.mavenDirectory = System.env.MAVEN_DIR == null ? "$projectDir/repo" : "$System.env.MAVEN_DIR"
 ext.jdDirectory = System.env.JAVADOCS_DIR == null ? null : "$System.env.JAVADOCS_DIR"
-
-String DownloadFile(String manual_override, String filename, String url) {
-    String ret = "";
-    if (manual_override != null) {
-        ret = manual_override;
-        if (new File(ret).exists()) {
-            logger.warn("Manually selected: ${ret}")
-            return ret;
-        } else {
-            throw new GradleException("File not found: ${ret}")
-        }
-    }
-
-    // ci environment
-    if (new File("${mavenDirectory}/${filename}").exists()) {
-        return "${mavenDirectory}/${filename}"
-    }
-
-    // check local dir (dev environment)
-    ret = "${projectDir}/../nms_binaries/${filename}"
-    if (!(new File(ret).exists())) {
-        // nms not found, download from nyaaci
-        def f = new File(ret)
-        println "Downloading ${filename}"
-        f.getParentFile().mkdirs()
-        new URL(url).withInputStream { i -> f.withOutputStream { it << i } }
-    }
-    println("Found file: ${filename} => ${ret}")
-    return ret
-}
-
-String deobfedJar = DownloadFile(System.env.NMS_JAR,
-        "spigot-${minecraftVersion}-latest-deobfed.jar",
-        "https://ci.nyaacat.com/maven/spigot-${minecraftVersion}-latest-deobfed.jar")
-String deobfMappingCsrg = DownloadFile(System.env.NMS_DEOBF_MAPPING,
-        "spigot-${minecraftVersion}-latest-deobf-mapping.csrg",
-        "https://ci.nyaacat.com/maven/spigot-${minecraftVersion}-latest-deobf-mapping.csrg")
-String specialSourceJar = DownloadFile(System.env.SPECIAL_SOURCE_JAR,
-        "specialsource-shaded.jar",
-        "https://search.maven.org/remotecontent?filepath=net/md-5/SpecialSource/1.11.0/SpecialSource-1.11.0-shaded.jar")
 
 // Version used for distribution. Different from maven repo
 group = "cat.nyaa"
@@ -65,7 +29,15 @@ version = "$majorVersion.$minorVersion.$buildNumber".toString()
 // extra compile warnings
 compileJava {
     options.compilerArgs += ["-Xlint:deprecation"]
-    options.encoding = 'UTF-8'
+    options.encoding = StandardCharsets.UTF_8.name()
+}
+
+java {
+    toolchain.languageVersion.set(JavaLanguageVersion.of(17))
+}
+
+assemble {
+    dependsOn(reobfJar)
 }
 
 repositories {
@@ -79,51 +51,27 @@ repositories {
 }
 
 dependencies {
-    // spigot dependencies
-    compileOnly "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT"
-    compileOnly files(deobfedJar)
-    compileOnly 'com.mojang:brigadier:1.0.18'
-    compileOnly 'com.mojang:datafixerupper:4.0.26'
-    compileOnly 'com.mojang:javabridge:1.2.24'
+
+    testImplementation 'junit:junit:4.13.2'
+    paperweightDevelopmentBundle("io.papermc.paper:dev-bundle:$minecraftVersion-R0.1-SNAPSHOT")
+
 
     // other plugins
     compileOnly('net.essentialsx:EssentialsX:2.19.6')      // soft dep
 
     compileOnly 'org.jetbrains:annotations:23.0.0'
-    implementation 'org.cadixdev:lorenz:0.5.8'
     // Testing
-    testImplementation 'junit:junit:4.13.2'
-    testImplementation files(deobfedJar)
+
+    testImplementation(platform('org.junit:junit-bom:5.9.0'))
+    testImplementation('org.junit.jupiter:junit-jupiter')
+//    testImplementation 'junit:junit:4.13.2'
     testImplementation 'com.github.seeseemelk:MockBukkit-v1.19:2.119.3'
     testImplementation 'org.mockito:mockito-core:4.8.0'
+    testImplementation 'org.mockito:mockito-junit-jupiter:4.8.0'
     testImplementation 'org.xerial:sqlite-jdbc:3.39.3.0'
     testImplementation 'ch.vorburger.mariaDB4j:mariaDB4j:2.5.3'
 }
 
-// artifacts
-task reobfedJar(dependsOn: [build]) {
-    doLast {
-        exec {
-            String inJar = jar.archiveFile.get().asFile.path;
-            String outJar = new File(jar.getArchiveFile().get().asFile.getParent(), jar.getArchiveBaseName().get() + "-" + jar.archiveVersion.get() + "-reobfed.jar").path
-
-            String atFile = new File(project.getProjectDir(), "at.at").getPath();
-            String logFile = new File(project.getProjectDir(), "rebof.log").getPath()
-            println("using at file:" + atFile)
-            println("using log file:" + logFile)
-            commandLine(
-                    "java", "-jar", specialSourceJar,
-                    "--live",
-                    "-i", inJar,
-                    "-o", outJar,
-                    "-m", deobfMappingCsrg,
-                    "--log", logFile,
-                    "--access-transformer", atFile,
-                    "--reverse"
-            )
-        }
-    }
-}
 
 task sourcesJar(type: Jar) {
     archiveClassifier.set('sources')
@@ -136,20 +84,21 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
 
 
 processResources { // modify version string
+    filteringCharset = StandardCharsets.UTF_8.name()
     filesMatching("**/plugin.yml") {
         expand 'version': project.version
     }
-    filesMatching("**/MCVersion"){
+    filesMatching("**/MCVersion") {
         expand 'minecraftVersion': project.minecraftVersion
     }
-    from(deobfMappingCsrg) {
-        rename { 'spigot-deobf.csrg' }
-    }
+//    from(deobfMappingCsrg) {
+//        rename { 'spigot-deobf.csrg' }
+//    }
 }
 processTestResources {
-    from(deobfMappingCsrg) {
-        rename { 'spigot-deobf.csrg' }
-    }
+//    from(deobfMappingCsrg) {
+//        rename { 'spigot-deobf.csrg' }
+//    }
 }
 publishing {
     publications {

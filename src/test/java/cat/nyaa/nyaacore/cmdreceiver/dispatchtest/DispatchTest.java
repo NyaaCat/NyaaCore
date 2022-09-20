@@ -7,45 +7,37 @@ import cat.nyaa.nyaacore.cmdreceiver.Arguments;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.command.PluginCommandUtils;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.verify;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class DispatchTest {
-    public interface ICallback {
-        void onCommand(String mark, CommandSender sender, Arguments args);
-
-        void onTab(String mark, CommandSender sender, Arguments args);
-    }
-
     public static ICallback callback;
-
     private static ServerMock server;
     private static NyaaCoreLoader plugin;
     private static CmdRoot cmdRoot;
     private static PluginCommand cmd;
 
-
-    @BeforeClass
+    @BeforeAll
     public static void setUp() {
         server = MockBukkit.mock();
-        plugin = MockBukkit.load(NyaaCoreLoader.class,true);
+        plugin = MockBukkit.load(NyaaCoreLoader.class, true);
         cmdRoot = new CmdRoot(plugin);
 
         cmd = PluginCommandUtils.createPluginCommand("nct", plugin);
@@ -53,12 +45,21 @@ public class DispatchTest {
         server.getCommandMap().register("nyaacoretest", cmd);
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDown() {
         MockBukkit.unmock();
     }
 
-    @Before
+    public static boolean equalsIgnoreOrder(List<String> a, List<String> b) {
+        if (a.size() != b.size()) return false;
+        List<String> a2 = new ArrayList<>(a);
+        List<String> b2 = new ArrayList<>(b);
+        Collections.sort(a2);
+        Collections.sort(b2);
+        return a2.equals(b2);
+    }
+
+    @BeforeEach
     public void setUpCallbackStub() {
         callback = Mockito.mock(ICallback.class);
     }
@@ -83,15 +84,6 @@ public class DispatchTest {
         verify(callback).onTab(eq(mark), same(sender), captor.capture());
         assertNull(captor.getValue().next());
         return result;
-    }
-
-    public static boolean equalsIgnoreOrder(List<String> a, List<String> b) {
-        if (a.size() != b.size()) return false;
-        List<String> a2 = new ArrayList<>(a);
-        List<String> b2 = new ArrayList<>(b);
-        Collections.sort(a2);
-        Collections.sort(b2);
-        return a2.equals(b2);
     }
 
     @Test
@@ -131,7 +123,6 @@ public class DispatchTest {
         assertEquals("abcd", args.next());
         assertNull(args.next());
     }
-
 
     @Test
     public void testRootSub2B() {
@@ -186,6 +177,12 @@ public class DispatchTest {
     public void testTabSub2AC() {
         List<String> result = tabCompletion("nct sub2 c abcd", "nct-sub2a-ctc");
         assertTrue(equalsIgnoreOrder(result, List.of("abcd_s1")));
+    }
+
+    public interface ICallback {
+        void onCommand(String mark, CommandSender sender, Arguments args);
+
+        void onTab(String mark, CommandSender sender, Arguments args);
     }
 }
 

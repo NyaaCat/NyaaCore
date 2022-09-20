@@ -1,6 +1,6 @@
 package cat.nyaa.nyaacore.utils;
 
-import net.minecraft.world.entity.projectile.EntityThrownTrident;
+import net.minecraft.world.entity.projectile.ThrownTrident;
 import org.bukkit.craftbukkit.v1_19_R1.entity.CraftEntity;
 import org.bukkit.entity.Trident;
 import org.bukkit.inventory.ItemStack;
@@ -12,7 +12,7 @@ public final class TridentUtils {
 
     static {
         try {
-            FIELD_DEALT_DAMAGE = EntityThrownTrident.class.getDeclaredField("dealtDamage");
+            FIELD_DEALT_DAMAGE = ThrownTrident.class.getDeclaredField("dealtDamage");
             FIELD_DEALT_DAMAGE.setAccessible(true);
         } catch (NoSuchFieldException e) {
             e.printStackTrace();
@@ -31,7 +31,7 @@ public final class TridentUtils {
 
     public static boolean getTridentDealtDamage(Trident entity) {
         try {
-            EntityThrownTrident thrownTrident = (EntityThrownTrident) ((CraftEntity) entity).getHandle();
+            ThrownTrident thrownTrident = (ThrownTrident) ((CraftEntity) entity).getHandle();
             return (boolean) FIELD_DEALT_DAMAGE.get(thrownTrident);
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
@@ -40,7 +40,7 @@ public final class TridentUtils {
 
     public static void setTridentDealtDamage(Trident entity, boolean dealtDamage) {
         try {
-            EntityThrownTrident thrownTrident = (EntityThrownTrident) ((CraftEntity) entity).getHandle();
+            ThrownTrident thrownTrident = (ThrownTrident) ((CraftEntity) entity).getHandle();
             FIELD_DEALT_DAMAGE.set(thrownTrident, dealtDamage);
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);

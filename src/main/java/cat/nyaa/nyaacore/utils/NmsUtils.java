@@ -1,13 +1,13 @@
 package cat.nyaa.nyaacore.utils;
 
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import net.minecraft.advancements.critereon.CriterionConditionNBT;
-import net.minecraft.core.BlockPosition;
-import net.minecraft.nbt.MojangsonParser;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.world.entity.player.EntityHuman;
+import net.minecraft.advancements.critereon.NbtPredicate;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.TagParser;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Explosion;
-import net.minecraft.world.level.block.entity.TileEntity;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
@@ -34,22 +34,21 @@ public final class NmsUtils {
     public static void setEntityTag(Entity e, String tag) {
         net.minecraft.world.entity.Entity nmsEntity = ((CraftEntity) e).getHandle();
 
-        if (nmsEntity instanceof EntityHuman) {
+        if (nmsEntity instanceof Player) {
             throw new IllegalArgumentException("Player NBT cannot be edited");
         } else {
-            NBTTagCompound nbtToBeMerged;
+            CompoundTag nbtToBeMerged;
 
             try {
-                nbtToBeMerged = MojangsonParser.parseTag(tag);
+                nbtToBeMerged = TagParser.parseTag(tag);
             } catch (CommandSyntaxException ex) {
                 throw new IllegalArgumentException("Invalid NBTTag string");
             }
 
-            NBTTagCompound nmsOrigNBT = CriterionConditionNBT.getEntityTagToCompare(nmsEntity); // entity to nbt
-            NBTTagCompound nmsClonedNBT = nmsOrigNBT.copy(); // clone
+            CompoundTag nmsOrigNBT = NbtPredicate.getEntityTagToCompare(nmsEntity); // entity to nbt
+            CompoundTag nmsClonedNBT = nmsOrigNBT.copy(); // clone
             nmsClonedNBT.merge(nbtToBeMerged); // merge NBT
             if (nmsClonedNBT.equals(nmsOrigNBT)) {
-                return;
             } else {
                 UUID uuid = nmsEntity.getUUID(); // store UUID
                 nmsEntity.load(nmsClonedNBT); // set nbt
@@ -59,7 +58,7 @@ public final class NmsUtils {
     }
 
     public static boolean createExplosion(World world, Entity entity, double x, double y, double z, float power, boolean setFire, boolean breakBlocks) {
-        return !((CraftWorld) world).getHandle().explode(((CraftEntity) entity).getHandle(), x, y, z, power, setFire, breakBlocks ? Explosion.Effect.BREAK : Explosion.Effect.NONE).wasCanceled;
+        return !((CraftWorld) world).getHandle().explode(((CraftEntity) entity).getHandle(), x, y, z, power, setFire, breakBlocks ? Explosion.BlockInteraction.BREAK : Explosion.BlockInteraction.NONE).wasCanceled;
     }
 
     /**
@@ -115,14 +114,14 @@ public final class NmsUtils {
     }
 
     public static List<Block> getTileEntities(World world) {
-        Map<BlockPosition, TileEntity> tileEntityList = ((CraftWorld) world).getHandle().capturedTileEntities;
+        Map<BlockPos, BlockEntity> BlockEntityList = ((CraftWorld) world).getHandle().capturedTileEntities;
         // Safe to parallelize getPosition and getBlockAt
-        return tileEntityList.entrySet().stream().parallel().map(Map.Entry::getKey).map(p -> world.getBlockAt(p.getX(), p.getY(), p.getZ())).collect(Collectors.toList());
+        return BlockEntityList.entrySet().stream().parallel().map(Map.Entry::getKey).map(p -> world.getBlockAt(p.getX(), p.getY(), p.getZ())).collect(Collectors.toList());
     }
 
-    public static List<BlockState> getTileEntityBlockStates(World world) {
-        Map<BlockPosition, TileEntity> tileEntityList = ((CraftWorld) world).getHandle().capturedTileEntities;
+    public static List<BlockState> getBlockEntityBlockStates(World world) {
+        Map<BlockPos, BlockEntity> BlockEntityList = ((CraftWorld) world).getHandle().capturedTileEntities;
         // Safe to parallelize getPosition and getBlockAt
-        return tileEntityList.entrySet().stream().parallel().map(Map.Entry::getKey).map(p -> world.getBlockAt(p.getX(), p.getY(), p.getZ())).map(Block::getState).collect(Collectors.toList());
+        return BlockEntityList.entrySet().stream().parallel().map(Map.Entry::getKey).map(p -> world.getBlockAt(p.getX(), p.getY(), p.getZ())).map(Block::getState).collect(Collectors.toList());
     }
 }

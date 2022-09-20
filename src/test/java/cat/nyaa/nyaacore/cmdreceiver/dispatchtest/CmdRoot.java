@@ -10,20 +10,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CmdRoot extends CommandReceiver {
+    @SubCommand("sub1")
+    public CmdSub1 sub1;
+    @SubCommand("sub2")
+    public CmdSub2 sub2;
+
     public CmdRoot(Plugin plugin) {
         super(plugin, null);
     }
-
 
     @Override
     public String getHelpPrefix() {
         return "";
     }
-
-    @SubCommand("sub1")
-    public CmdSub1 sub1;
-    @SubCommand("sub2")
-    public CmdSub2 sub2;
 
     // call with: nct sub3 {...}
     @SubCommand(value = "sub3", tabCompleter = "sub3tc")

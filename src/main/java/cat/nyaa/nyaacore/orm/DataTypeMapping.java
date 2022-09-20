@@ -1,7 +1,6 @@
 package cat.nyaa.nyaacore.orm;
 
 import cat.nyaa.nyaacore.utils.ItemStackUtils;
-
 import org.apache.commons.lang3.NotImplementedException;
 import org.bukkit.Bukkit;
 import org.bukkit.inventory.ItemStack;
@@ -108,7 +107,7 @@ public class DataTypeMapping {
             if (obj instanceof Number) {
                 return ((Number) obj).intValue() == 1;
             } else {
-                throw new IllegalArgumentException("Expecting number but received " + obj.toString());
+                throw new IllegalArgumentException("Expecting number but received " + obj);
             }
         }
 
@@ -127,7 +126,7 @@ public class DataTypeMapping {
             if (obj instanceof Number) {
                 return ((Number) obj).intValue();
             } else {
-                throw new IllegalArgumentException("Expecting number but received " + obj.toString());
+                throw new IllegalArgumentException("Expecting number but received " + obj);
             }
         }
 
@@ -146,7 +145,7 @@ public class DataTypeMapping {
             if (obj instanceof Number) {
                 return ((Number) obj).longValue();
             } else {
-                throw new IllegalArgumentException("Expecting number but received " + obj.toString());
+                throw new IllegalArgumentException("Expecting number but received " + obj);
             }
         }
 
@@ -165,7 +164,7 @@ public class DataTypeMapping {
             if (obj instanceof Number) {
                 return ((Number) obj).floatValue();
             } else {
-                throw new IllegalArgumentException("Expecting number but received " + obj.toString());
+                throw new IllegalArgumentException("Expecting number but received " + obj);
             }
         }
 
@@ -184,7 +183,7 @@ public class DataTypeMapping {
             if (obj instanceof Number) {
                 return ((Number) obj).doubleValue();
             } else {
-                throw new IllegalArgumentException("Expecting number but received " + obj.toString());
+                throw new IllegalArgumentException("Expecting number but received " + obj);
             }
         }
 
@@ -203,7 +202,7 @@ public class DataTypeMapping {
             if (obj instanceof String) {
                 return (String) obj;
             } else {
-                throw new IllegalArgumentException("Expecting string but received " + obj.toString());
+                throw new IllegalArgumentException("Expecting string but received " + obj);
             }
         }
 
@@ -235,7 +234,7 @@ public class DataTypeMapping {
             if (obj instanceof String) {
                 return Enum.valueOf(enumClass, (String) obj);
             } else {
-                throw new IllegalArgumentException("Expecting string but received " + obj.toString());
+                throw new IllegalArgumentException("Expecting string but received " + obj);
             }
         }
 
@@ -264,7 +263,7 @@ public class DataTypeMapping {
                 }
                 return result;
             } else {
-                throw new IllegalArgumentException("Expecting string but received " + obj.toString());
+                throw new IllegalArgumentException("Expecting string but received " + obj);
             }
         }
 
@@ -314,7 +313,7 @@ public class DataTypeMapping {
                     throw new RuntimeException(ex);
                 }
             } else {
-                throw new IllegalArgumentException("Expecting string but received " + obj.toString());
+                throw new IllegalArgumentException("Expecting string but received " + obj);
             }
         }
 

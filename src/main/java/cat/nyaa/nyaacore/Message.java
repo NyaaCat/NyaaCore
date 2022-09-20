@@ -42,10 +42,8 @@ public class Message {
         if (cloned.hasItemMeta() && cloned.getItemMeta() instanceof BookMeta) {
             return ItemStackUtils.itemToJson(removeBookContent(cloned));
         }
-        if (cloned.hasItemMeta() && cloned.getItemMeta() instanceof BlockStateMeta) {
-            BlockStateMeta blockStateMeta = (BlockStateMeta) cloned.getItemMeta();
-            if (blockStateMeta.hasBlockState() && blockStateMeta.getBlockState() instanceof InventoryHolder) {
-                InventoryHolder inventoryHolder = (InventoryHolder) blockStateMeta.getBlockState();
+        if (cloned.hasItemMeta() && cloned.getItemMeta() instanceof BlockStateMeta blockStateMeta) {
+            if (blockStateMeta.hasBlockState() && blockStateMeta.getBlockState() instanceof InventoryHolder inventoryHolder) {
                 ArrayList<ItemStack> items = new ArrayList<>();
                 for (int i = 0; i < inventoryHolder.getInventory().getSize(); i++) {
                     ItemStack itemStack = inventoryHolder.getInventory().getItem(i);

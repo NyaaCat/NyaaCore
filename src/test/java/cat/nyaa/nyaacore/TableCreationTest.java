@@ -3,7 +3,7 @@ package cat.nyaa.nyaacore;
 import cat.nyaa.nyaacore.orm.annotations.Column;
 import cat.nyaa.nyaacore.orm.annotations.Table;
 import cat.nyaa.nyaacore.orm.backends.SQLiteDatabase;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;

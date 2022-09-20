@@ -13,7 +13,7 @@ import org.bukkit.inventory.ItemStack;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.sql.SQLException;
@@ -22,19 +22,19 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class SQLiteDatabaseTest {
 
     private IConnectedDatabase db;
 
-    @BeforeClass
+    @BeforeAll
     public static void touchDbFile() throws SQLException, ClassNotFoundException {
         new File(NyaaCoreTester.instance.getDataFolder(), "testdb.db").delete();
         DatabaseUtils.connect(NyaaCoreTester.instance, BackendConfig.sqliteBackend("testdb.db")).close();
     }
 
-    @Before
+    @BeforeEach
     public void openDatabase() throws SQLException, ClassNotFoundException {
         db = DatabaseUtils.connect(NyaaCoreTester.instance, BackendConfig.sqliteBackend("testdb.db"));
     }
@@ -351,7 +351,7 @@ public class SQLiteDatabaseTest {
         assertEquals(5050, (Object) tb8.selectUnique(WhereClause.EMPTY).x);  // Sigma{i=1..100}{i} == 5050
     }
 
-    @After
+    @AfterEach
     public void closeTables() throws SQLException {
         db.close();
     }

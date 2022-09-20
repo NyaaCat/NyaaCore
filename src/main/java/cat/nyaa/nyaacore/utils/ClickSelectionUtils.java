@@ -43,7 +43,7 @@ public class ClickSelectionUtils {
                 timeoutListener.remove(player);
             }
         };
-        runnable.runTaskLater(plugin, timeout * 20);
+        runnable.runTaskLater(plugin, timeout * 20L);
         timeoutListener.put(player, runnable);
     }
 

@@ -3,26 +3,24 @@ package cat.nyaa.nyaacore;
 import be.seeseemelk.mockbukkit.MockBukkit;
 import be.seeseemelk.mockbukkit.ServerMock;
 import be.seeseemelk.mockbukkit.entity.PlayerMock;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class MessageTest {
 
+    public static final char COLOR_CHAR = '\u00A7';
     private ServerMock server;
     private NyaaCoreLoader plugin;
-    public static final char COLOR_CHAR = '\u00A7';
 
-    @Before
-    public void setUp()
-    {
+    @BeforeEach
+    public void setUp() {
         server = MockBukkit.mock();
-        plugin = MockBukkit.load(NyaaCoreLoader.class,true);
+        plugin = MockBukkit.load(NyaaCoreLoader.class, true);
     }
 
-    @After
-    public void tearDown()
-    {
+    @AfterEach
+    public void tearDown() {
         MockBukkit.unmock();
     }
 

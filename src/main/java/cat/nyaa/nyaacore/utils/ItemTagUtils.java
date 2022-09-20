@@ -1,6 +1,6 @@
 package cat.nyaa.nyaacore.utils;
 
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundTag;
 import org.bukkit.craftbukkit.v1_19_R1.inventory.CraftItemStack;
 import org.bukkit.inventory.ItemStack;
 
@@ -19,7 +19,7 @@ public class ItemTagUtils {
             return Optional.empty();
         }
         if (item1.isEmpty()) return Optional.empty();
-        NBTTagCompound tag = item1.get().getTag();
+        CompoundTag tag = item1.get().getTag();
         if (tag == null) return Optional.empty();
         return !tag.contains(key) ? Optional.empty() : Optional.of(tag.getString(key));
     }
@@ -30,7 +30,7 @@ public class ItemTagUtils {
             return Optional.empty();
         }
         net.minecraft.world.item.ItemStack itemStack = is.get();
-        NBTTagCompound tag = itemStack.getOrCreateTag();
+        CompoundTag tag = itemStack.getOrCreateTag();
         tag.putString(key, value);
         itemStack.setTag(tag);
         return Optional.of(value);
@@ -44,7 +44,7 @@ public class ItemTagUtils {
             return Optional.empty();
         }
         if (item1.isEmpty()) return Optional.empty();
-        NBTTagCompound tag = item1.get().getTag();
+        CompoundTag tag = item1.get().getTag();
         if (tag == null) return Optional.empty();
         return !tag.contains(key) ? Optional.empty() : Optional.of(tag.getInt(key));
     }
@@ -55,7 +55,7 @@ public class ItemTagUtils {
             return Optional.empty();
         }
         net.minecraft.world.item.ItemStack itemStack = is.get();
-        NBTTagCompound tag = itemStack.getOrCreateTag();
+        CompoundTag tag = itemStack.getOrCreateTag();
         if (tag == null) return Optional.empty();
         tag.putInt(key, value);
         itemStack.setTag(tag);
@@ -70,7 +70,7 @@ public class ItemTagUtils {
             return Optional.empty();
         }
         if (item1.isEmpty()) return Optional.empty();
-        NBTTagCompound tag = item1.get().getTag();
+        CompoundTag tag = item1.get().getTag();
         if (tag == null) return Optional.empty();
         return !tag.contains(key) ? Optional.empty() : Optional.of(tag.getDouble(key));
     }
@@ -81,7 +81,7 @@ public class ItemTagUtils {
             return Optional.empty();
         }
         net.minecraft.world.item.ItemStack itemStack = is.get();
-        NBTTagCompound tag = itemStack.getOrCreateTag();
+        CompoundTag tag = itemStack.getOrCreateTag();
         if (tag == null) return Optional.empty();
         tag.putDouble(key, value);
         itemStack.setTag(tag);
@@ -96,7 +96,7 @@ public class ItemTagUtils {
             return Optional.empty();
         }
         if (item1.isEmpty()) return Optional.empty();
-        NBTTagCompound tag = item1.get().getTag();
+        CompoundTag tag = item1.get().getTag();
         if (tag == null) return Optional.empty();
         return !tag.contains(key) ? Optional.empty() : Optional.of(tag.getShort(key));
     }
@@ -107,7 +107,7 @@ public class ItemTagUtils {
             return Optional.empty();
         }
         net.minecraft.world.item.ItemStack itemStack = is.get();
-        NBTTagCompound tag = itemStack.getOrCreateTag();
+        CompoundTag tag = itemStack.getOrCreateTag();
         if (tag == null) return Optional.empty();
         tag.putShort(key, value);
         itemStack.setTag(tag);
@@ -122,7 +122,7 @@ public class ItemTagUtils {
             return Optional.empty();
         }
         if (item1.isEmpty()) return Optional.empty();
-        NBTTagCompound tag = item1.get().getTag();
+        CompoundTag tag = item1.get().getTag();
         if (tag == null) return Optional.empty();
         return !tag.contains(key) ? Optional.empty() : Optional.of(tag.getByte(key));
     }
@@ -133,7 +133,7 @@ public class ItemTagUtils {
             return Optional.empty();
         }
         net.minecraft.world.item.ItemStack itemStack = is.get();
-        NBTTagCompound tag = itemStack.getOrCreateTag();
+        CompoundTag tag = itemStack.getOrCreateTag();
         if (tag == null) return Optional.empty();
         tag.putByte(key, value);
         itemStack.setTag(tag);
@@ -148,7 +148,7 @@ public class ItemTagUtils {
             return Optional.empty();
         }
         if (item1.isEmpty()) return Optional.empty();
-        NBTTagCompound tag = item1.get().getTag();
+        CompoundTag tag = item1.get().getTag();
         if (tag == null) return Optional.empty();
         return !tag.contains(key) ? Optional.empty() : Optional.of(tag.getLong(key));
     }
@@ -159,7 +159,7 @@ public class ItemTagUtils {
             return Optional.empty();
         }
         net.minecraft.world.item.ItemStack itemStack = is.get();
-        NBTTagCompound tag = itemStack.getOrCreateTag();
+        CompoundTag tag = itemStack.getOrCreateTag();
         if (tag == null) return Optional.empty();
         tag.putLong(key, value);
         itemStack.setTag(tag);
@@ -174,7 +174,7 @@ public class ItemTagUtils {
             return Optional.empty();
         }
         if (item1.isEmpty()) return Optional.empty();
-        NBTTagCompound tag = item1.get().getTag();
+        CompoundTag tag = item1.get().getTag();
         if (tag == null) return Optional.empty();
         return !tag.contains(key) ? Optional.empty() : Optional.of(tag.getLongArray(key));
     }
@@ -185,7 +185,7 @@ public class ItemTagUtils {
             return Optional.empty();
         }
         net.minecraft.world.item.ItemStack itemStack = is.get();
-        NBTTagCompound tag = itemStack.getOrCreateTag();
+        CompoundTag tag = itemStack.getOrCreateTag();
         if (tag == null) return Optional.empty();
         tag.putLongArray(key, value); // this is anonymous
         itemStack.setTag(tag);
@@ -200,7 +200,7 @@ public class ItemTagUtils {
             return Optional.empty();
         }
         if (item1.isEmpty()) return Optional.empty();
-        NBTTagCompound tag = item1.get().getTag();
+        CompoundTag tag = item1.get().getTag();
         if (tag == null) return Optional.empty();
         return !tag.contains(key) ? Optional.empty() : Optional.of(tag.getIntArray(key));
     }
@@ -211,7 +211,7 @@ public class ItemTagUtils {
             return Optional.empty();
         }
         net.minecraft.world.item.ItemStack itemStack = is.get();
-        NBTTagCompound tag = itemStack.getOrCreateTag();
+        CompoundTag tag = itemStack.getOrCreateTag();
         if (tag == null) return Optional.empty();
         tag.putIntArray(key, value);
         itemStack.setTag(tag);
@@ -226,7 +226,7 @@ public class ItemTagUtils {
             return Optional.empty();
         }
         if (item1.isEmpty()) return Optional.empty();
-        NBTTagCompound tag = item1.get().getTag();
+        CompoundTag tag = item1.get().getTag();
         if (tag == null) return Optional.empty();
         return !tag.contains(key) ? Optional.empty() : Optional.of(tag.getByteArray(key));
     }
@@ -237,7 +237,7 @@ public class ItemTagUtils {
             return Optional.empty();
         }
         net.minecraft.world.item.ItemStack itemStack = is.get();
-        NBTTagCompound tag = itemStack.getOrCreateTag();
+        CompoundTag tag = itemStack.getOrCreateTag();
         if (tag == null) return Optional.empty();
         tag.putByteArray(key, value);
         itemStack.setTag(tag);
@@ -252,7 +252,7 @@ public class ItemTagUtils {
             return Optional.empty();
         }
         if (item1.isEmpty()) return Optional.empty();
-        NBTTagCompound tag = item1.get().getTag();
+        CompoundTag tag = item1.get().getTag();
         if (tag == null) return Optional.empty();
         return !tag.contains(key) ? Optional.empty() : Optional.of(tag.getBoolean(key));
     }
@@ -263,7 +263,7 @@ public class ItemTagUtils {
             return Optional.empty();
         }
         net.minecraft.world.item.ItemStack itemStack = is.get();
-        NBTTagCompound tag = itemStack.getOrCreateTag();
+        CompoundTag tag = itemStack.getOrCreateTag();
         if (tag == null) return Optional.empty();
         tag.putBoolean(key, value);
         itemStack.setTag(tag);
@@ -278,7 +278,7 @@ public class ItemTagUtils {
             return Optional.empty();
         }
         if (item1.isEmpty()) return Optional.empty();
-        NBTTagCompound tag = item1.get().getTag();
+        CompoundTag tag = item1.get().getTag();
         if (tag == null) return Optional.empty();
         return !tag.contains(key) ? Optional.empty() : Optional.of(tag.getFloat(key));
     }
@@ -289,7 +289,7 @@ public class ItemTagUtils {
             return Optional.empty();
         }
         net.minecraft.world.item.ItemStack itemStack = is.get();
-        NBTTagCompound tag = itemStack.getOrCreateTag();
+        CompoundTag tag = itemStack.getOrCreateTag();
         if (tag == null) return Optional.empty();
         tag.putFloat(key, value);
         itemStack.setTag(tag);

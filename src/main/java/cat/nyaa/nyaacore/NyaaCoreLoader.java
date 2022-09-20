@@ -56,7 +56,7 @@ public class NyaaCoreLoader extends JavaPlugin {
                 serverVersion = SharedConstants.getCurrentVersion().getName();
             } catch (Exception e) {
                 e.printStackTrace();
-                Bukkit.getPluginManager().disablePlugin((Plugin) this);
+                Bukkit.getPluginManager().disablePlugin(this);
             }
             try {
                 var VersionResource = getResource("MCVersion");
@@ -75,20 +75,21 @@ public class NyaaCoreLoader extends JavaPlugin {
         private static checkVersion instance;
         private static boolean bypass = false;
 
-        public void enable(@Nullable InputStream VersionResource, Logger logger) {
-            if (bypass) return;
-
-        }
-
-        public void setOff() { // test only
-            bypass = true;
-        }
-
         public static checkVersion getInstance() {
             if (checkVersion.instance == null) {
                 checkVersion.instance = new checkVersion();
             }
             return instance;
+        }
+
+        public void enable(@Nullable InputStream VersionResource, Logger logger) {
+            if (bypass) {
+            }
+
+        }
+
+        public void setOff() { // test only
+            bypass = true;
         }
     }
 }

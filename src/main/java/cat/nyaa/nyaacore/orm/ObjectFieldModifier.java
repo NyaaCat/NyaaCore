@@ -71,7 +71,7 @@ public class ObjectFieldModifier {
 
         String methodName = dataMethod.getName();
         if (!methodName.startsWith("get") && !methodName.startsWith("set"))
-            throw new IllegalArgumentException("Method is neither a setter nor a getter: " + dataMethod.toString());
+            throw new IllegalArgumentException("Method is neither a setter nor a getter: " + dataMethod);
         String methodSuffix = methodName.substring(3);
         String name = ("".equals(anno.name())) ? methodSuffix : anno.name();
         Class methodType;
@@ -81,7 +81,7 @@ public class ObjectFieldModifier {
             methodType = dataMethod.getParameterCount() == 1 ? dataMethod.getParameterTypes()[0] : null;
         }
         if (methodType == null || methodType == Void.class || methodType == Void.TYPE)
-            throw new IllegalArgumentException("Cannot determine getter/setter type: " + dataMethod.toString());
+            throw new IllegalArgumentException("Cannot determine getter/setter type: " + dataMethod);
         //if (methodType != String.class && methodType != Long.class && methodType != Double.class)
         //   throw new IllegalArgumentException("Only three types are supported for getter/setter columns: String/Long/Double");
 

@@ -2,7 +2,6 @@ package cat.nyaa.nyaacore.orm;
 
 import cat.nyaa.nyaacore.orm.backends.BackendConfig;
 import cat.nyaa.nyaacore.orm.backends.IConnectedDatabase;
-import cat.nyaa.nyaacore.orm.backends.MysqlDatabase;
 import cat.nyaa.nyaacore.orm.backends.SQLiteDatabase;
 import org.bukkit.plugin.Plugin;
 

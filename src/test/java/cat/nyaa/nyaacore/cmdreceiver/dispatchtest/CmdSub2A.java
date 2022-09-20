@@ -6,7 +6,7 @@ import cat.nyaa.nyaacore.cmdreceiver.CommandReceiver;
 import cat.nyaa.nyaacore.cmdreceiver.SubCommand;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.Plugin;
-import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,7 +36,7 @@ public class CmdSub2A extends CommandReceiver {
     // no way to call this sub command
     @SubCommand(value = "b")
     public void sub2AB(CommandSender sender, Arguments args) {
-        Assert.fail("should not be able to be called");
+        Assertions.fail("should not be able to be called");
     }
 
     public List<String> ctc(CommandSender sender, Arguments args) {

@@ -31,7 +31,7 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
 
     /**
      * @param plugin for logging purpose only
-     * @param _i18n i18n
+     * @param _i18n  i18n
      */
     @SuppressWarnings("rawtypes")
     public CommandReceiver(Plugin plugin, ILocalizer _i18n) {
@@ -105,8 +105,7 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
     }
 
     public static ItemStack getItemInHand(CommandSender se) {
-        if (se instanceof Player) {
-            Player p = (Player) se;
+        if (se instanceof Player p) {
             if (p.getInventory() != null) {
                 ItemStack i = p.getInventory().getItemInMainHand();
                 if (i != null && i.getType() != Material.AIR) {
@@ -120,8 +119,7 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
     }
 
     public static ItemStack getItemInOffHand(CommandSender se) {
-        if (se instanceof Player) {
-            Player p = (Player) se;
+        if (se instanceof Player p) {
             if (p.getInventory() != null) {
                 ItemStack i = p.getInventory().getItemInOffHand();
                 if (i != null && i.getType() != Material.AIR) {
@@ -373,14 +371,14 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
             Set<String> allSubCommandsName = new HashSet<>();
             allSubCommandsName.addAll(subCommandAlias.keySet());
             allSubCommandsName.addAll(subCommands.keySet());
-            List<String> subcommands =allSubCommandsName.stream().filter(s -> s.startsWith(cmd_prefix)).sorted().toList();
+            List<String> subcommands = allSubCommandsName.stream().filter(s -> s.startsWith(cmd_prefix)).sorted().toList();
             ret.addAll(subcommands);
             return ret;
         } else {
             // goto subcommand if exact match found
             // otherwise ask default command
             String subCommandName = getSubCommandName(cmd);
-            if (subCommandName !=null) {
+            if (subCommandName != null) {
                 args.next();
                 return subCommands.get(subCommandName).callTabComplete(sender, args);
             } else if (defaultSubCommand != null) {
@@ -400,13 +398,14 @@ public abstract class CommandReceiver implements CommandExecutor, TabCompleter {
         }
         return null;
     }
+
     @Nullable
     private String[] getSubCommandAlias(@Nullable SubCommandInfo subCommandInfo) {
-        if(subCommandInfo == null)return null;
-        if(subCommandInfo.alias == null)return null;
+        if (subCommandInfo == null) return null;
+        if (subCommandInfo.alias == null) return null;
         ArrayList<String> list = Lists.newArrayList(subCommandInfo.alias);
         list.removeIf(String::isEmpty);
-        if(list.size()<=0)return null;
+        if (list.size() <= 0) return null;
         return list.toArray(new String[0]);
     }
 

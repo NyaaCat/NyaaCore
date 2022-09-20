@@ -43,7 +43,7 @@ public class SQLiteDatabase implements IConnectedDatabase {
             ObjectFieldModifier ct = objMod.columns.get(colName);
             colStr.add(getTableCreationScheme(ct));
         }
-        return String.format("CREATE TABLE IF NOT EXISTS %s(%s)", objMod.tableName, colStr.toString());
+        return String.format("CREATE TABLE IF NOT EXISTS %s(%s)", objMod.tableName, colStr);
     }
 
     @Override

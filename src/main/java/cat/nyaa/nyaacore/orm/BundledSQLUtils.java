@@ -89,7 +89,7 @@ public final class BundledSQLUtils {
                 buf.write((byte) result);
                 result = bis.read();
             }
-            sql = buf.toString(StandardCharsets.UTF_8.name());
+            sql = buf.toString(StandardCharsets.UTF_8);
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }

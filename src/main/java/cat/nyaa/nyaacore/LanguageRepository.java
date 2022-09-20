@@ -7,7 +7,6 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
@@ -36,21 +35,20 @@ import java.util.stream.Collectors;
  * 4. Report a missing key
  */
 public abstract class LanguageRepository implements ILocalizer {
-    public static Set<String> getAllLanguages() {
-        return Arrays.stream(Locale.getAvailableLocales()).map(Locale::toLanguageTag).map(s->s.replace('-', '_')).collect(Collectors.toSet());
-    }
-
     /**
      * Use English as fallback language
      */
     public static final String DEFAULT_LANGUAGE = "en_US";
-
     /**
      * Per-plugin language map used by {@link LanguageRepository}
      * So it's possible to overwrite some internal language keys here.
      * Map[languageTag, Map[key, value]]
      */
     private final Map<String, Map<String, String>> map = new HashMap<>();
+
+    public static Set<String> getAllLanguages() {
+        return Arrays.stream(Locale.getAvailableLocales()).map(Locale::toLanguageTag).map(s -> s.replace('-', '_')).collect(Collectors.toSet());
+    }
 
     // helper function to load language map
     private static void loadResourceMap(Plugin plugin, String langTag, Map<String, String> targetMap) {
@@ -77,8 +75,8 @@ public abstract class LanguageRepository implements ILocalizer {
      * overwrite existing items
      * The '&' will be transformed to color code.
      *
-     * @param section        source section
-     * @param prefix         used in recursion to determine the proper prefix
+     * @param section source section
+     * @param prefix  used in recursion to determine the proper prefix
      */
     private static void loadLanguageSection(Map<String, String> map, ConfigurationSection section, String prefix) {
         if (map == null || section == null || prefix == null) return;

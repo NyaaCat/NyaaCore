@@ -11,6 +11,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CmdSub2 extends CommandReceiver {
+    @SubCommand(isDefaultCommand = true)
+    public CmdSub2A sub2a;
+
     public CmdSub2(Plugin plugin, ILocalizer i18n) {
         super(plugin, i18n);
     }
@@ -19,9 +22,6 @@ public class CmdSub2 extends CommandReceiver {
     public String getHelpPrefix() {
         return "sub2";
     }
-
-    @SubCommand(isDefaultCommand = true)
-    public CmdSub2A sub2a;
 
     // call with: nct sub2 b {...}
     @SubCommand(value = "b", tabCompleter = "btc")

@@ -16,7 +16,8 @@ public interface Getter<T> {
         } catch (NoSuchMethodException e) {
             try {
                 return cls.getDeclaredConstructor(cls.getEnclosingClass()).newInstance(p);
-            } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException ex) {
+            } catch (InstantiationException | IllegalAccessException | InvocationTargetException |
+                     NoSuchMethodException ex) {
                 throw new RuntimeException(ex);
             }
         }

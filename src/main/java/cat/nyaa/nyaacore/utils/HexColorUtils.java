@@ -44,7 +44,8 @@ public class HexColorUtils {
     private static String replaceColor(final String input, final Set<ChatColor> supported, boolean rgb) {
         StringBuffer legacyBuilder = new StringBuffer();
         Matcher legacyMatcher = REPLACE_ALL_PATTERN.matcher(input);
-        legacyLoop: while (legacyMatcher.find()) {
+        legacyLoop:
+        while (legacyMatcher.find()) {
             boolean isEscaped = (legacyMatcher.group(1) != null);
             if (!isEscaped) {
                 char code = legacyMatcher.group(2).toLowerCase(Locale.ROOT).charAt(0);
@@ -102,10 +103,10 @@ public class HexColorUtils {
     //Extracted from EssentialsX    
 
     //actual call
-    public static String hexColored(String str){
-        try{
+    public static String hexColored(String str) {
+        try {
             return replaceFormat(str);
-        } catch (Exception e){
+        } catch (Exception e) {
             //fallback in case an exception thrown.
             return ChatColor.translateAlternateColorCodes('&', str);
         }
