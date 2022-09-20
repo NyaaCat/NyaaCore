@@ -6,7 +6,7 @@ pipeline {
                 jdk "jdk17"
             }
             steps {
-                sh './gradlew reobfJar sourcesJar javadocJar'
+                sh './gradlew build publish'
             }
         }
     }

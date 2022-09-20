@@ -2,6 +2,7 @@ import java.nio.charset.StandardCharsets
 
 plugins {
     id 'java-library'
+    id 'maven-publish'
     id 'io.papermc.paperweight.userdev' version '1.3.8'
     id 'xyz.jpenilla.run-paper' version '1.0.6' // Adds runServer and runMojangMappedServer tasks for testing
 }
@@ -33,6 +34,8 @@ compileJava {
 
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(17))
+    withJavadocJar()
+    withSourcesJar()
 }
 
 assemble {
@@ -71,17 +74,6 @@ dependencies {
     testImplementation 'ch.vorburger.mariaDB4j:mariaDB4j:2.5.3'
 }
 
-
-task sourcesJar(type: Jar) {
-    archiveClassifier.set('sources')
-    from sourceSets.main.java.srcDirs
-}
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    archiveClassifier.set('javadoc')
-    from javadoc.destinationDir
-}
-
-
 processResources { // modify version string
     filteringCharset = StandardCharsets.UTF_8.name()
     filesMatching("**/plugin.yml") {
@@ -90,17 +82,27 @@ processResources { // modify version string
     filesMatching("**/MCVersion") {
         expand 'minecraftVersion': project.minecraftVersion
     }
-//    from(deobfMappingCsrg) {
-//        rename { 'spigot-deobf.csrg' }
-//    }
 }
-processTestResources {
-//    from(deobfMappingCsrg) {
-//        rename { 'spigot-deobf.csrg' }
-//    }
-}
+
 reobfJar{
     outputJar.set(layout.buildDirectory.file("libs/${pluginNameUpper}-mc${minecraftVersion}-${project.version}.jar"))
+}
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            afterEvaluate{
+                group project.group
+                artifactId pluginNameLower
+                version "$majorVersion.$minorVersion.$buildNumber-SNAPSHOT"
+            }
+        }
+    }
+    repositories {
+        maven {
+            url mavenDirectory
+        }
+    }
 }
 
 javadoc {
@@ -112,16 +114,11 @@ javadoc {
         //links 'https://hub.spigotmc.org/javadocs/spigot/'
         links 'https://guava.dev/releases/21.0/api/docs/'
         links 'https://ci.md-5.net/job/BungeeCord/ws/chat/target/apidocs/'
-
-        locale 'en_US'
-        encoding 'UTF-8'
-        docEncoding 'UTF-8'
-        addBooleanOption('keywords', true)
-        addStringOption('Xdoclint:none', '-quiet')
-
+        options.locale = 'en_US'
+        options.encoding = 'UTF-8'
+        options.addBooleanOption('keywords', true)
+        options.addStringOption('Xdoclint:none', '-quiet')
         options.addBooleanOption('html5', true)
-
-        windowTitle = "${pluginNameUpper} Javadoc"
-        docTitle = "${pluginNameUpper} (mc$minecraftVersion-${project.version})"
+        options.windowTitle = "${pluginNameUpper} Javadoc"
     }
 }
