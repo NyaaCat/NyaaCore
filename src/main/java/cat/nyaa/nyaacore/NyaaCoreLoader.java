@@ -60,7 +60,7 @@ public class NyaaCoreLoader extends JavaPlugin {
             }
             try {
                 var VersionResource = getResource("MCVersion");
-                targetVersion = VersionResource == null ? "" : Arrays.toString(VersionResource.readAllBytes());
+                targetVersion = VersionResource == null ? "" : new String(VersionResource.readAllBytes());
                 getLogger().info("target minecraft version:" + targetVersion + "server version:" + serverVersion);
             } catch (Exception e) {
                 throw new RuntimeException(e);
