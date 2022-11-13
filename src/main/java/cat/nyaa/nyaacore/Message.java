@@ -39,42 +39,53 @@ public class Message {
 
     public static String getItemJsonStripped(ItemStack item) {
         ItemStack cloned = item.clone();
-        if (cloned.hasItemMeta() && cloned.getItemMeta() instanceof BookMeta) {
-            return ItemStackUtils.itemToJson(removeBookContent(cloned));
-        }
-        if (cloned.hasItemMeta() && cloned.getItemMeta() instanceof BlockStateMeta blockStateMeta) {
-            if (blockStateMeta.hasBlockState() && blockStateMeta.getBlockState() instanceof InventoryHolder inventoryHolder) {
-                ArrayList<ItemStack> items = new ArrayList<>();
-                for (int i = 0; i < inventoryHolder.getInventory().getSize(); i++) {
-                    ItemStack itemStack = inventoryHolder.getInventory().getItem(i);
-                    if (itemStack != null && itemStack.getType() != Material.AIR) {
-                        if (items.size() < 5) {
-                            if (itemStack.hasItemMeta()) {
-                                if (itemStack.getItemMeta().hasLore()) {
-                                    ItemMeta meta = itemStack.getItemMeta();
-                                    meta.setLore(new ArrayList<>());
-                                    itemStack.setItemMeta(meta);
-                                }
-                                if (itemStack.getItemMeta() instanceof BookMeta) {
-                                    itemStack = removeBookContent(itemStack);
-                                }
-                            }
-                            items.add(itemStack);
-                        } else {
-                            items.add(new ItemStack(Material.STONE));
-                        }
-                    }
-                }
-                inventoryHolder.getInventory().clear();
-                for (int i = 0; i < items.size(); i++) {
-                    inventoryHolder.getInventory().setItem(i, items.get(i));
-                }
-                blockStateMeta.setBlockState((BlockState) inventoryHolder);
-                cloned.setItemMeta(blockStateMeta);
-                return ItemStackUtils.itemToJson(cloned);
+        if (cloned.hasItemMeta()) {
+            var meta = cloned.getItemMeta();
+            if(meta instanceof BookMeta) {
+                return ItemStackUtils.itemToJson(removeBookContent(cloned));
+            }
+            if (meta != null) {
+                cloned.setItemMeta(filterItemMeta(meta));
             }
         }
         return ItemStackUtils.itemToJson(cloned);
+    }
+
+
+    public static ItemMeta filterItemMeta(ItemMeta itemMeta) {
+        var cloned = itemMeta.clone();
+        if(!(cloned instanceof BlockStateMeta blockStateMeta))return cloned;
+        if(!(blockStateMeta.getBlockState() instanceof InventoryHolder inventoryHolder))return cloned;
+        ArrayList<ItemStack> items = new ArrayList<>();
+
+        for (int i = 0; i < inventoryHolder.getInventory().getSize(); i++) {
+            ItemStack itemStack = inventoryHolder.getInventory().getItem(i);
+            if (itemStack != null && itemStack.getType() != Material.AIR) {
+                if (items.size() < 5) {
+                    if (itemStack.hasItemMeta()) {
+                        if (itemStack.getItemMeta().hasLore()) {
+                            ItemMeta meta = itemStack.getItemMeta();
+                            meta.setLore(new ArrayList<>());
+                            itemStack.setItemMeta(meta);
+                        }
+                        if (itemStack.getItemMeta() instanceof BookMeta) {
+                            itemStack = removeBookContent(itemStack);
+                        }
+                    }
+                    items.add(itemStack);
+                } else {
+                    items.add(new ItemStack(Material.STONE));
+                }
+            }
+        }
+
+        inventoryHolder.getInventory().clear();
+        for (int i = 0; i < items.size(); i++) {
+            inventoryHolder.getInventory().setItem(i, items.get(i));
+        }
+        blockStateMeta.setBlockState((BlockState) inventoryHolder);
+        return blockStateMeta;
+
     }
 
     /**
