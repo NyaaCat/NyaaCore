@@ -1,7 +1,7 @@
 package cat.nyaa.nyaacore.utils;
 
 import net.minecraft.nbt.CompoundTag;
-import org.bukkit.craftbukkit.v1_19_R1.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_19_R3.inventory.CraftItemStack;
 import org.bukkit.inventory.ItemStack;
 
 import java.lang.reflect.Field;

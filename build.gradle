@@ -14,7 +14,7 @@ ext.pluginNameLower = ext.pluginNameUpper.toLowerCase()
 
 ext.majorVersion = 9
 ext.minorVersion = 2
-ext.minecraftVersion = "1.19.2"
+ext.minecraftVersion = "1.19.4"
 
 
 // Supplied by Jenkins
