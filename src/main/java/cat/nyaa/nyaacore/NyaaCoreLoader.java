@@ -6,7 +6,6 @@ import cat.nyaa.nyaacore.utils.OfflinePlayerUtils;
 import net.minecraft.SharedConstants;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.java.JavaPluginLoader;
@@ -14,7 +13,6 @@ import org.bukkit.plugin.java.JavaPluginLoader;
 import javax.annotation.Nullable;
 import java.io.File;
 import java.io.InputStream;
-import java.util.Arrays;
 import java.util.logging.Logger;
 
 public class NyaaCoreLoader extends JavaPlugin {
