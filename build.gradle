@@ -25,7 +25,7 @@ ext.jdDirectory = System.env.JAVADOCS_DIR == null ? null : "$System.env.JAVADOCS
 // Version used for distribution. Different from maven repo
 group = "cat.nyaa"
 //archivesBaseName = "${pluginNameUpper}-mc$minecraftVersion"
-version = "$majorVersion.$minorVersion-mc$minecraftVersion-$buildNumber".toString()
+version = "$majorVersion.$minorVersion-mc$minecraftVersion-build$buildNumber".toString()
 
 // extra compile warnings
 compileJava {
