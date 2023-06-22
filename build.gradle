@@ -14,7 +14,7 @@ ext.pluginNameLower = ext.pluginNameUpper.toLowerCase()
 
 ext.majorVersion = 9
 ext.minorVersion = 2
-ext.minecraftVersion = "1.19.4"
+ext.minecraftVersion = "1.20.1"
 
 
 // Supplied by Jenkins
@@ -25,7 +25,7 @@ ext.jdDirectory = System.env.JAVADOCS_DIR == null ? null : "$System.env.JAVADOCS
 // Version used for distribution. Different from maven repo
 group = "cat.nyaa"
 //archivesBaseName = "${pluginNameUpper}-mc$minecraftVersion"
-version = "$majorVersion.$minorVersion.$buildNumber".toString()
+version = "$majorVersion.$minorVersion-mc$minecraftVersion-$buildNumber".toString()
 
 // extra compile warnings
 compileJava {
@@ -81,7 +81,7 @@ processResources { // modify version string
 }
 
 reobfJar{
-    outputJar.set(layout.buildDirectory.file("libs/${pluginNameUpper}-mc${minecraftVersion}-${project.version}.jar"))
+    outputJar.set(layout.buildDirectory.file("libs/${pluginNameUpper}-${project.version}-mc${minecraftVersion}.jar"))
 }
 publishing {
     publications {
