@@ -52,7 +52,8 @@ public abstract class LanguageRepository implements ILocalizer {
 
     // helper function to load language map
     private static void loadResourceMap(Plugin plugin, String langTag, Map<String, String> targetMap) {
-        if (plugin == null || langTag == null || targetMap == null) throw new IllegalArgumentException();
+        if (plugin == null || langTag == null || targetMap == null)
+            throw new IllegalArgumentException();
         InputStream stream = plugin.getResource("lang/" + langTag + ".yml");
         if (stream != null) {
             YamlConfiguration section = YamlConfiguration.loadConfiguration(new InputStreamReader(stream, StandardCharsets.UTF_8));
@@ -62,7 +63,8 @@ public abstract class LanguageRepository implements ILocalizer {
 
     // helper function to load language map
     private static void loadLocalMap(Plugin plugin, String codeName, Map<String, String> targetMap) {
-        if (plugin == null || codeName == null || targetMap == null) throw new IllegalArgumentException();
+        if (plugin == null || codeName == null || targetMap == null)
+            throw new IllegalArgumentException();
         File langFile = new File(plugin.getDataFolder(), codeName + ".yml");
         if (langFile.exists() && langFile.isFile()) {
             YamlConfiguration section = YamlConfiguration.loadConfiguration(langFile);
@@ -83,7 +85,7 @@ public abstract class LanguageRepository implements ILocalizer {
         for (String key : section.getKeys(false)) {
             String path = prefix + key;
             if (section.isString(key)) {
-                map.put(path, HexColorUtils.hexColored(section.getString(key)));
+                map.put(path, HexColorUtils.extractColorCode(section.getString(key)));
             } else if (section.isConfigurationSection(key)) {
                 loadLanguageSection(map, section.getConfigurationSection(key), path + ".");
             }
@@ -181,7 +183,8 @@ public abstract class LanguageRepository implements ILocalizer {
      * `null` key-value pair will be ignored
      */
     public String getSubstituted(String key, Object... param) {
-        if (key == null || param == null || (param.length % 2) != 0) throw new IllegalArgumentException();
+        if (key == null || param == null || (param.length % 2) != 0)
+            throw new IllegalArgumentException();
         Map<Object, Object> map = new HashMap<>();
         for (int i = 0; i < param.length / 2; i++) {
             if (param[i * 2] != null && param[i * 2 + 1] != null) {
@@ -246,7 +249,8 @@ public abstract class LanguageRepository implements ILocalizer {
 
         @Override
         public String getFormatted(String key, Object... para) {
-            if (!key.startsWith("internal.")) throw new IllegalArgumentException("Not an internal language key");
+            if (!key.startsWith("internal."))
+                throw new IllegalArgumentException("Not an internal language key");
             return super.getFormatted(key, para);
         }
 
@@ -258,7 +262,8 @@ public abstract class LanguageRepository implements ILocalizer {
 
         @Override
         public String getSubstituted(String key, Map<?, ?> paraMap) {
-            if (!key.startsWith("internal.")) throw new IllegalArgumentException("Not an internal language key");
+            if (!key.startsWith("internal."))
+                throw new IllegalArgumentException("Not an internal language key");
             return super.getSubstituted(key, paraMap);
         }
     }
