@@ -29,6 +29,11 @@ public class HexColorUtils {
         return convertToLegacyColorCode(textBuilder.toString());
     }
 
+    // for old api compatibility
+    public static String hexColored(String text){
+        return extractColorCode(text);
+    }
+
     /**
      * Expand color code looks like <code>&amp;#RRGGBB</code> to <code>&amp;x&amp;R&amp;R&amp;G&amp;G&amp;B&amp;B</code>.
      *
