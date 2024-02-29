@@ -1,4 +1,5 @@
 import io.papermc.paperweight.util.path
+import java.util.*
 
 plugins {
     `java-library`
@@ -69,7 +70,7 @@ publishing {
         create<MavenPublication>("mavenJava") {
             from(getComponents()["java"])
             afterEvaluate {
-                artifactId = pluginName
+                artifactId = pluginName.lowercase()
                 groupId = "$group"
                 version =
                     "$majorVersion.$minorVersion.$buildNumber-${
