@@ -14,7 +14,7 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.util.datafix.DataFixers;
 import net.minecraft.util.datafix.fixes.References;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v1_20_R1.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_20_R3.inventory.CraftItemStack;
 import org.bukkit.inventory.ItemStack;
 
 import java.io.*;
@@ -78,13 +78,13 @@ public final class ItemStackUtils {
 
     public static ItemStack itemFromBinary(byte[] nbt, int offset, int len) throws IOException {
         if (unlimitedNbtAccounter == null) {
-            unlimitedNbtAccounter = NbtAccounter.UNLIMITED;
+            unlimitedNbtAccounter = NbtAccounter.unlimitedHeap();
         }
 
         //Constructor<?> constructNativeItemStackFromCompoundTag = classNativeItemStack.getConstructor(classCompoundTag);
         ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(nbt, offset, len);
         DataInputStream dataInputStream = new DataInputStream(byteArrayInputStream);
-        CompoundTag reconstructedCompoundTag = CompoundTag.TYPE.load(dataInputStream, 0, unlimitedNbtAccounter);
+        CompoundTag reconstructedCompoundTag = CompoundTag.TYPE.load(dataInputStream, unlimitedNbtAccounter);
         dataInputStream.close();
         byteArrayInputStream.close();
         int dataVersion = reconstructedCompoundTag.getInt(NYAACORE_ITEMSTACK_DATAVERSION_KEY);
