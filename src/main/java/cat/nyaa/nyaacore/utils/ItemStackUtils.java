@@ -14,13 +14,16 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.util.datafix.DataFixers;
 import net.minecraft.util.datafix.fixes.References;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v1_20_R3.inventory.CraftItemStack;
+import org.bukkit.World;
+import org.bukkit.craftbukkit.CraftWorld;
+import org.bukkit.craftbukkit.inventory.CraftItemStack;
 import org.bukkit.inventory.ItemStack;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterInputStream;
@@ -38,6 +41,24 @@ public final class ItemStackUtils {
             .maximumWeight(256L * 1024 * 1024).build(); // Hard Coded 256M
     private static NbtAccounter unlimitedNbtAccounter = null;
 
+    private static CraftWorld defaultWorld;
+
+    private static CraftWorld getDefaultWorld() {
+        if (defaultWorld == null) {
+            var worlds = Bukkit.getWorlds();
+            if (!worlds.isEmpty()) {
+                var first = worlds.getFirst();
+                if (first instanceof CraftWorld) {
+                    defaultWorld = (CraftWorld) first;
+                }
+            }
+            if(defaultWorld == null) {
+                throw new IllegalStateException("No world available");
+            }
+        }
+        return defaultWorld;
+    }
+
     static {
         //noinspection deprecation
         currentDataVersion = Bukkit.getUnsafe().getDataVersion();
@@ -51,14 +72,13 @@ public final class ItemStackUtils {
      * @return binary NBT representation of the item stack
      */
     public static byte[] itemToBinary(ItemStack itemStack) throws IOException {
-        net.minecraft.world.item.ItemStack nativeItemStack = CraftItemStack.asNMSCopy(itemStack);
-        CompoundTag CompoundTag = new CompoundTag();
-        nativeItemStack.save(CompoundTag);
-        CompoundTag.putInt(NYAACORE_ITEMSTACK_DATAVERSION_KEY, currentDataVersion);
-
+        net.minecraft.world.item.ItemStack nativeItemStack = CraftItemStack.unwrap(itemStack);
+        CompoundTag tagPrefix = new CompoundTag();
+        tagPrefix.putInt(NYAACORE_ITEMSTACK_DATAVERSION_KEY, currentDataVersion);
+        Tag tag = nativeItemStack.save(getDefaultWorld().getHandle().registryAccess(), tagPrefix);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream dos = new DataOutputStream(baos);
-        CompoundTag.write(dos);
+        tag.write(dos);
         byte[] outputByteArray = baos.toByteArray();
         dos.close();
         baos.close();
@@ -72,7 +92,7 @@ public final class ItemStackUtils {
      * @param nbt binary item nbt data
      * @return constructed item
      */
-    public static ItemStack itemFromBinary(byte[] nbt) throws ReflectiveOperationException, IOException {
+    public static ItemStack itemFromBinary(byte[] nbt) throws IOException {
         return itemFromBinary(nbt, 0, nbt.length);
     }
 
@@ -103,8 +123,11 @@ public final class ItemStackUtils {
             Dynamic<Tag> out = dataFixer_instance.update(References_ITEM_STACK, dynamicInstance, dataVersion, currentDataVersion);
             reconstructedCompoundTag = (CompoundTag) out.getValue();
         }
-        net.minecraft.world.item.ItemStack reconstructedNativeItemStack = net.minecraft.world.item.ItemStack.of(reconstructedCompoundTag);
-        return CraftItemStack.asBukkitCopy(reconstructedNativeItemStack);
+        Optional<net.minecraft.world.item.ItemStack> reconstructedNativeItemStack = net.minecraft.world.item.ItemStack.parse(getDefaultWorld().getHandle().registryAccess(), reconstructedCompoundTag);
+        if(reconstructedNativeItemStack.isEmpty()) {
+            throw new IOException("Failed to parse item from binary");
+        }
+        return CraftItemStack.asCraftMirror(reconstructedNativeItemStack.get());
     }
 
     private static byte[] compress(byte[] data) {
@@ -195,7 +218,7 @@ public final class ItemStackUtils {
                 dis.readFully(tmp);
                 ret.add(itemFromBinary(tmp));
             }
-        } catch (IOException | ReflectiveOperationException ex) {
+        } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
         itemDeserializerCache.put(base64, ret.stream().map(ItemStack::clone).collect(Collectors.toList()));
@@ -222,12 +245,11 @@ public final class ItemStackUtils {
     public static String itemToJson(ItemStack itemStack) throws RuntimeException {
         CompoundTag nmsCompoundTagObj; // This will just be an empty CompoundTag instance to invoke the saveNms method
         net.minecraft.world.item.ItemStack nmsItemStackObj; // This is the net.minecraft.server.ItemStack object received from the asNMSCopy method
-        CompoundTag itemAsJsonObject; // This is the net.minecraft.server.ItemStack after being put through saveNmsItem method
+        Tag itemAsJsonObject; // This is the net.minecraft.server.ItemStack after being put through saveNmsItem method
 
         try {
-            nmsCompoundTagObj = new CompoundTag();
-            nmsItemStackObj = CraftItemStack.asNMSCopy(itemStack);
-            itemAsJsonObject = nmsItemStackObj.save(nmsCompoundTagObj);
+            nmsItemStackObj = CraftItemStack.unwrap(itemStack);
+            itemAsJsonObject = nmsItemStackObj.save(getDefaultWorld().getHandle().registryAccess());
         } catch (Throwable t) {
             throw new RuntimeException("failed to serialize itemstack to nms item", t);
         }
