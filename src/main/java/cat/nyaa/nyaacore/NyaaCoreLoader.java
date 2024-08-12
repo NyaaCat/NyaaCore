@@ -53,7 +53,7 @@ public class NyaaCoreLoader extends JavaPlugin {
             try {
                 serverVersion = SharedConstants.getCurrentVersion().getName();
             } catch (Exception e) {
-                e.printStackTrace();
+                getLogger().severe(e.getMessage());
                 Bukkit.getPluginManager().disablePlugin(this);
             }
             try {
