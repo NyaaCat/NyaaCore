@@ -11,8 +11,8 @@ plugins {
 // = = =
 
 val pluginName = "NyaaCore"
-val majorVersion = 10
-val minorVersion = 1
+val majorVersion = 9
+val minorVersion = 4
 
 val paperApiName = "1.21-R0.1-SNAPSHOT"
 
@@ -31,7 +31,7 @@ val javaDocDirectory =
 group = "cat.nyaa"
 //archivesBaseName = "${pluginNameUpper}-mc$minecraftVersion"
 version =
-    "$majorVersion.$minorVersion-${getMcVersion(paperApiName)}-b$buildNumber"
+    "$majorVersion.$minorVersion"
 
 java {
     // Configure the java toolchain. This allows gradle to auto-provision JDK 21 on systems that only have JDK 8 installed for example.
