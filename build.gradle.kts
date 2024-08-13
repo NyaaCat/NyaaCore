@@ -19,19 +19,14 @@ val paperApiName = "1.21-R0.1-SNAPSHOT"
 // = = =
 
 // for Jenkins CI
-val buildNumber = System.getenv("BUILD_NUMBER") ?: "local"
-val mavenDirectory =
-    System.getenv("MAVEN_DIR")
-        ?: layout.buildDirectory.dir("repo").path.toString()
-val javaDocDirectory =
-    System.getenv("JAVADOC_DIR")
-        ?: layout.buildDirectory.dir("javadoc").path.toString()
+val buildNumber = System.getenv("BUILD_NUMBER") ?: "x"
+val mavenDirectory = System.getenv("MAVEN_DIR") ?: layout.buildDirectory.dir("repo").path.toString()
+val javaDocDirectory = System.getenv("JAVADOC_DIR") ?: layout.buildDirectory.dir("javadoc").path.toString()
 
 // Version used for distribution. Different from maven repo
 group = "cat.nyaa"
 //archivesBaseName = "${pluginNameUpper}-mc$minecraftVersion"
-version =
-    "$majorVersion.$minorVersion"
+version ="$majorVersion.$minorVersion"
 
 java {
     // Configure the java toolchain. This allows gradle to auto-provision JDK 21 on systems that only have JDK 8 installed for example.
@@ -45,12 +40,12 @@ repositories {
     } //paper
     maven { url = uri("https://libraries.minecraft.net") } // mojang
     maven { url = uri("https://repo.essentialsx.net/releases/") } // essentials
-    maven { url = uri("https://ci.nyaacat.com/maven/") } // nyaacat
+    // maven { url = uri("https://ci.nyaacat.com/maven/") } // nyaacat
 
 }
 
 dependencies {
-    paperweightDevelopmentBundle(paperweight.paperDevBundle(paperApiName))
+    paperweight.paperDevBundle(paperApiName)
     // paperweight.foliaDevBundle("1.21-R0.1-SNAPSHOT")
     // paperweight.devBundle("com.example.paperfork", "1.21-R0.1-SNAPSHOT")
     compileOnly("net.essentialsx:EssentialsX:2.20.1")      // soft dep
@@ -68,23 +63,24 @@ dependencies {
 publishing {
     publications {
         create<MavenPublication>("mavenJava") {
-            from(getComponents()["java"])
-            afterEvaluate {
-                artifactId = pluginName.lowercase()
-                groupId = "$group"
-                version =
-                    "$majorVersion.$minorVersion.$buildNumber-${
-                        getMcVersion(
-                            paperApiName
-                        )
-                    }"
-            }
+            from(components["java"])
+            groupId = group.toString()
+            artifactId = pluginName.lowercase()
+            version = "$majorVersion.$minorVersion.$buildNumber-mc${getMcVersion(paperApiName)}"
         }
     }
     repositories {
         maven {
-            name = "nyaaMaven"
+            name = "PublishMaven"
             url = uri(mavenDirectory)
+            val mavenUserName = System.getenv("MAVEN_USERNAME")
+            val mavenPassword = System.getenv("MAVEN_PASSWORD")
+            if(mavenUserName != null && mavenPassword != null) {
+                credentials {
+                    username = mavenUserName
+                    password = mavenPassword
+                }
+            }
         }
     }
 }
@@ -99,10 +95,20 @@ reobfJar {
 
 
 tasks {
+
+    // 1)
+    // For >=1.20.5 when you don't care about supporting spigot
+    // paperweight.reobfArtifactConfiguration = io.papermc.paperweight.userdev.ReobfArtifactConfiguration.MOJANG_PRODUCTION
+
+    // 2)
+    // For 1.20.4 or below, or when you care about supporting Spigot on >=1.20.5
+    // Configure reobfJar to run when invoking the build task
+    /*
     // Configure reobfJar to run when invoking the build task
     assemble {
         dependsOn(reobfJar)
     }
+    */
 
 
     compileJava {
