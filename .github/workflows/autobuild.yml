@@ -20,7 +20,6 @@ jobs:
         with:
           distribution: 'oracle'
           java-version: '21'
-          cache: 'gradle'
       - name: checkout repo
         uses: actions/checkout@v4
       - name: build project with gradle
