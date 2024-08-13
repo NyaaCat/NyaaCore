@@ -8,4 +8,4 @@ loadbefore:
   - aolib
 authors: [ RecursiveG,Librazy,cyilin ]
 website: "https://github.com/NyaaCat/NyaaCore"
-api-version: 1.19
+api-version: ${api_version}

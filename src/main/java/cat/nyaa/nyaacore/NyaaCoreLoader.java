@@ -56,13 +56,9 @@ public class NyaaCoreLoader extends JavaPlugin {
                 getLogger().severe(e.getMessage());
                 Bukkit.getPluginManager().disablePlugin(this);
             }
-            try {
-                var VersionResource = getResource("MCVersion");
-                targetVersion = VersionResource == null ? "" : new String(VersionResource.readAllBytes());
-                getLogger().info("target minecraft version:" + targetVersion + "server version:" + serverVersion);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+            var pluginDescription = getDescription();
+            targetVersion = pluginDescription.getAPIVersion();
+            getLogger().info("target minecraft version:" + targetVersion + " ,server version:" + serverVersion);
             Bukkit.getPluginManager().registerEvents(new ClickSelectionUtils._Listener(), this);
             Bukkit.getPluginManager().registerEvents(new OfflinePlayerUtils._Listener(), this);
             OfflinePlayerUtils.init();
