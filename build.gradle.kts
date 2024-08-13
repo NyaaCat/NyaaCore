@@ -110,6 +110,14 @@ tasks {
     }
     */
 
+    withType<ProcessResources> {
+
+        val newProperties = project.properties.toMutableMap()
+        newProperties["api_version"] = getMcVersion(paperApiName)
+        filesMatching("plugin.yml") {
+            expand(newProperties)
+        }
+    }
 
     compileJava {
         options.encoding = Charsets.UTF_8.name() // We want UTF-8 for everything
@@ -118,6 +126,7 @@ tasks {
         // See https://openjdk.java.net/jeps/247 for more information.
         options.release.set(21)
     }
+
     javadoc {
         with((options as StandardJavadocDocletOptions)) {
             options.encoding =
