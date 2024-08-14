@@ -1,5 +1,4 @@
-import io.papermc.paperweight.util.path
-import java.util.*
+import java.net.URI
 
 plugins {
     `java-library`
@@ -11,22 +10,12 @@ plugins {
 // = = =
 
 val pluginName = "NyaaCore"
-val majorVersion = 9
-val minorVersion = 4
-
-val paperApiName = "1.21-R0.1-SNAPSHOT"
+val paperApiName = "1.21.1-R0.1-SNAPSHOT"
 
 // = = =
 
-// for Jenkins CI
-val buildNumber = System.getenv("BUILD_NUMBER") ?: "x"
-val mavenDirectory = System.getenv("MAVEN_DIR") ?: layout.buildDirectory.dir("repo").path.toString()
-val javaDocDirectory = System.getenv("JAVADOC_DIR") ?: layout.buildDirectory.dir("javadoc").path.toString()
-
-// Version used for distribution. Different from maven repo
 group = "cat.nyaa"
-//archivesBaseName = "${pluginNameUpper}-mc$minecraftVersion"
-version ="$majorVersion.$minorVersion"
+version ="9.4"
 
 java {
     // Configure the java toolchain. This allows gradle to auto-provision JDK 21 on systems that only have JDK 8 installed for example.
@@ -35,19 +24,14 @@ java {
 
 repositories {
     mavenCentral()
-    maven {
-        url = uri("https://papermc.io/repo/repository/maven-public/")
-    } //paper
-    maven { url = uri("https://libraries.minecraft.net") } // mojang
-    maven { url = uri("https://repo.essentialsx.net/releases/") } // essentials
+    maven ("https://papermc.io/repo/repository/maven-public/") //paper
+    maven ("https://libraries.minecraft.net")  // mojang
+    maven ("https://repo.essentialsx.net/releases/") // essentials
     // maven { url = uri("https://ci.nyaacat.com/maven/") } // nyaacat
-
 }
 
 dependencies {
     paperweight.paperDevBundle(paperApiName)
-    // paperweight.foliaDevBundle("1.21-R0.1-SNAPSHOT")
-    // paperweight.devBundle("com.example.paperfork", "1.21-R0.1-SNAPSHOT")
     compileOnly("net.essentialsx:EssentialsX:2.20.1")      // soft dep
     compileOnly("org.jetbrains:annotations:24.1.0")
     // Testing
@@ -66,20 +50,16 @@ publishing {
             from(components["java"])
             groupId = group.toString()
             artifactId = pluginName.lowercase()
-            version = "$majorVersion.$minorVersion.$buildNumber-mc${getMcVersion(paperApiName)}"
+            version = project.version.toString()
         }
     }
     repositories {
         maven {
-            name = "PublishMaven"
-            url = uri(mavenDirectory)
-            val mavenUserName = System.getenv("MAVEN_USERNAME")
-            val mavenPassword = System.getenv("MAVEN_PASSWORD")
-            if(mavenUserName != null && mavenPassword != null) {
-                credentials {
-                    username = mavenUserName
-                    password = mavenPassword
-                }
+            name = "github-package"
+            url = URI(System.getenv("GITHUB_MAVEN_URL") ?: "https://github.com")
+            credentials {
+                username = System.getenv("GITHUB_ACTOR")
+                password = System.getenv("GITHUB_TOKEN")
             }
         }
     }
@@ -95,23 +75,26 @@ reobfJar {
 
 
 tasks {
-
+    // ref: https://docs.papermc.io/paper/dev/userdev
     // 1)
     // For >=1.20.5 when you don't care about supporting spigot
-    // paperweight.reobfArtifactConfiguration = io.papermc.paperweight.userdev.ReobfArtifactConfiguration.MOJANG_PRODUCTION
+    // set:
+    paperweight.reobfArtifactConfiguration = io.papermc.paperweight.userdev.ReobfArtifactConfiguration.MOJANG_PRODUCTION
+    // and it will eliminate the -dev suffix from the artifact name which indicates the artifact is
+    // mojang-mapped and won't work on the most of the server but at 1.20.5 the paper
+    // uses mojang-mapping by default, so it doesn't matter anymore.
+    //
 
     // 2)
     // For 1.20.4 or below, or when you care about supporting Spigot on >=1.20.5
     // Configure reobfJar to run when invoking the build task
     /*
-    // Configure reobfJar to run when invoking the build task
     assemble {
         dependsOn(reobfJar)
     }
     */
 
     withType<ProcessResources> {
-
         val newProperties = project.properties.toMutableMap()
         newProperties["api_version"] = getMcVersion(paperApiName)
         filesMatching("plugin.yml") {
@@ -121,7 +104,6 @@ tasks {
 
     compileJava {
         options.encoding = Charsets.UTF_8.name() // We want UTF-8 for everything
-
         // Set the release flag. This configures what version bytecode the compiler will emit, as well as what JDK APIs are usable.
         // See https://openjdk.java.net/jeps/247 for more information.
         options.release.set(21)
@@ -158,5 +140,7 @@ tasks {
 }
 
 private fun getMcVersion(apiNameString: String): String {
-    return apiNameString.split('-')[0]
+    val version = apiNameString.split('-')[0]
+    val versionInArray = version.split('.')
+    return "${versionInArray[0]}.${versionInArray[1]}"
 }

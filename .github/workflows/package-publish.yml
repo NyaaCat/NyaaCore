@@ -38,7 +38,5 @@ jobs:
       - name: Publish to GitHub Packages Apache Maven
         run: ./gradlew publish -i
         env:
-          BUILD_NUMBER: ${{github.run_number}}
-          MAVEN_DIR: https://maven.pkg.github.com/${{github.repository}}
-          MAVEN_USERNAME: ${{github.actor}}
-          MAVEN_PASSWORD: ${{secrets.GITHUB_TOKEN}}
+          GITHUB_MAVEN_URL: https://maven.pkg.github.com/${{github.repository}}
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
