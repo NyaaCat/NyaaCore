@@ -55,15 +55,31 @@ publishing {
     }
     repositories {
         maven {
-            name = "github-package"
+            name = "GithubPackage"
             url = URI(System.getenv("GITHUB_MAVEN_URL") ?: "https://github.com")
             credentials {
                 username = System.getenv("GITHUB_ACTOR")
                 password = System.getenv("GITHUB_TOKEN")
             }
         }
+        maven {
+            name = "NyaaCatCILocal"
+            //local maven repository
+            url = uri("file://${System.getenv("MAVEN_DIR")}")
+        }
     }
 }
+
+// Custom tasks for publishing to specific repositories
+tasks.register("publishToGithubPackage") {
+    dependsOn("publishMavenJavaPublicationToGithubPackageRepository")
+    // auto generated task: publish<PublicationName>PublicationTo<RepositoryName>Repository
+}
+
+tasks.register("publishToNyaaCatCILocal") {
+    dependsOn("publishMavenJavaPublicationToNyaaCatCILocalRepository")
+}
+
 
 /*
 reobfJar {
@@ -133,10 +149,7 @@ tasks {
             )
             options.windowTitle = "$pluginName Javadoc"
         }
-
-
     }
-
 }
 
 private fun getMcVersion(apiNameString: String): String {

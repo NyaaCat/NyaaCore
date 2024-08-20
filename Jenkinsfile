@@ -6,7 +6,7 @@ pipeline {
                 jdk "jdk17"
             }
             steps {
-                sh './gradlew build publish'
+                sh './gradlew publishToNyaaCatCILocal'
             }
         }
     }
