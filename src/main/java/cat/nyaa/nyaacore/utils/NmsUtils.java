@@ -58,7 +58,7 @@ public final class NmsUtils {
     }
 
     public static boolean createExplosion(World world, Entity entity, double x, double y, double z, float power, boolean setFire, boolean breakBlocks) {
-        return !((CraftWorld) world).getHandle().explode(((CraftEntity) entity).getHandle(), x, y, z, power, setFire, breakBlocks ? Level.ExplosionInteraction.MOB : Level.ExplosionInteraction.NONE).wasCanceled;
+        return world.createExplosion(x, y, z, power, setFire, breakBlocks, entity);
     }
 
     /**
