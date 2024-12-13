@@ -3,19 +3,19 @@ import java.net.URI
 plugins {
     `java-library`
     `maven-publish`
-    id("io.papermc.paperweight.userdev") version "1.7.1"
+    id("io.papermc.paperweight.userdev") version "1.7.2"
     id("xyz.jpenilla.run-paper") version "2.3.0" // Adds runServer and runMojangMappedServer tasks for testing
 }
 
 // = = =
 
 val pluginName = "NyaaCore"
-val paperApiName = "1.21.1-R0.1-SNAPSHOT"
+val paperApiName = "1.21.3-R0.1-SNAPSHOT"
 
 // = = =
 
 group = "cat.nyaa"
-version ="9.4"
+version ="9.5"
 
 java {
     // Configure the java toolchain. This allows gradle to auto-provision JDK 21 on systems that only have JDK 8 installed for example.

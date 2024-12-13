@@ -22,7 +22,7 @@ public final class LocaleUtils {
     public static String getUnlocalizedName(ItemStack itemStack) {
         if (itemStack == null) throw new IllegalArgumentException();
         net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
-        return nmsItemStack.getItem().getDescriptionId(nmsItemStack);
+        return nmsItemStack.getItem().getDescriptionId();
     }
 
     public static BaseComponent getNameComponent(ItemStack item) {
@@ -34,7 +34,7 @@ public final class LocaleUtils {
             return new TranslatableComponent(key, ((SkullMeta) item.getItemMeta()).getOwningPlayer().getName());
         }
         net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(item);
-        return new TranslatableComponent(nmsItemStack.getItem().getDescriptionId(nmsItemStack));
+        return new TranslatableComponent(nmsItemStack.getItem().getDescriptionId());
     }
 
     public static String getUnlocalizedName(Enchantment ench) {
