@@ -2,7 +2,7 @@
 Common library used for all NyaaCat plugin.  
 Provides infrastructures to simplify plugin development.
 
-[![Build Status](https://ci.nyaacat.com/job/NyaaCore/job/1.18/badge/icon)](https://ci.nyaacat.com/job/NyaaCore/job/1.18/)
+[![Build Status](https://ci.nyaacat.com/job/NyaaCore/job/main/badge/icon)](https://ci.nyaacat.com/job/NyaaCore/job/main/)
 ## Component List
 
 - Annotation based command dispatcher
@@ -40,5 +40,6 @@ dependencies {
 - 6.4.x: Minecraft 1.14.3
 - 7.0.x: Minecraft 1.14.4
 - 7.1.x: Minecraft 1.15.1 since build 350
+- 9.x: Minecraft 1.21+
 
 Older versions can be found in [Github Release Page](https://github.com/NyaaCat/NyaaCore/releases)
