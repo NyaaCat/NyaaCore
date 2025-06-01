@@ -107,7 +107,7 @@ public final class ItemStackUtils {
         CompoundTag reconstructedCompoundTag = CompoundTag.TYPE.load(dataInputStream, unlimitedNbtAccounter);
         dataInputStream.close();
         byteArrayInputStream.close();
-        int dataVersion = reconstructedCompoundTag.getInt(NYAACORE_ITEMSTACK_DATAVERSION_KEY);
+        int dataVersion = reconstructedCompoundTag.getInt(NYAACORE_ITEMSTACK_DATAVERSION_KEY).orElse(NYAACORE_ITEMSTACK_DEFAULT_DATAVERSION);
         if (dataVersion > 0) {
             reconstructedCompoundTag.remove(NYAACORE_ITEMSTACK_DATAVERSION_KEY);
         }

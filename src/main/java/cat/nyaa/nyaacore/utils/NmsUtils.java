@@ -40,7 +40,7 @@ public final class NmsUtils {
             CompoundTag nbtToBeMerged;
 
             try {
-                nbtToBeMerged = TagParser.parseTag(tag);
+                nbtToBeMerged = TagParser.parseCompoundFully(tag);
             } catch (CommandSyntaxException ex) {
                 throw new IllegalArgumentException("Invalid NBTTag string");
             }

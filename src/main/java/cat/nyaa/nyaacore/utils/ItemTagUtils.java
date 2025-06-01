@@ -16,7 +16,7 @@ public class ItemTagUtils {
         net.minecraft.world.item.ItemStack nmsItem = CraftItemStack.unwrap(item);
         CompoundTag tag = getTag(nmsItem);
         if (tag == null) return Optional.empty();
-        return !tag.contains(key) ? Optional.empty() : Optional.of(tag.getString(key));
+        return !tag.contains(key) ? Optional.empty() : tag.getString(key);
     }
 
     public static Optional<String> setString(ItemStack item, String key, String value) throws NoSuchFieldException, IllegalAccessException {
@@ -35,7 +35,7 @@ public class ItemTagUtils {
         net.minecraft.world.item.ItemStack nmsItem = CraftItemStack.unwrap(item);
         CompoundTag tag = getTag(nmsItem);
         if (tag == null) return Optional.empty();
-        return !tag.contains(key) ? Optional.empty() : Optional.of(tag.getInt(key));
+        return !tag.contains(key) ? Optional.empty() : tag.getInt(key);
     }
 
     public static Optional<Integer> setInt(ItemStack item, String key, int value) {
@@ -54,7 +54,7 @@ public class ItemTagUtils {
         net.minecraft.world.item.ItemStack nmsItem = CraftItemStack.unwrap(item);
         CompoundTag tag = getTag(nmsItem);
         if (tag == null) return Optional.empty();
-        return !tag.contains(key) ? Optional.empty() : Optional.of(tag.getDouble(key));
+        return !tag.contains(key) ? Optional.empty() : tag.getDouble(key);
     }
 
     public static Optional<Double> setDouble(ItemStack item, String key, double value) {
@@ -73,7 +73,7 @@ public class ItemTagUtils {
         net.minecraft.world.item.ItemStack nmsItem = CraftItemStack.unwrap(item);
         CompoundTag tag = getTag(nmsItem);
         if (tag == null) return Optional.empty();
-        return !tag.contains(key) ? Optional.empty() : Optional.of(tag.getShort(key));
+        return !tag.contains(key) ? Optional.empty() : tag.getShort(key);
     }
 
     public static Optional<Short> setShort(ItemStack item, String key, short value) {
@@ -92,7 +92,7 @@ public class ItemTagUtils {
         net.minecraft.world.item.ItemStack nmsItem = CraftItemStack.unwrap(item);
         CompoundTag tag = getTag(nmsItem);
         if (tag == null) return Optional.empty();
-        return !tag.contains(key) ? Optional.empty() : Optional.of(tag.getByte(key));
+        return !tag.contains(key) ? Optional.empty() : tag.getByte(key);
     }
 
     public static Optional<Byte> setByte(ItemStack item, String key, byte value) {
@@ -111,7 +111,7 @@ public class ItemTagUtils {
         net.minecraft.world.item.ItemStack nmsItem = CraftItemStack.unwrap(item);
         CompoundTag tag = getTag(nmsItem);
         if (tag == null) return Optional.empty();
-        return !tag.contains(key) ? Optional.empty() : Optional.of(tag.getLong(key));
+        return !tag.contains(key) ? Optional.empty() : tag.getLong(key);
     }
 
     public static Optional<Long> setLong(ItemStack item, String key, long value) {
@@ -130,7 +130,7 @@ public class ItemTagUtils {
         net.minecraft.world.item.ItemStack nmsItem = CraftItemStack.unwrap(item);
         CompoundTag tag = getTag(nmsItem);
         if (tag == null) return Optional.empty();
-        return !tag.contains(key) ? Optional.empty() : Optional.of(tag.getLongArray(key));
+        return !tag.contains(key) ? Optional.empty() : tag.getLongArray(key);
     }
 
     public static Optional<long[]> setLongArray(ItemStack item, String key, long[] value) {
@@ -149,7 +149,7 @@ public class ItemTagUtils {
         net.minecraft.world.item.ItemStack nmsItem = CraftItemStack.unwrap(item);
         CompoundTag tag = getTag(nmsItem);
         if (tag == null) return Optional.empty();
-        return !tag.contains(key) ? Optional.empty() : Optional.of(tag.getIntArray(key));
+        return !tag.contains(key) ? Optional.empty() : tag.getIntArray(key);
     }
 
     public static Optional<int[]> setIntArray(ItemStack item, String key, int[] value) {
@@ -168,7 +168,7 @@ public class ItemTagUtils {
         net.minecraft.world.item.ItemStack nmsItem = CraftItemStack.unwrap(item);
         CompoundTag tag = getTag(nmsItem);
         if (tag == null) return Optional.empty();
-        return !tag.contains(key) ? Optional.empty() : Optional.of(tag.getByteArray(key));
+        return !tag.contains(key) ? Optional.empty() : tag.getByteArray(key);
     }
 
     public static Optional<byte[]> setByteArray(ItemStack item, String key, byte[] value) {
@@ -187,7 +187,7 @@ public class ItemTagUtils {
         net.minecraft.world.item.ItemStack nmsItem = CraftItemStack.unwrap(item);
         CompoundTag tag = getTag(nmsItem);
         if (tag == null) return Optional.empty();
-        return !tag.contains(key) ? Optional.empty() : Optional.of(tag.getBoolean(key));
+        return !tag.contains(key) ? Optional.empty() : tag.getBoolean(key);
     }
 
     public static Optional<Boolean> setBoolean(ItemStack item, String key, boolean value) {
@@ -206,7 +206,7 @@ public class ItemTagUtils {
         net.minecraft.world.item.ItemStack nmsItem = CraftItemStack.unwrap(item);
         CompoundTag tag = getTag(nmsItem);
         if (tag == null) return Optional.empty();
-        return !tag.contains(key) ? Optional.empty() : Optional.of(tag.getFloat(key));
+        return !tag.contains(key) ? Optional.empty() : tag.getFloat(key);
     }
 
     public static Optional<Float> setFloat(ItemStack item, String key, float value) {

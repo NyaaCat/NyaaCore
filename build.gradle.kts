@@ -3,19 +3,19 @@ import java.net.URI
 plugins {
     `java-library`
     `maven-publish`
-    id("io.papermc.paperweight.userdev") version "1.7.2"
+    id("io.papermc.paperweight.userdev") version "2.0.0-beta.17"
     id("xyz.jpenilla.run-paper") version "2.3.0" // Adds runServer and runMojangMappedServer tasks for testing
 }
 
 // = = =
 
 val pluginName = "NyaaCore"
-val paperApiName = "1.21.3-R0.1-SNAPSHOT"
+val paperApiName = "1.21.5-R0.1-SNAPSHOT"
 
 // = = =
 
 group = "cat.nyaa"
-version ="9.5"
+version ="9.6"
 
 java {
     // Configure the java toolchain. This allows gradle to auto-provision JDK 21 on systems that only have JDK 8 installed for example.
@@ -32,7 +32,9 @@ repositories {
 
 dependencies {
     paperweight.paperDevBundle(paperApiName)
-    compileOnly("net.essentialsx:EssentialsX:2.20.1")      // soft dep
+    compileOnly("net.essentialsx:EssentialsX:2.21.1") {
+        exclude(group = "org.spigotmc", module = "spigot-api")
+    }    // soft dep
     compileOnly("org.jetbrains:annotations:24.1.0")
     // Testing
     testImplementation(platform("org.junit:junit-bom:5.10.3"))
