@@ -2,6 +2,7 @@ package cat.nyaa.nyaacore;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 
 public class Pair<K, V> implements Map.Entry<K, V> {
 
@@ -16,6 +17,16 @@ public class Pair<K, V> implements Map.Entry<K, V> {
     public Pair(Map.Entry<? extends K, ? extends V> entry) {
         this.key = entry.getKey();
         this.value = entry.getValue();
+    }
+
+    public Pair<K, V> copy() {
+        return new Pair<>(this.key, this.value);
+    }
+
+    public Pair<K, V> deepCopy(Function<K, K> keyMapper, Function<V, V> valueMapper) {
+        K keyCopy = key == null ? null : keyMapper.apply(key);
+        V valueCopy = value == null ? null : valueMapper.apply(value);
+        return new Pair<>(keyCopy, valueCopy);
     }
 
     public static <Ks, Vs> Pair<Ks, Vs> of(Ks key, Vs value) {
