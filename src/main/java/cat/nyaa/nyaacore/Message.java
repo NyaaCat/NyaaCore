@@ -2,15 +2,17 @@ package cat.nyaa.nyaacore;
 
 import cat.nyaa.nyaacore.utils.ItemStackUtils;
 import cat.nyaa.nyaacore.utils.LocaleUtils;
+import net.kyori.adventure.inventory.Book;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import net.kyori.adventure.title.Title;
+import net.kyori.adventure.util.Ticks;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.chat.ComponentSerializer;
-import org.bukkit.Bukkit;
-import org.bukkit.Material;
-import org.bukkit.OfflinePlayer;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.block.BlockState;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -21,16 +23,17 @@ import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.permissions.Permission;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Predicate;
 
 public class Message {
-    public final BaseComponent inner;
+    public Component inner;
 
     public Message(String text) {
-        inner = new TextComponent(text);
+        inner = Component.text(text);
     }
 
     public static String getPlayerJson(OfflinePlayer player) {
@@ -95,27 +98,29 @@ public class Message {
      * @param item the book
      * @return book without contents.
      */
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     public static ItemStack removeBookContent(ItemStack item) {
         if (item.hasItemMeta() && item.getItemMeta() instanceof BookMeta) {
             ItemStack itemStack = item.clone();
             BookMeta meta = (BookMeta) itemStack.getItemMeta();
-            meta.setPages(new ArrayList<>());
+            meta.pages(Component.empty());
             itemStack.setItemMeta(meta);
             return itemStack;
         }
         return item;
     }
 
-    public static void sendActionBarMessage(Player player, BaseComponent msg) {
-        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, msg);
+    public static void sendActionBarMessage(Player player, Component msg) {
+        player.sendActionBar(msg);
     }
 
-    public static void sendTitle(Player player, BaseComponent title, BaseComponent subtitle, int fadeInTicks, int stayTicks, int fadeOutTicks) {
-        player.sendTitle(title.toLegacyText(), subtitle.toLegacyText(), fadeInTicks, stayTicks, fadeOutTicks);
+    public static void sendTitle(Player player, Component title, Component subtitle, int fadeInTicks, int stayTicks, int fadeOutTicks) {
+        Title title1 = Title.title(title, subtitle, Title.Times.times(Duration.ofMillis(fadeInTicks * 50L), Duration.ofMillis(stayTicks * 50L), Duration.ofMillis(fadeOutTicks * 50L)));
+        player.showTitle(title1);
     }
 
     public Message append(String text) {
-        inner.addExtra(text);
+        inner = inner.append(Component.text(text));
         return this;
     }
 
@@ -140,16 +145,15 @@ public class Message {
      */
     public Message append(String template, ItemStack... items) {
         if (items == null || items.length == 0) return this;
-        Map<String, BaseComponent> varMap = new HashMap<>();
+        Map<String, Component> varMap = new HashMap<>();
         for (int i = 0; i < items.length; i++) {
             ItemStack clone = items[i].clone();
-            boolean hasCustomName = clone.hasItemMeta() && clone.getItemMeta().hasDisplayName();
-            BaseComponent cmp = hasCustomName ? new TextComponent(TextComponent.fromLegacyText(clone.getItemMeta().getDisplayName())) : LocaleUtils.getNameComponent(clone);
-            cmp.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_ITEM, new BaseComponent[]{new TextComponent(getItemJsonStripped(clone))}));
-            varMap.put(String.format("{amount:%d}", i), new TextComponent(Integer.toString(clone.getAmount())));
+            boolean hasCustomName = clone.hasItemMeta() && clone.getItemMeta().hasCustomName();
+            Component cmp = hasCustomName ? clone.displayName() : Component.translatable(clone);
+            varMap.put(String.format("{amount:%d}", i), Component.text(clone.getAmount()));
             varMap.put(String.format("{itemName:%d}", i), cmp);
             if (i == 0) {
-                varMap.put("{amount}", new TextComponent(Integer.toString(clone.getAmount())));
+                varMap.put("{amount}", Component.text(clone.getAmount()));
                 varMap.put("{itemName}", cmp);
             }
         }
@@ -157,9 +161,9 @@ public class Message {
         return append(template, varMap);
     }
 
-    public Message append(String template, Map<String, BaseComponent> varMap) {
+    public Message append(String template, Map<String, Component> varMap) {
         String remTemplate = template;
-        while (remTemplate.length() > 0) {
+        while (!remTemplate.isEmpty()) {
             int idx = remTemplate.length();
             String var = null;
             for (String v : varMap.keySet()) {
@@ -170,7 +174,6 @@ public class Message {
                 }
             }
 
-            if (idx == -1) break; // no more variables left
             if (idx == 0) {
                 remTemplate = remTemplate.substring(var.length());
                 append(varMap.get(var));
@@ -180,12 +183,11 @@ public class Message {
                 remTemplate = remTemplate.substring(idx);
             }
         }
-        if (remTemplate.length() > 0) append(remTemplate);
         return this;
     }
 
-    public Message append(BaseComponent component) {
-        inner.addExtra(component);
+    public Message append(Component component) {
+        inner = inner.append(component);
         return this;
     }
 
@@ -193,7 +195,7 @@ public class Message {
         if (p instanceof Player) {
             return send((Player) p);
         } else {
-            p.sendMessage(this.inner.toLegacyText());
+            p.sendMessage(this.inner);
             return this;
         }
     }
@@ -204,13 +206,13 @@ public class Message {
 
     public Message send(Player p, MessageType type) {
         if (type == MessageType.CHAT) {
-            p.spigot().sendMessage(inner);
+            p.sendMessage(inner);
         } else if (type == MessageType.ACTION_BAR) {
             sendActionBarMessage(p, inner);
         } else if (type == MessageType.TITLE) {
-            sendTitle(p, inner, new TextComponent(), 10, 40, 10);
+            sendTitle(p, inner, Component.empty(), 10, 40, 10);
         } else if (type == MessageType.SUBTITLE) {
-            sendTitle(p, new TextComponent(), inner, 10, 40, 10);
+            sendTitle(p, Component.empty(), inner, 10, 40, 10);
         }
         return this;
     }
@@ -223,29 +225,19 @@ public class Message {
         for (Player p : Bukkit.getOnlinePlayers()) {
             send(p, type);
         }
-        Bukkit.getConsoleSender().sendMessage(inner.toLegacyText());
+        Bukkit.getConsoleSender().sendMessage(inner);
         return this;
     }
 
     public Message broadcast(Permission permission) {
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            if (player.hasPermission(permission)) {
-                this.send(player);
-            }
-        }
-        Bukkit.getConsoleSender().sendMessage(inner.toLegacyText());
-//        Bukkit.getConsoleSender().sendMessage("broadcast to players with permission:" + permission.getName());
+        Server server = Bukkit.getServer();
+        server.broadcast(inner, permission.getName());
         return this;
     }
 
     public Message broadcast(World world) {
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            if (player.getLocation().getWorld().equals(world)) {
-                this.send(player);
-            }
-        }
-        Bukkit.getConsoleSender().sendMessage(inner.toLegacyText());
-//        Bukkit.getConsoleSender().sendMessage("broadcast to world:" + world.getName());
+        world.sendMessage(inner);
+        Bukkit.getConsoleSender().sendMessage(inner);
         return this;
     }
 
@@ -255,14 +247,13 @@ public class Message {
                 this.send(player, type);
             }
         }
-        Bukkit.getConsoleSender().sendMessage(inner.toLegacyText());
-//        Bukkit.getConsoleSender().sendMessage("broadcast with filter:" + playerFilter.toString());
+        Bukkit.getConsoleSender().sendMessage(inner);
         return this;
     }
 
     @Override
     public String toString() {
-        return ComponentSerializer.toString(inner);
+        return PlainTextComponentSerializer.plainText().serialize(inner);
     }
 
     public enum MessageType {CHAT, ACTION_BAR, TITLE, SUBTITLE}

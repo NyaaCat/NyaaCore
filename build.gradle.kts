@@ -15,7 +15,7 @@ val paperApiName = "1.21.5-R0.1-SNAPSHOT"
 // = = =
 
 group = "cat.nyaa"
-version ="9.7"
+version ="9.8"
 
 java {
     // Configure the java toolchain. This allows gradle to auto-provision JDK 21 on systems that only have JDK 8 installed for example.
