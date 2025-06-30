@@ -8,7 +8,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.plugin.java.JavaPluginLoader;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -51,7 +50,7 @@ public class NyaaCoreLoader extends JavaPlugin {
         if (!isTest) {
             String serverVersion = "", targetVersion;
             try {
-                serverVersion = SharedConstants.getCurrentVersion().getName();
+                serverVersion = SharedConstants.getCurrentVersion().name();
             } catch (Exception e) {
                 getLogger().severe(e.getMessage());
                 Bukkit.getPluginManager().disablePlugin(this);

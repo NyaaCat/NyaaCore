@@ -1,13 +1,17 @@
 package cat.nyaa.nyaacore.utils;
 
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.logging.LogUtils;
 import net.minecraft.advancements.critereon.NbtPredicate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.TagParser;
+import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.storage.TagValueInput;
+import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
@@ -51,7 +55,7 @@ public final class NmsUtils {
             if (nmsClonedNBT.equals(nmsOrigNBT)) {
             } else {
                 UUID uuid = nmsEntity.getUUID(); // store UUID
-                nmsEntity.load(nmsClonedNBT); // set nbt
+                nmsEntity.load(TagValueInput.create(new ProblemReporter.ScopedCollector(LogUtils.getLogger()),nmsEntity.registryAccess(),nmsClonedNBT)); // set nbt
                 nmsEntity.setUUID(uuid); // set uuid
             }
         }
