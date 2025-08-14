@@ -84,7 +84,38 @@ public final class ItemStackUtils {
      * @return constructed item
      */
     public static ItemStack itemFromBinary(byte[] nbt) throws IOException {
-        return ItemStack.deserializeBytes(nbt);
+        if (nbt == null || nbt.length == 0) {
+            return null;
+        }
+        // GZIP magic number check
+        if (nbt.length < 2 || !(nbt[0] == (byte) 0x1f && nbt[1] == (byte) 0x8b)) {
+            // Data is not in GZIP format, assume it's legacy data.
+            // Legacy data was a "headless" NBT payload. We need to wrap it in a full
+            // NBT structure, then GZIP compress it before deserialization.
+            try (ByteArrayOutputStream fullNbtStream = new ByteArrayOutputStream();
+                 DataOutputStream nbtDos = new DataOutputStream(fullNbtStream)) {
+                
+                // 1. Create a full NBT structure by adding a header
+                nbtDos.writeByte(10); // TAG_Compound ID
+                nbtDos.writeUTF("");  // Root tag name (empty)
+                nbtDos.write(nbt);    // The original "headless" NBT payload
+                nbtDos.flush();
+
+                // 2. GZIP compress the full NBT structure
+                try (ByteArrayOutputStream gzipStream = new ByteArrayOutputStream();
+                     java.util.zip.GZIPOutputStream gzipOut = new java.util.zip.GZIPOutputStream(gzipStream)) {
+                    gzipOut.write(fullNbtStream.toByteArray());
+                    gzipOut.finish();
+                    byte[] compressedNbt = gzipStream.toByteArray();
+                    
+                    // 3. Deserialize the GZIP-compressed data
+                    return ItemStack.deserializeBytes(compressedNbt);
+                }
+            }
+        } else {
+            // Data is already in GZIP format (new format).
+            return ItemStack.deserializeBytes(nbt);
+        }
     }
 
     @Deprecated
