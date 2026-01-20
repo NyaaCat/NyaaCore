@@ -10,7 +10,7 @@ plugins {
 // = = =
 
 val pluginName = "NyaaCore"
-val paperApiName = "1.21.8-R0.1-SNAPSHOT"
+val paperApiName = "1.21.11-R0.1-SNAPSHOT"
 
 // = = =
 
