@@ -70,9 +70,13 @@ public final class ItemStackUtils {
      * for fast ItemStack serialization
      *
      * @param itemStack the item to be serialized
-     * @return binary NBT representation of the item stack
+     * @return binary NBT representation of the item stack, or empty byte array for null/air items
      */
     public static byte[] itemToBinary(ItemStack itemStack) {
+        // In Paper 1.21+, serializeAsBytes() throws IllegalArgumentException for empty items
+        if (itemStack == null || itemStack.isEmpty()) {
+            return new byte[0];
+        }
         return itemStack.serializeAsBytes();
     }
 
