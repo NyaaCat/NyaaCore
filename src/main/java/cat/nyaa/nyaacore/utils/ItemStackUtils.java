@@ -4,13 +4,12 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.io.BaseEncoding;
 import com.google.common.io.ByteStreams;
-import com.mojang.datafixers.DSL;
 import com.mojang.datafixers.DataFixer;
 import com.mojang.serialization.Dynamic;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtAccounter;
+import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.NbtOps;
-import net.minecraft.nbt.Tag;
 import net.minecraft.util.datafix.DataFixers;
 import net.minecraft.util.datafix.fixes.References;
 import org.bukkit.Bukkit;
@@ -91,34 +90,70 @@ public final class ItemStackUtils {
         if (nbt == null || nbt.length == 0) {
             return null;
         }
-        // GZIP magic number check
-        if (nbt.length < 2 || !(nbt[0] == (byte) 0x1f && nbt[1] == (byte) 0x8b)) {
-            // Data is not in GZIP format, assume it's legacy data.
-            // Legacy data was a "headless" NBT payload. We need to wrap it in a full
-            // NBT structure, then GZIP compress it before deserialization.
-            try (ByteArrayOutputStream fullNbtStream = new ByteArrayOutputStream();
-                 DataOutputStream nbtDos = new DataOutputStream(fullNbtStream)) {
-                
-                // 1. Create a full NBT structure by adding a header
-                nbtDos.writeByte(10); // TAG_Compound ID
-                nbtDos.writeUTF("");  // Root tag name (empty)
-                nbtDos.write(nbt);    // The original "headless" NBT payload
-                nbtDos.flush();
 
-                // 2. GZIP compress the full NBT structure
-                try (ByteArrayOutputStream gzipStream = new ByteArrayOutputStream();
-                     java.util.zip.GZIPOutputStream gzipOut = new java.util.zip.GZIPOutputStream(gzipStream)) {
-                    gzipOut.write(fullNbtStream.toByteArray());
-                    gzipOut.finish();
-                    byte[] compressedNbt = gzipStream.toByteArray();
-                    
-                    // 3. Deserialize the GZIP-compressed data
-                    return ItemStack.deserializeBytes(compressedNbt);
-                }
+        // Try modern format first (GZIP compressed)
+        if (nbt.length >= 2 && nbt[0] == (byte) 0x1f && nbt[1] == (byte) 0x8b) {
+            try {
+                return ItemStack.deserializeBytes(nbt);
+            } catch (Exception e) {
+                // If it fails, try to apply DataFixer for legacy data
+                return deserializeWithDataFixer(nbt, true);
+            }
+        }
+
+        // Legacy format (not GZIP) - apply DataFixer
+        return deserializeWithDataFixer(nbt, false);
+    }
+
+    /**
+     * Deserialize item data with DataFixer applied for legacy data migration.
+     * Handles old attribute formats like generic.attackDamage -> minecraft:attack_damage
+     */
+    private static ItemStack deserializeWithDataFixer(byte[] nbt, boolean isGzipped) throws IOException {
+        CompoundTag tag;
+
+        if (isGzipped) {
+            // Decompress GZIP data and read NBT
+            try (ByteArrayInputStream bis = new ByteArrayInputStream(nbt);
+                 java.util.zip.GZIPInputStream gzipIn = new java.util.zip.GZIPInputStream(bis);
+                 DataInputStream dis = new DataInputStream(gzipIn)) {
+                tag = NbtIo.read(dis, NbtAccounter.unlimitedHeap());
             }
         } else {
-            // Data is already in GZIP format (new format).
-            return ItemStack.deserializeBytes(nbt);
+            // Legacy headless format - wrap with compound tag header
+            try (ByteArrayOutputStream fullNbtStream = new ByteArrayOutputStream();
+                 DataOutputStream nbtDos = new DataOutputStream(fullNbtStream)) {
+                nbtDos.writeByte(10); // TAG_Compound ID
+                nbtDos.writeUTF("");  // Root tag name (empty)
+                nbtDos.write(nbt);
+                nbtDos.flush();
+
+                try (ByteArrayInputStream bis = new ByteArrayInputStream(fullNbtStream.toByteArray());
+                     DataInputStream dis = new DataInputStream(bis)) {
+                    tag = NbtIo.read(dis, NbtAccounter.unlimitedHeap());
+                }
+            }
+        }
+
+        // Check for data version and apply DataFixer if needed
+        int dataVersion = tag.getInt("DataVersion").orElse(NYAACORE_ITEMSTACK_DEFAULT_DATAVERSION);
+
+        if (dataVersion < currentDataVersion) {
+            // Apply DataFixer to upgrade the item data
+            DataFixer dataFixer = DataFixers.getDataFixer();
+            Dynamic<net.minecraft.nbt.Tag> dynamic = new Dynamic<>(NbtOps.INSTANCE, tag);
+            dynamic = dataFixer.update(References.ITEM_STACK, dynamic, dataVersion, currentDataVersion);
+            tag = (CompoundTag) dynamic.getValue();
+            tag.putInt("DataVersion", currentDataVersion);
+        }
+
+        // Serialize back to bytes with GZIP and deserialize using Paper's method
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+             java.util.zip.GZIPOutputStream gzipOut = new java.util.zip.GZIPOutputStream(bos);
+             DataOutputStream dos = new DataOutputStream(gzipOut)) {
+            NbtIo.write(tag, dos);
+            gzipOut.finish();
+            return ItemStack.deserializeBytes(bos.toByteArray());
         }
     }
 
