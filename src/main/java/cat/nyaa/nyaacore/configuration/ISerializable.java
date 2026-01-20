@@ -92,7 +92,8 @@ public interface ISerializable {
                 } else if (Keyed.class.isAssignableFrom(f.getType())) {
                     // Handle registry-based types (Sound, Biome, etc.) that are no longer enums in 1.21+
                     try {
-                        String keyName = ((String) newValue).toLowerCase();
+                        // Convert from stored format (BLOCK_ANVIL_USE) to registry key format (block.anvil.use)
+                        String keyName = ((String) newValue).toLowerCase().replace('_', '.');
                         // Try minecraft namespace first
                         NamespacedKey key = NamespacedKey.minecraft(keyName);
                         Registry<?> registry = findRegistry(f.getType());
