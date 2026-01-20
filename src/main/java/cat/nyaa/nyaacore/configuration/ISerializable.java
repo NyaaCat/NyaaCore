@@ -92,15 +92,12 @@ public interface ISerializable {
                 } else if (Keyed.class.isAssignableFrom(f.getType())) {
                     // Handle registry-based types (Sound, Biome, etc.) that are no longer enums in 1.21+
                     try {
-                        // Convert from stored format (BLOCK_ANVIL_USE) to registry key format (block.anvil.use)
-                        String keyName = ((String) newValue).toLowerCase().replace('_', '.');
-                        // Try minecraft namespace first
-                        NamespacedKey key = NamespacedKey.minecraft(keyName);
                         Registry<?> registry = findRegistry(f.getType());
                         if (registry != null) {
-                            newValue = registry.get(key);
+                            String rawValue = String.valueOf(newValue).trim();
+                            newValue = resolveKeyedValue(registry, rawValue);
                             if (newValue == null) {
-                                Bukkit.getLogger().warning("Failed to find registry value '" + keyName + "' for field " + f.getName() + " of type " + f.getType().getSimpleName());
+                                Bukkit.getLogger().warning("Failed to find registry value '" + rawValue + "' for field " + f.getName() + " of type " + f.getType().getSimpleName());
                                 continue;
                             }
                         } else {
@@ -275,6 +272,39 @@ public interface ISerializable {
             return (Registry<T>) Registry.ATTRIBUTE;
         }
         return null;
+    }
+
+    private static <T extends Keyed> T resolveKeyedValue(Registry<T> registry, String rawValue) {
+        if (rawValue == null || rawValue.isEmpty()) return null;
+
+        String normalized = rawValue.toLowerCase();
+        NamespacedKey key = null;
+        if (normalized.contains(":")) {
+            key = NamespacedKey.fromString(normalized);
+        } else if (normalized.contains(".")) {
+            key = NamespacedKey.minecraft(normalized);
+        }
+        if (key != null) {
+            T match = registry.get(key);
+            if (match != null) return match;
+        }
+
+        String legacy = normalized;
+        if (legacy.startsWith("minecraft:")) {
+            legacy = legacy.substring("minecraft:".length());
+        }
+        String legacyMatch = legacy.replace('.', '_');
+        for (T entry : registry) {
+            String entryKey = entry.getKey().getKey();
+            String enumStyle = entryKey.replace('.', '_');
+            if (enumStyle.equalsIgnoreCase(legacyMatch)) {
+                return entry;
+            }
+        }
+
+        String fallbackKeyName = legacy.replace('_', '.');
+        NamespacedKey fallbackKey = NamespacedKey.minecraft(fallbackKeyName);
+        return registry.get(fallbackKey);
     }
 
     /**
