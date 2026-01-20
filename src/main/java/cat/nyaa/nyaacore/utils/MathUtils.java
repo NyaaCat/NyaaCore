@@ -13,9 +13,15 @@ public final class MathUtils {
 
     /**
      * Generate a random number in [min,max]
+     * If min > max, the values are swapped automatically.
      */
     public static int uniformRangeInclusive(int minInclusive, int maxInclusive) {
-        if (maxInclusive < minInclusive) throw new IllegalArgumentException();
+        if (maxInclusive < minInclusive) {
+            // Swap values if min > max
+            int temp = minInclusive;
+            minInclusive = maxInclusive;
+            maxInclusive = temp;
+        }
         return rng.nextInt(maxInclusive - minInclusive + 1) + minInclusive;
     }
 
