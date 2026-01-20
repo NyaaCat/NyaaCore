@@ -3,6 +3,9 @@ package cat.nyaa.nyaacore.configuration;
 import cat.nyaa.nyaacore.configuration.annotation.Deserializer;
 import cat.nyaa.nyaacore.utils.ReflectionUtils;
 import org.bukkit.Bukkit;
+import org.bukkit.Keyed;
+import org.bukkit.NamespacedKey;
+import org.bukkit.Registry;
 import org.bukkit.configuration.ConfigurationSection;
 
 import java.lang.annotation.ElementType;
@@ -83,7 +86,28 @@ public interface ISerializable {
                     try {
                         newValue = Enum.valueOf((Class<? extends Enum>) f.getType(), (String) newValue);
                     } catch (Exception ex) {
-                        ex.printStackTrace();
+                        Bukkit.getLogger().warning("Failed to deserialize enum value '" + newValue + "' for field " + f.getName() + " of type " + f.getType().getSimpleName() + ": " + ex.getMessage());
+                        continue; // Skip setting this field, keep the default value
+                    }
+                } else if (Keyed.class.isAssignableFrom(f.getType())) {
+                    // Handle registry-based types (Sound, Biome, etc.) that are no longer enums in 1.21+
+                    try {
+                        String keyName = ((String) newValue).toLowerCase();
+                        // Try minecraft namespace first
+                        NamespacedKey key = NamespacedKey.minecraft(keyName);
+                        Registry<?> registry = findRegistry(f.getType());
+                        if (registry != null) {
+                            newValue = registry.get(key);
+                            if (newValue == null) {
+                                Bukkit.getLogger().warning("Failed to find registry value '" + keyName + "' for field " + f.getName() + " of type " + f.getType().getSimpleName());
+                                continue;
+                            }
+                        } else {
+                            Bukkit.getLogger().warning("No registry found for type " + f.getType().getSimpleName() + ", skipping field " + f.getName());
+                            continue;
+                        }
+                    } catch (Exception ex) {
+                        Bukkit.getLogger().warning("Failed to deserialize registry value '" + newValue + "' for field " + f.getName() + " of type " + f.getType().getSimpleName() + ": " + ex.getMessage());
                         continue;
                     }
                 } else if (ISerializable.class.isAssignableFrom(f.getType())) {
@@ -173,6 +197,11 @@ public interface ISerializable {
                     Enum e = (Enum) f.get(obj);
                     if (e == null) continue;
                     config.set(cfgName, e.name());
+                } else if (Keyed.class.isAssignableFrom(f.getType())) {
+                    // Handle registry-based types (Sound, Biome, etc.) that are no longer enums in 1.21+
+                    Keyed k = (Keyed) f.get(obj);
+                    if (k == null) continue;
+                    config.set(cfgName, k.getKey().getKey().toUpperCase());
                 } else if (ISerializable.class.isAssignableFrom(f.getType())) {
                     ISerializable o = (ISerializable) f.get(obj);
                     if (o == null) continue;
@@ -220,6 +249,31 @@ public interface ISerializable {
 
     default void serialize(ConfigurationSection config) {
         serialize(config, this);
+    }
+
+    /**
+     * Find the appropriate Registry for a given Keyed type.
+     * Used for deserializing registry-based types like Sound, Biome, etc.
+     */
+    @SuppressWarnings("unchecked")
+    private static <T extends Keyed> Registry<T> findRegistry(Class<?> type) {
+        // Check common registry types
+        if (org.bukkit.Sound.class.isAssignableFrom(type)) {
+            return (Registry<T>) Registry.SOUNDS;
+        } else if (org.bukkit.block.Biome.class.isAssignableFrom(type)) {
+            return (Registry<T>) Registry.BIOME;
+        } else if (org.bukkit.entity.EntityType.class.isAssignableFrom(type)) {
+            return (Registry<T>) Registry.ENTITY_TYPE;
+        } else if (org.bukkit.Material.class.isAssignableFrom(type)) {
+            return (Registry<T>) Registry.MATERIAL;
+        } else if (org.bukkit.enchantments.Enchantment.class.isAssignableFrom(type)) {
+            return (Registry<T>) Registry.ENCHANTMENT;
+        } else if (org.bukkit.potion.PotionEffectType.class.isAssignableFrom(type)) {
+            return (Registry<T>) Registry.POTION_EFFECT_TYPE;
+        } else if (org.bukkit.attribute.Attribute.class.isAssignableFrom(type)) {
+            return (Registry<T>) Registry.ATTRIBUTE;
+        }
+        return null;
     }
 
     /**
