@@ -14,6 +14,7 @@ import net.minecraft.util.datafix.DataFixers;
 import net.minecraft.util.datafix.fixes.References;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -46,6 +47,11 @@ public final class ItemStackUtils {
             .weigher((String k, List<ItemStack> v) -> k.getBytes().length)
             .maximumWeight(256L * 1024 * 1024).build(); // Hard Coded 256M
     private static NbtAccounter unlimitedNbtAccounter = null;
+    private static final LegacyComponentSerializer LEGACY_TEXT_SERIALIZER = LegacyComponentSerializer.builder()
+            .character(ChatColor.COLOR_CHAR)
+            .hexColors()
+            .useUnusualXRepeatedCharacterHexFormat()
+            .build();
 
     private static CraftWorld defaultWorld;
 
@@ -239,6 +245,8 @@ public final class ItemStackUtils {
      * Convert base64 string back to a list of items
      */
     public static List<ItemStack> itemsFromBase64(String base64) {
+        if (base64 == null) throw new IllegalArgumentException();
+        base64 = sanitizeBase64(base64);
         List<ItemStack> stack = itemDeserializerCache.getIfPresent(base64);
         if (stack != null) return stack.stream().map(ItemStack::clone).collect(Collectors.toList());
         if (base64.length() <= 0) return new ArrayList<>();
@@ -295,23 +303,34 @@ public final class ItemStackUtils {
     public static boolean isSimilarPlainText(ItemStack base, ItemStack given) {
         if (base == null || given == null) return false;
         if (!Objects.equals(base.getType(), given.getType())) return false;
-        String baseName = getPlainDisplayName(base);
-        String givenName = getPlainDisplayName(given);
-        if (!Objects.equals(baseName, givenName)) return false;
-        List<String> baseLore = getPlainLore(base);
-        List<String> givenLore = getPlainLore(given);
-        return Objects.equals(baseLore, givenLore);
+        ItemMeta baseMeta = base.getItemMeta();
+        ItemMeta givenMeta = given.getItemMeta();
+        boolean baseHasName = hasAnyName(baseMeta);
+        boolean givenHasName = hasAnyName(givenMeta);
+        if (baseHasName || givenHasName) {
+            String baseName = getPlainDisplayName(base);
+            String givenName = getPlainDisplayName(given);
+            if (!Objects.equals(baseName, givenName)) return false;
+        }
+        boolean baseHasLore = hasAnyLore(baseMeta);
+        boolean givenHasLore = hasAnyLore(givenMeta);
+        if (baseHasLore || givenHasLore) {
+            List<String> baseLore = getPlainLore(base);
+            List<String> givenLore = getPlainLore(given);
+            if (!Objects.equals(baseLore, givenLore)) return false;
+        }
+        return true;
     }
 
     public static String getPlainDisplayName(ItemStack item) {
         if (item == null) return "";
         ItemMeta meta = item.getItemMeta();
         if (meta == null) return "";
+        Component name = getDisplayNameComponent(meta);
+        if (name != null) {
+            return PlainTextComponentSerializer.plainText().serialize(name);
+        }
         if (meta.hasDisplayName()) {
-            Component name = meta.displayName();
-            if (name != null) {
-                return PlainTextComponentSerializer.plainText().serialize(name);
-            }
             return plainTextFromString(meta.getDisplayName());
         }
         return "";
@@ -338,6 +357,52 @@ public final class ItemStackUtils {
         return plain;
     }
 
+    private static Component getDisplayNameComponent(ItemMeta meta) {
+        if (meta == null) return null;
+        if (meta.hasCustomName()) {
+            Component custom = meta.customName();
+            if (custom != null) {
+                return custom;
+            }
+        }
+        if (meta.hasDisplayName()) {
+            Component display = meta.displayName();
+            if (display != null) {
+                return display;
+            }
+        }
+        return null;
+    }
+
+    private static boolean hasAnyName(ItemMeta meta) {
+        if (meta == null) return false;
+        return meta.hasCustomName() || meta.hasDisplayName();
+    }
+
+    private static boolean hasAnyLore(ItemMeta meta) {
+        if (meta == null) return false;
+        if (meta.hasLore()) return true;
+        List<Component> lore = meta.lore();
+        return lore != null && !lore.isEmpty();
+    }
+
+    private static String sanitizeBase64(String base64) {
+        int len = base64.length();
+        StringBuilder sanitized = null;
+        for (int i = 0; i < len; i++) {
+            char c = base64.charAt(i);
+            if (Character.isWhitespace(c)) {
+                if (sanitized == null) {
+                    sanitized = new StringBuilder(len);
+                    sanitized.append(base64, 0, i);
+                }
+            } else if (sanitized != null) {
+                sanitized.append(c);
+            }
+        }
+        return sanitized == null ? base64 : sanitized.toString();
+    }
+
     private static String plainTextFromString(String text) {
         if (text == null || text.isEmpty()) return "";
         String trimmed = text.trim();
@@ -348,6 +413,12 @@ public final class ItemStackUtils {
             } catch (Exception ignored) {
                 // Fall back to legacy handling.
             }
+        }
+        try {
+            Component component = LEGACY_TEXT_SERIALIZER.deserialize(text);
+            return PlainTextComponentSerializer.plainText().serialize(component);
+        } catch (Exception ignored) {
+            // Fallback to raw stripping.
         }
         return ChatColor.stripColor(text);
     }
