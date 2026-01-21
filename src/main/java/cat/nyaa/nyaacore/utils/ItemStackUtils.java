@@ -248,7 +248,9 @@ public final class ItemStackUtils {
         if (base64 == null) throw new IllegalArgumentException();
         base64 = sanitizeBase64(base64);
         List<ItemStack> stack = itemDeserializerCache.getIfPresent(base64);
-        if (stack != null) return stack.stream().map(ItemStack::clone).collect(Collectors.toList());
+        if (stack != null) {
+            return stack.stream().map(item -> item == null ? null : item.clone()).collect(Collectors.toList());
+        }
         if (base64.length() <= 0) return new ArrayList<>();
 
         byte[] uncompressedBinary = decompress(BaseEncoding.base64().decode(base64));
@@ -267,7 +269,7 @@ public final class ItemStackUtils {
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
-        itemDeserializerCache.put(base64, ret.stream().map(ItemStack::clone).collect(Collectors.toList()));
+        itemDeserializerCache.put(base64, ret.stream().map(item -> item == null ? null : item.clone()).collect(Collectors.toList()));
         return ret;
     }
 
