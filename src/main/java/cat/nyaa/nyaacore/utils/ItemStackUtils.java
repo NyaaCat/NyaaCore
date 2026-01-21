@@ -12,18 +12,24 @@ import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.util.datafix.DataFixers;
 import net.minecraft.util.datafix.fixes.References;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.UnsafeValues;
 import org.bukkit.World;
 import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.craftbukkit.inventory.CraftItemStack;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterInputStream;
@@ -91,18 +97,12 @@ public final class ItemStackUtils {
             return null;
         }
 
-        // Try modern format first (GZIP compressed)
-        if (nbt.length >= 2 && nbt[0] == (byte) 0x1f && nbt[1] == (byte) 0x8b) {
-            try {
-                return ItemStack.deserializeBytes(nbt);
-            } catch (Exception e) {
-                // If it fails, try to apply DataFixer for legacy data
-                return deserializeWithDataFixer(nbt, true);
-            }
+        boolean isGzipped = isGzipCompressed(nbt);
+        try {
+            return deserializeWithDataFixer(nbt, isGzipped);
+        } catch (Exception ex) {
+            return ItemStack.deserializeBytes(nbt);
         }
-
-        // Legacy format (not GZIP) - apply DataFixer
-        return deserializeWithDataFixer(nbt, false);
     }
 
     /**
@@ -145,6 +145,8 @@ public final class ItemStackUtils {
             dynamic = dataFixer.update(References.ITEM_STACK, dynamic, dataVersion, currentDataVersion);
             tag = (CompoundTag) dynamic.getValue();
             tag.putInt("DataVersion", currentDataVersion);
+        } else if (isGzipped) {
+            return ItemStack.deserializeBytes(nbt);
         }
 
         // Serialize back to bytes with GZIP and deserialize using Paper's method
@@ -155,6 +157,10 @@ public final class ItemStackUtils {
             gzipOut.finish();
             return ItemStack.deserializeBytes(bos.toByteArray());
         }
+    }
+
+    private static boolean isGzipCompressed(byte[] nbt) {
+        return nbt.length >= 2 && nbt[0] == (byte) 0x1f && nbt[1] == (byte) 0x8b;
     }
 
     @Deprecated
@@ -284,5 +290,65 @@ public final class ItemStackUtils {
     @Deprecated
     public static Object asNMSCopy(ItemStack itemStack) {
         return CraftItemStack.asNMSCopy(itemStack);
+    }
+
+    public static boolean isSimilarPlainText(ItemStack base, ItemStack given) {
+        if (base == null || given == null) return false;
+        if (!Objects.equals(base.getType(), given.getType())) return false;
+        String baseName = getPlainDisplayName(base);
+        String givenName = getPlainDisplayName(given);
+        if (!Objects.equals(baseName, givenName)) return false;
+        List<String> baseLore = getPlainLore(base);
+        List<String> givenLore = getPlainLore(given);
+        return Objects.equals(baseLore, givenLore);
+    }
+
+    public static String getPlainDisplayName(ItemStack item) {
+        if (item == null) return "";
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return "";
+        if (meta.hasDisplayName()) {
+            Component name = meta.displayName();
+            if (name != null) {
+                return PlainTextComponentSerializer.plainText().serialize(name);
+            }
+            return plainTextFromString(meta.getDisplayName());
+        }
+        return "";
+    }
+
+    public static List<String> getPlainLore(ItemStack item) {
+        if (item == null) return Collections.emptyList();
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null || !meta.hasLore()) return Collections.emptyList();
+        List<Component> componentLore = meta.lore();
+        if (componentLore != null) {
+            List<String> plain = new ArrayList<>(componentLore.size());
+            for (Component line : componentLore) {
+                plain.add(PlainTextComponentSerializer.plainText().serialize(line));
+            }
+            return plain;
+        }
+        List<String> legacyLore = meta.getLore();
+        if (legacyLore == null) return Collections.emptyList();
+        List<String> plain = new ArrayList<>(legacyLore.size());
+        for (String line : legacyLore) {
+            plain.add(plainTextFromString(line));
+        }
+        return plain;
+    }
+
+    private static String plainTextFromString(String text) {
+        if (text == null || text.isEmpty()) return "";
+        String trimmed = text.trim();
+        if ((trimmed.startsWith("{") && trimmed.endsWith("}")) || (trimmed.startsWith("[") && trimmed.endsWith("]"))) {
+            try {
+                Component component = GsonComponentSerializer.gson().deserialize(trimmed);
+                return PlainTextComponentSerializer.plainText().serialize(component);
+            } catch (Exception ignored) {
+                // Fall back to legacy handling.
+            }
+        }
+        return ChatColor.stripColor(text);
     }
 }

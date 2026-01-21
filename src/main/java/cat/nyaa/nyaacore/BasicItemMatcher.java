@@ -1,6 +1,7 @@
 package cat.nyaa.nyaacore;
 
 import cat.nyaa.nyaacore.configuration.ISerializable;
+import cat.nyaa.nyaacore.utils.ItemStackUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
@@ -65,11 +66,13 @@ public class BasicItemMatcher implements ISerializable {
 
         String baseDisplay = getDisplayName(base);
         String givenDisplay = getDisplayName(given);
+        String baseDisplayPlain = ItemStackUtils.getPlainDisplayName(base);
+        String givenDisplayPlain = ItemStackUtils.getPlainDisplayName(given);
         if (nameMatch == MatchingMode.EXACT && !baseDisplay.equals(givenDisplay)) return false;
-        if (nameMatch == MatchingMode.EXACT_TEXT && !ChatColor.stripColor(baseDisplay).equals(ChatColor.stripColor(givenDisplay)))
+        if (nameMatch == MatchingMode.EXACT_TEXT && !baseDisplayPlain.equals(givenDisplayPlain))
             return false;
         if (nameMatch == MatchingMode.CONTAINS && !givenDisplay.contains(baseDisplay)) return false;
-        if (nameMatch == MatchingMode.CONTAINS_TEXT && !ChatColor.stripColor(givenDisplay).contains(ChatColor.stripColor(baseDisplay)))
+        if (nameMatch == MatchingMode.CONTAINS_TEXT && !givenDisplayPlain.contains(baseDisplayPlain))
             return false;
 
         Map<Enchantment, Integer> baseEnch = base.getEnchantments();
@@ -85,14 +88,14 @@ public class BasicItemMatcher implements ISerializable {
 
         String[] baseLore = getLore(base);
         String[] givenLore = getLore(given);
+        String[] baseLorePlain = ItemStackUtils.getPlainLore(base).toArray(new String[0]);
+        String[] givenLorePlain = ItemStackUtils.getPlainLore(given).toArray(new String[0]);
         if (loreMatch == MatchingMode.EXACT && !Arrays.deepEquals(baseLore, givenLore)) return false;
         if (loreMatch == MatchingMode.CONTAINS && !containStrArr(givenLore, baseLore, false)) return false;
         if (loreMatch == MatchingMode.EXACT_TEXT) {
-            for (int i = 0; i < baseLore.length; i++) baseLore[i] = ChatColor.stripColor(baseLore[i]);
-            for (int i = 0; i < givenLore.length; i++) givenLore[i] = ChatColor.stripColor(givenLore[i]);
-            if (!Arrays.deepEquals(baseLore, givenLore)) return false;
+            if (!Arrays.deepEquals(baseLorePlain, givenLorePlain)) return false;
         }
-        return loreMatch != MatchingMode.CONTAINS_TEXT || containStrArr(givenLore, baseLore, true);
+        return loreMatch != MatchingMode.CONTAINS_TEXT || containStrArr(givenLorePlain, baseLorePlain, false);
     }
 
     private String getDisplayName(ItemStack i) {
