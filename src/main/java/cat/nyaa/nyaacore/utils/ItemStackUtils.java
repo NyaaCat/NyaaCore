@@ -345,9 +345,9 @@ public final class ItemStackUtils {
     public static List<String> getPlainLore(ItemStack item) {
         if (item == null) return Collections.emptyList();
         ItemMeta meta = item.getItemMeta();
-        if (meta == null || !meta.hasLore()) return Collections.emptyList();
+        if (meta == null) return Collections.emptyList();
         List<Component> componentLore = meta.lore();
-        if (componentLore != null) {
+        if (componentLore != null && !componentLore.isEmpty()) {
             List<String> plain = new ArrayList<>(componentLore.size());
             for (Component line : componentLore) {
                 plain.add(PlainTextComponentSerializer.plainText().serialize(line));
@@ -355,7 +355,7 @@ public final class ItemStackUtils {
             return plain;
         }
         List<String> legacyLore = meta.getLore();
-        if (legacyLore == null) return Collections.emptyList();
+        if (legacyLore == null || legacyLore.isEmpty()) return Collections.emptyList();
         List<String> plain = new ArrayList<>(legacyLore.size());
         for (String line : legacyLore) {
             plain.add(plainTextFromString(line));
