@@ -330,6 +330,12 @@ public final class ItemStackUtils {
         if (name != null) {
             return PlainTextComponentSerializer.plainText().serialize(name);
         }
+        if (meta.hasItemName()) {
+            String itemName = meta.getItemName();
+            if (itemName != null && !itemName.isEmpty()) {
+                return plainTextFromString(itemName);
+            }
+        }
         if (meta.hasDisplayName()) {
             return plainTextFromString(meta.getDisplayName());
         }
@@ -365,6 +371,12 @@ public final class ItemStackUtils {
                 return custom;
             }
         }
+        if (meta.hasItemName()) {
+            Component itemName = meta.itemName();
+            if (itemName != null) {
+                return itemName;
+            }
+        }
         if (meta.hasDisplayName()) {
             Component display = meta.displayName();
             if (display != null) {
@@ -376,7 +388,7 @@ public final class ItemStackUtils {
 
     private static boolean hasAnyName(ItemMeta meta) {
         if (meta == null) return false;
-        return meta.hasCustomName() || meta.hasDisplayName();
+        return meta.hasCustomName() || meta.hasItemName() || meta.hasDisplayName();
     }
 
     private static boolean hasAnyLore(ItemMeta meta) {
