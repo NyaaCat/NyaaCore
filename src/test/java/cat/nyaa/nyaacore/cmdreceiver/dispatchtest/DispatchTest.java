@@ -1,7 +1,5 @@
 package cat.nyaa.nyaacore.cmdreceiver.dispatchtest;
 
-import be.seeseemelk.mockbukkit.MockBukkit;
-import be.seeseemelk.mockbukkit.ServerMock;
 import cat.nyaa.nyaacore.NyaaCoreLoader;
 import cat.nyaa.nyaacore.cmdreceiver.Arguments;
 import org.bukkit.command.CommandSender;
@@ -12,6 +10,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockbukkit.mockbukkit.MockBukkit;
+import org.mockbukkit.mockbukkit.ServerMock;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -30,14 +30,13 @@ import static org.mockito.Mockito.verify;
 public class DispatchTest {
     public static ICallback callback;
     private static ServerMock server;
-    private static NyaaCoreLoader plugin;
     private static CmdRoot cmdRoot;
     private static PluginCommand cmd;
 
     @BeforeAll
     public static void setUp() {
         server = MockBukkit.mock();
-        plugin = MockBukkit.load(NyaaCoreLoader.class, true);
+        NyaaCoreLoader plugin = MockBukkit.load(NyaaCoreLoader.class, true);
         cmdRoot = new CmdRoot(plugin);
 
         cmd = PluginCommandUtils.createPluginCommand("nct", plugin);

@@ -3,14 +3,14 @@ import java.net.URI
 plugins {
     `java-library`
     `maven-publish`
-    id("io.papermc.paperweight.userdev") version "2.0.0-beta.17"
+    id("io.papermc.paperweight.userdev") version "2.0.0-beta.21"
     id("xyz.jpenilla.run-paper") version "2.3.0" // Adds runServer and runMojangMappedServer tasks for testing
 }
 
 // = = =
 
 val pluginName = "NyaaCore"
-val paperApiName = "1.21.11-R0.1-SNAPSHOT"
+val paperApiName = "26.1.2.build.+"
 
 // = = =
 
@@ -19,7 +19,7 @@ version ="9.10"
 
 java {
     // Configure the java toolchain. This allows gradle to auto-provision JDK 21 on systems that only have JDK 8 installed for example.
-    toolchain.languageVersion.set(JavaLanguageVersion.of(21))
+    toolchain.languageVersion.set(JavaLanguageVersion.of(25))
 }
 
 repositories {
@@ -32,18 +32,18 @@ repositories {
 
 dependencies {
     paperweight.paperDevBundle(paperApiName)
-    compileOnly("net.essentialsx:EssentialsX:2.21.1") {
+    compileOnly("net.essentialsx:EssentialsX:2.21.2") {
         exclude(group = "org.spigotmc", module = "spigot-api")
     }    // soft dep
-    compileOnly("org.jetbrains:annotations:24.1.0")
     // Testing
-    testImplementation(platform("org.junit:junit-bom:5.10.3"))
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testImplementation(platform("org.junit:junit-bom:6.1.0-RC1"))
     testImplementation("org.junit.jupiter:junit-jupiter")
-    testImplementation("com.github.seeseemelk:MockBukkit-v1.21:3.95.1")
-    testImplementation("org.mockito:mockito-core:5.12.0")
-    testImplementation("org.mockito:mockito-junit-jupiter:5.12.0")
-    testImplementation("org.xerial:sqlite-jdbc:3.46.0.0")
-    testImplementation("ch.vorburger.mariaDB4j:mariaDB4j:3.1.0")
+    testImplementation("org.mockbukkit.mockbukkit:mockbukkit-v26.1.2:4.113.1")
+    testImplementation("org.mockito:mockito-core:5.23.0")
+    testImplementation("org.mockito:mockito-junit-jupiter:5.23.0")
+    testImplementation("org.xerial:sqlite-jdbc:3.53.1.0")
+    testImplementation("ch.vorburger.mariaDB4j:mariaDB4j:3.3.1")
 }
 
 publishing {
@@ -64,10 +64,14 @@ publishing {
                 password = System.getenv("GITHUB_TOKEN")
             }
         }
-        maven {
-            name = "NyaaCatCILocal"
-            //local maven repository
-            url = uri("file://${System.getenv("MAVEN_DIR")}")
+        // Add local maven repository only when MAVEN_DIR is set to avoid converting "file://null" to a URI
+        val mavenDir = System.getenv("MAVEN_DIR")
+        if (mavenDir != null && mavenDir.isNotBlank()) {
+            maven {
+                name = "NyaaCatCILocal"
+                // local maven repository
+                url = uri("file://$mavenDir")
+            }
         }
     }
 }
@@ -83,34 +87,8 @@ tasks.register("publishToNyaaCatCILocal") {
 }
 
 
-/*
-reobfJar {
-     // This is an example of how you might change the output location for reobfJar. It's recommended not to do this
-     // for a variety of reasons, however it's asked frequently enough that an example of how to do it is included here.
-     outputJar.set(layout.buildDirectory.file("libs/PaperweightTestPlugin-${project.version}.jar"))
-}
-*/
-
 
 tasks {
-    // ref: https://docs.papermc.io/paper/dev/userdev
-    // 1)
-    // For >=1.20.5 when you don't care about supporting spigot
-    // set:
-    paperweight.reobfArtifactConfiguration = io.papermc.paperweight.userdev.ReobfArtifactConfiguration.MOJANG_PRODUCTION
-    // and it will eliminate the -dev suffix from the artifact name which indicates the artifact is
-    // mojang-mapped and won't work on the most of the server but at 1.20.5 the paper
-    // uses mojang-mapping by default, so it doesn't matter anymore.
-    //
-
-    // 2)
-    // For 1.20.4 or below, or when you care about supporting Spigot on >=1.20.5
-    // Configure reobfJar to run when invoking the build task
-    /*
-    assemble {
-        dependsOn(reobfJar)
-    }
-    */
 
     withType<ProcessResources> {
         val newProperties = project.properties.toMutableMap()
@@ -124,7 +102,7 @@ tasks {
         options.encoding = Charsets.UTF_8.name() // We want UTF-8 for everything
         // Set the release flag. This configures what version bytecode the compiler will emit, as well as what JDK APIs are usable.
         // See https://openjdk.java.net/jeps/247 for more information.
-        options.release.set(21)
+        options.release.set(25)
     }
 
     javadoc {
@@ -151,6 +129,13 @@ tasks {
             )
             options.windowTitle = "$pluginName Javadoc"
         }
+    }
+
+    test {
+        // Use JUnit Platform (JUnit 5) for test discovery
+        useJUnitPlatform()
+        // Prevent build failure if no tests are discovered in some environments
+        failOnNoDiscoveredTests = false
     }
 }
 

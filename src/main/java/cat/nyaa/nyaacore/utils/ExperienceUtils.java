@@ -19,20 +19,13 @@ public final class ExperienceUtils {
      * The true exp point for a player at this time.
      */
     public static int getExpPoints(Player p) {
-        int pointForCurrentLevel = Math.round(p.getExpToLevel() * p.getExp());
-        return getExpForLevel(p.getLevel()) + pointForCurrentLevel;
+        return p.getTotalExperience();
     }
 
     public static void subtractExpPoints(Player p, int points) {
         if (points < 0) throw new IllegalArgumentException();
         if (points == 0) return;
-        int total = getExpPoints(p);
-        if (total < points) throw new IllegalArgumentException("Negative Exp Left");
-        int newLevel = getLevelForExp(total - points);
-        int remPoint = total - points - getExpForLevel(newLevel);
-        p.setLevel(newLevel);
-        p.setExp(0);
-        p.giveExp(remPoint);
+        p.setTotalExperience(p.getTotalExperience() - points);
     }
 
     /**

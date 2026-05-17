@@ -1,13 +1,13 @@
 package cat.nyaa.nyaacore;
 
-import be.seeseemelk.mockbukkit.MockBukkit;
-import be.seeseemelk.mockbukkit.ServerMock;
 import org.bukkit.plugin.Plugin;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockbukkit.mockbukkit.MockBukkit;
+import org.mockbukkit.mockbukkit.ServerMock;
 import org.mockito.Mockito;
 
 import java.io.*;
@@ -17,13 +17,12 @@ public class LanguageRepositoryTest {
     @TempDir
     public static File another_plugin_data_dir;
     private static ServerMock server;
-    private static NyaaCoreLoader nyaacore;
     private static Plugin plugin;
 
     @BeforeAll
     public static void setUpMockServer() throws IOException {
         server = MockBukkit.mock();
-        nyaacore = MockBukkit.load(NyaaCoreLoader.class, true);
+        NyaaCoreLoader nyaacore = MockBukkit.load(NyaaCoreLoader.class, true);
         plugin = Mockito.mock(Plugin.class);
         Mockito.when(plugin.getDataFolder()).thenReturn(another_plugin_data_dir);
 

@@ -1,17 +1,10 @@
 package cat.nyaa.nyaacore;
 
 import cat.nyaa.nyaacore.utils.ItemStackUtils;
-import cat.nyaa.nyaacore.utils.LocaleUtils;
-import net.kyori.adventure.inventory.Book;
+import io.papermc.paper.datacomponent.DataComponentTypes;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.kyori.adventure.title.Title;
-import net.kyori.adventure.util.Ticks;
-import net.md_5.bungee.api.ChatMessageType;
-import net.md_5.bungee.api.chat.BaseComponent;
-import net.md_5.bungee.api.chat.HoverEvent;
-import net.md_5.bungee.api.chat.TextComponent;
-import net.md_5.bungee.chat.ComponentSerializer;
 import org.bukkit.*;
 import org.bukkit.block.BlockState;
 import org.bukkit.command.CommandSender;
@@ -23,7 +16,6 @@ import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.permissions.Permission;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -98,13 +90,10 @@ public class Message {
      * @param item the book
      * @return book without contents.
      */
-    @SuppressWarnings("ResultOfMethodCallIgnored")
     public static ItemStack removeBookContent(ItemStack item) {
-        if (item.hasItemMeta() && item.getItemMeta() instanceof BookMeta) {
+        if (item.hasData(DataComponentTypes.WRITTEN_BOOK_CONTENT)) {
             ItemStack itemStack = item.clone();
-            BookMeta meta = (BookMeta) itemStack.getItemMeta();
-            meta.pages(Component.empty());
-            itemStack.setItemMeta(meta);
+            itemStack.unsetData(DataComponentTypes.WRITTEN_BOOK_CONTENT);
             return itemStack;
         }
         return item;
@@ -115,7 +104,7 @@ public class Message {
     }
 
     public static void sendTitle(Player player, Component title, Component subtitle, int fadeInTicks, int stayTicks, int fadeOutTicks) {
-        Title title1 = Title.title(title, subtitle, Title.Times.times(Duration.ofMillis(fadeInTicks * 50L), Duration.ofMillis(stayTicks * 50L), Duration.ofMillis(fadeOutTicks * 50L)));
+        Title title1 = Title.title(title, subtitle, fadeInTicks, stayTicks, fadeOutTicks);
         player.showTitle(title1);
     }
 
@@ -148,7 +137,7 @@ public class Message {
         Map<String, Component> varMap = new HashMap<>();
         for (int i = 0; i < items.length; i++) {
             ItemStack clone = items[i].clone();
-            boolean hasCustomName = clone.hasItemMeta() && clone.getItemMeta().hasCustomName();
+            boolean hasCustomName = clone.hasData(DataComponentTypes.CUSTOM_NAME);
             Component cmp = hasCustomName ? clone.displayName() : Component.translatable(clone);
             varMap.put(String.format("{amount:%d}", i), Component.text(clone.getAmount()));
             varMap.put(String.format("{itemName:%d}", i), cmp);

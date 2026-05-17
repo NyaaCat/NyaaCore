@@ -55,7 +55,7 @@ public class VersionUtils {
             result.add(versionint);
         }
         while (result.lastIndexOf(0) == (result.size() - 1)) {
-            result.remove(result.size() - 1);
+            result.removeLast();
         }
         return result;
     }
@@ -67,7 +67,7 @@ public class VersionUtils {
         String[] splitVersion = version.split("\\.");
         List<String> result = new ArrayList<>();
         for (String s : splitVersion) {
-            if (!s.equals("")) result.add(s);
+            if (!s.isEmpty()) result.add(s);
         }
         return result.toArray(new String[0]);
     }

@@ -70,7 +70,6 @@ public final class InventoryUtils {
                         amount = amount - (item.getMaxStackSize() - tmp.getAmount());
                         tmp.setAmount(item.getMaxStackSize());
                         tmpInv[slot] = tmp;
-                        continue;
                     }
                 }
             }
@@ -117,15 +116,12 @@ public final class InventoryUtils {
                 if (tmp.getAmount() < amount) {
                     amount = amount - tmp.getAmount();
                     items[slot] = new ItemStack(Material.AIR);
-                    continue;
                 } else if (tmp.getAmount() > amount) {
                     tmp.setAmount(tmp.getAmount() - amount);
-                    amount = 0;
                     success = true;
                     break;
                 } else {
                     items[slot] = new ItemStack(Material.AIR);
-                    amount = 0;
                     success = true;
                     break;
                 }
@@ -227,7 +223,7 @@ public final class InventoryUtils {
             }
         }
 
-        if (ret.size() == 0) {
+        if (ret.isEmpty()) {
             inv.setContents(cloneStacks);
             return null;
         } else {

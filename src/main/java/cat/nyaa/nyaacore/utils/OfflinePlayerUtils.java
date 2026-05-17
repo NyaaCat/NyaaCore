@@ -120,7 +120,7 @@ public class OfflinePlayerUtils {
             if (nameMapsList.isEmpty()) {
                 return null;
             }
-            nameCache.put(uuid, nameMapsList.get(nameMapsList.size() - 1).get("name").toString());
+            nameCache.put(uuid, nameMapsList.getLast().get("name").toString());
             return nameCache.get(uuid);
         }).exceptionally((e) -> {
             NyaaCoreLoader.getInstance().getLogger().log(Level.INFO, "failed to request uuid -> name api", e);

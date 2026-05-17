@@ -8,10 +8,8 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.TagParser;
 import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.storage.TagValueInput;
-import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
@@ -63,26 +61,6 @@ public final class NmsUtils {
 
     public static boolean createExplosion(World world, Entity entity, double x, double y, double z, float power, boolean setFire, boolean breakBlocks) {
         return world.createExplosion(x, y, z, power, setFire, breakBlocks, entity);
-    }
-
-    /**
-     * fromMobSpawner is removed in 1.15.2 Spigot
-     * use {Mob.isAware} instead.
-     */
-    @Deprecated
-    public static boolean isFromMobSpawner(Entity entity) {
-        return false;
-    }
-
-    /**
-     * fromMobSpawner is removed in 1.15.2 Spigot
-     * use {Mob.isAware} instead.
-     */
-    @Deprecated
-    public static void setFromMobSpawner(Entity entity, boolean fromMobSpawner) {
-//        if (entity instanceof CraftEntity) {
-//            ((CraftEntity) entity).getHandle().fromMobSpawner = fromMobSpawner;
-//        }
     }
 
     /**
