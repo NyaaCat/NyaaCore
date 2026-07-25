@@ -2,7 +2,7 @@ package cat.nyaa.nyaacore.utils;
 
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.logging.LogUtils;
-import net.minecraft.advancements.criterion.NbtPredicate;
+import net.minecraft.advancements.predicates.NbtPredicate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.TagParser;
@@ -96,13 +96,13 @@ public final class NmsUtils {
     }
 
     public static List<Block> getTileEntities(World world) {
-        Map<BlockPos, BlockEntity> BlockEntityList = ((CraftWorld) world).getHandle().capturedTileEntities;
+        Map<BlockPos, BlockEntity> BlockEntityList = ((CraftWorld) world).getHandle().capturedBlockEntities;
         // Safe to parallelize getPosition and getBlockAt
         return BlockEntityList.entrySet().stream().parallel().map(Map.Entry::getKey).map(p -> world.getBlockAt(p.getX(), p.getY(), p.getZ())).collect(Collectors.toList());
     }
 
     public static List<BlockState> getBlockEntityBlockStates(World world) {
-        Map<BlockPos, BlockEntity> BlockEntityList = ((CraftWorld) world).getHandle().capturedTileEntities;
+        Map<BlockPos, BlockEntity> BlockEntityList = ((CraftWorld) world).getHandle().capturedBlockEntities;
         // Safe to parallelize getPosition and getBlockAt
         return BlockEntityList.entrySet().stream().parallel().map(Map.Entry::getKey).map(p -> world.getBlockAt(p.getX(), p.getY(), p.getZ())).map(Block::getState).collect(Collectors.toList());
     }

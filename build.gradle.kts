@@ -4,18 +4,18 @@ plugins {
     `java-library`
     `maven-publish`
     id("io.papermc.paperweight.userdev") version "2.0.0-beta.21"
-    id("xyz.jpenilla.run-paper") version "2.3.0" // Adds runServer and runMojangMappedServer tasks for testing
+    id("xyz.jpenilla.run-paper") version "3.0.2" // Adds runServer and runMojangMappedServer tasks for testing
 }
 
 // = = =
 
 val pluginName = "NyaaCore"
-val paperApiName = "26.1.2.build.+"
+val paperApiName = "26.2.build.+"
 
 // = = =
 
 group = "cat.nyaa"
-version ="9.10"
+version ="9.11"
 
 java {
     // Configure the java toolchain. This allows gradle to auto-provision JDK 21 on systems that only have JDK 8 installed for example.
@@ -136,6 +136,12 @@ tasks {
         useJUnitPlatform()
         // Prevent build failure if no tests are discovered in some environments
         failOnNoDiscoveredTests = false
+        // MockBukkit only publishes mockbukkit-v26.1.2 so far and doesn't yet support the
+        // registries introduced in Paper 26.2 (e.g. minecraft:attribute), which crashes
+        // ServerMock init. Exclude these until MockBukkit ships a 26.2-compatible release.
+        exclude("cat/nyaa/nyaacore/LanguageRepositoryTest.class")
+        exclude("cat/nyaa/nyaacore/MessageTest.class")
+        exclude("cat/nyaa/nyaacore/cmdreceiver/dispatchtest/DispatchTest.class")
     }
 }
 
