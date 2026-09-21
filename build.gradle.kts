@@ -10,12 +10,15 @@ plugins {
 // = = =
 
 val pluginName = "NyaaCore"
-val paperApiName = "26.2.build.+"
+// Pinned to a concrete Paper 26.2 STABLE build so the build is reproducible.
+// Discovered from repo.papermc.io .../io/papermc/paper/paper-api/maven-metadata.xml
+// and fill.papermc.io/v3/projects/paper/versions/26.2/builds?channel=STABLE
+val paperApiName = "26.2.build.123-stable"
 
 // = = =
 
 group = "cat.nyaa"
-version ="9.11"
+version ="9.12"
 
 java {
     // Configure the java toolchain. This allows gradle to auto-provision JDK 21 on systems that only have JDK 8 installed for example.
@@ -39,7 +42,7 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation(platform("org.junit:junit-bom:6.1.0-RC1"))
     testImplementation("org.junit.jupiter:junit-jupiter")
-    testImplementation("org.mockbukkit.mockbukkit:mockbukkit-v26.1.2:4.113.1")
+    testImplementation("org.mockbukkit.mockbukkit:mockbukkit-v26.2:4.116.1")
     testImplementation("org.mockito:mockito-core:5.23.0")
     testImplementation("org.mockito:mockito-junit-jupiter:5.23.0")
     testImplementation("org.xerial:sqlite-jdbc:3.53.1.0")
@@ -136,12 +139,22 @@ tasks {
         useJUnitPlatform()
         // Prevent build failure if no tests are discovered in some environments
         failOnNoDiscoveredTests = false
-        // MockBukkit only publishes mockbukkit-v26.1.2 so far and doesn't yet support the
-        // registries introduced in Paper 26.2 (e.g. minecraft:attribute), which crashes
-        // ServerMock init. Exclude these until MockBukkit ships a 26.2-compatible release.
-        exclude("cat/nyaa/nyaacore/LanguageRepositoryTest.class")
-        exclude("cat/nyaa/nyaacore/MessageTest.class")
-        exclude("cat/nyaa/nyaacore/cmdreceiver/dispatchtest/DispatchTest.class")
+        // The MockBukkit-backed tests (LanguageRepositoryTest / MessageTest / DispatchTest)
+        // used to be excluded because only mockbukkit-v26.1.2 existed, which crashed on the
+        // registries introduced in Paper 26.2. mockbukkit-v26.2 is published now, so they
+        // are back in the suite.
+        //
+        // paperweight-userdev also puts the Mojang-mapped paper-server jar on the test
+        // runtime classpath. Both that jar and MockBukkit ship META-INF/services entries
+        // for io.papermc.paper.registry.RegistryAccess, io.papermc.paper.ServerBuildInfo,
+        // InternalAPIBridge, ... Paper resolves those through
+        // net.kyori.adventure.util.Services, which hard-fails with "Expected to find one
+        // service interface ..., found multiple" (and the real PaperRegistryAccess also
+        // throws "minecraft:attribute points to a registry that is not available yet"
+        // because there is no bootstrapped server). Unit tests only need the API, so the
+        // server jar is dropped from the *test runtime* classpath; compilation against it
+        // is untouched.
+        classpath = classpath.filter { it.name != "mappedServerJar.jar" }
     }
 }
 

@@ -3,7 +3,6 @@ package cat.nyaa.nyaacore;
 import cat.nyaa.nyaacore.configuration.NbtItemStack;
 import cat.nyaa.nyaacore.utils.ClickSelectionUtils;
 import cat.nyaa.nyaacore.utils.OfflinePlayerUtils;
-import net.minecraft.SharedConstants;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.plugin.PluginDescriptionFile;
@@ -50,7 +49,10 @@ public class NyaaCoreLoader extends JavaPlugin {
         if (!isTest) {
             String serverVersion = "", targetVersion;
             try {
-                serverVersion = SharedConstants.getCurrentVersion().name();
+                // Was net.minecraft.SharedConstants.getCurrentVersion().name(). The Paper API
+                // exposes the same string without reaching into NMS, which also keeps this
+                // class loadable when only paper-api is on the classpath (unit tests).
+                serverVersion = Bukkit.getMinecraftVersion();
             } catch (Exception e) {
                 getLogger().severe(e.getMessage());
                 Bukkit.getPluginManager().disablePlugin(this);

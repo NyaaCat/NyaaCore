@@ -18,7 +18,7 @@ public class MessageTest {
     @BeforeEach
     public void setUp() {
         server = MockBukkit.mock();
-        plugin = MockBukkit.load(NyaaCoreLoader.class, true);
+        plugin = MockBukkit.load(NyaaCoreLoader.class);
     }
 
     @AfterEach
